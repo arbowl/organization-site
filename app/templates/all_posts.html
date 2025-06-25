@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}All Posts - Name{% endblock %}
+{% block content %}
+    <div class="text-center mb-8">
+        <h2 class="text-3xl font-extrabold text-gray-900">All Blog Posts</h2>
+    </div>
+
+    {% if entries %}
+        <ul class="space-y-6 max-w-2xl mx-auto">
+            {% for e in entries %}
+                <li class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+                    <h4 class="text-2xl font-semibold text-blue-700 hover:text-blue-900 mb-2">
+                        <a href="{{ url_for('blog.view_post', slug=e.post.slug) }}">
+                            {{ e.post.title }}
+                        </a>
+                    </h4>
+                    <small class="text-gray-500 text-sm">
+                        By <span class="font-medium"><a href="{{ url_for('blog.user_posts', username=e.post.author.username) }}">{{ e.post.author.username }}</a></span> on {{ e.post.timestamp.strftime('%Y-%m-%d') }}
+                    </small>
+                    👍 {{ e.likes }} 💬 {{ e.comments }}
+                </li>
+            {% endfor %}
+        </ul>
+        <nav aria-label="Pages" class="mt-12">
+            <ul class="flex justify-center items-center space-x-2">
+                {% if pagination.has_prev %}
+                    <li>
+                        <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
+                            href="{{ url_for('blog.all_posts', page=pagination.prev_num) }}">
+                            Previous
+                        </a>
+                    </li>
+                {% else %}
+                    <li>
+                        <span class="px-4 py-2 border border-gray-200 text-gray-400 rounded-md cursor-not-allowed">
+                            Prev
+                        </span>
+                    </li>
+                {% endif %}
+                {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                        {% if p == pagination.page %}
+                            <li>
+                                <span class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md">
+                                    {{ p }}
+                                </span>
+                            </li>
+                        {% else %}
+                            <li>
+                                <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
+                                    href="{{ url_for('blog.all_posts', page=p) }}">
+                                    {{ p }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li>
+                            <span class="px-4 py-2 border border-gray-200 text-gray-500 rounded-md cursor-not-allowed">
+                                ...
+                            </span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                {% if pagination.has_next %}
+                    <li>
+                        <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
+                            href="{{ url_for('blog.all_posts', page=pagination.next_num) }}">
+                            Next
+                        </a>
+                    </li>
+                {% else %}
+                    <li>
+                        <span class="px-4 py-2 border border-gray-200 text-gray-400 rounded-md cursor-not-allowed">
+                            Next
+                        </span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% else %}
+        <p class="text-center text-gray-600 italic mt-8">No posts to display yet. Check back soon!</p>
+    {% endif %}
+    <div class="text-center mt-8">
+        <a href="{{ url_for('blog.create_post') }}"
+           class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300 ease-in-out">
+            Create New Post
+        </a>
+    </div>
+{% endblock %}
