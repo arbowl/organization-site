@@ -3,19 +3,19 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}Name{% endblock %}</title>
+        <title>{% block title %}Activism Night{% endblock %}</title>
         <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     </head>
     <body class="font-sans text-gray-800 bg-gray-100">
-        <header class="bg-white shadow p-4 md:px-6 lg:px-8">
+        <header class="bg-white shadow p-4 md:px-6 lg:px-8 sticky top-0 z-50">
             <div class="container mx-auto flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-blue-600">
-                    <a href="{{ url_for('blog.index') }}" class="hover:text-blue-800">⌂</a>
+                    <a href="{{ url_for('blog.index') }}" class="hover:text-blue-800"> ⃤</a>
                 </h1>
                 <nav class="site-nav">
                     <a href="{{ url_for('blog.index') }}" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md">Home</a>
-                    <a href="{{ url_for('blog.all_posts') }}" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md">Blog</a>
+                    <a href="{{ url_for('blog.all_posts') }}" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md">Posts</a>
                     <a href="{{ url_for('pages.about') }}" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md">About</a>
                     {% if current_user.is_authenticated %}
                         <a href="{{ url_for('auth.logout') }}" class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 ml-4">Logout</a>
@@ -30,7 +30,7 @@
         </main>
         <footer class="mt-8 text-center text-gray-500 text-sm p-4">
             <hr class="border-t border-gray-300 mb-2">
-            <p>&copy; 2025 Name</p>
+            <p>&copy; 2025 Activism Night</p>
         </footer>
     </body>
 </html>
