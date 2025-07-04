@@ -9,7 +9,8 @@ from markdown import markdown
 from requests import get
 from requests.exceptions import RequestException
 
-ALLOWED = list(sanitizer.ALLOWED_TAGS) + ["p", "pre", "code", "h1", "h2", "h3", "table", "thead", "tbody", "tr", "td", "img"]
+ALLOWED_TAGS = list(sanitizer.ALLOWED_TAGS) + ["img", "hr", "a", "p", "pre", "code", "h1", "h2", "h3", "table", "thead", "tbody", "tr", "td", "img", "blockquote"]
+ALLOWED_ATTRS = {"blockquote": ["class", "data-lang"], "a": ["href"], "img": ["src", "alt", "height", "width"]}
 
 
 @dataclass
@@ -20,7 +21,7 @@ class Gatherings:
 
 
 def md(text):
-    return clean(markdown(text, extensions=["fenced_code", "tables"]), tags=ALLOWED, strip=True)
+    return clean(markdown(text, extensions=["fenced_code", "tables", "smarty"]), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, strip=True)
 
 
 def get_rss_highlights():

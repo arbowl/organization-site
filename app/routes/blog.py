@@ -13,13 +13,11 @@ from app.utils import get_rss_highlights, roles_required, scrape_events, get_gat
 blog_bp = Blueprint("blog", __name__)
 
 
-
-
 @blog_bp.route("/")
 def index():
     posts = Post.query.order_by(Post.timestamp.desc()).limit(5).all()
     news = get_rss_highlights()
-    events = scrape_events()
+    events = scrape_events()[:5]
     gatherings = get_gatherings()
     return render_template("index.html", posts=posts, news=news, events=events, gatherings=gatherings)
 

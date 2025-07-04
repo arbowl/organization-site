@@ -1,0 +1,12 @@
+.post-content a {
+    text-decoration: underline;
+}
+
+.post-content a:hover {
+    color: #586875;
+    text-decoration-line: underline;
+    text-decoration-color: #586875;
+    text-decoration-style: dotted;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+}

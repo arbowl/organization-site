@@ -3,9 +3,11 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}Activism Night{% endblock %}</title>
+        <title>{% block title %}Dismantl{% endblock %}</title>
         <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+        <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     </head>
     <body class="font-sans text-gray-800 bg-gray-100">
         <header class="bg-white shadow p-4 md:px-6 lg:px-8 sticky top-0 z-50">
@@ -30,7 +32,7 @@
         </main>
         <footer class="mt-8 text-center text-gray-500 text-sm p-4">
             <hr class="border-t border-gray-300 mb-2">
-            <p>&copy; 2025 Activism Night</p>
+            <p>&copy; 2025 Dismantl</p>
         </footer>
     </body>
 </html>
