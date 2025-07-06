@@ -10,3 +10,23 @@
     text-decoration-thickness: 1px;
     text-underline-offset: 0.15em;
 }
+
+/* style.css */
+
+/* Base Blockquote Style */
+blockquote {
+    padding: 1.5rem; /* Equivalent to Tailwind p-6 */
+    margin: 1.5rem 0; /* Equivalent to Tailwind my-6 */
+    font-style: italic;
+    color: #4a5568; /* A darker gray, e.g., text-gray-700 */
+    background-color: #f7fafc; /* A very light gray, e.g., bg-gray-50 */
+    border-left: 0.25rem solid #179bed; /* 4px solid teal-600 */
+    border-radius: 0.5rem; /* Equivalent to Tailwind rounded-lg */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Equivalent to Tailwind shadow-md */
+}
+
+blockquote footer {
+    margin-top: 1rem; /* Equivalent to Tailwind mt-4 */
+    font-size: 0.875rem; /* Equivalent to Tailwind text-sm */
+    color: #718096; /* A lighter gray, e.g., text-gray-600 */
+}
