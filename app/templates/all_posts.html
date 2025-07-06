@@ -4,6 +4,8 @@
     <div class="text-center mb-8">
         <h2 class="text-3xl font-extrabold text-gray-900">All Posts</h2>
     </div>
+    {% include 'includes/rules.html' %}
+    <br>
     {% if entries %}
         <ul class="space-y-6 max-w-2xl mx-auto">
             {% for e in entries %}
@@ -20,6 +22,12 @@
                 </li>
             {% endfor %}
         </ul>
+        <div class="text-center mt-8">
+            <a href="{{ url_for('blog.create_post') }}"
+            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300 ease-in-out">
+                Create New Post
+            </a>
+        </div>
         <nav aria-label="Pages" class="mt-12">
             <ul class="flex justify-center items-center space-x-2">
                 {% if pagination.has_prev %}
@@ -79,43 +87,5 @@
     {% else %}
         <p class="text-center text-gray-600 italic mt-8">No posts to display yet. Check back soon!</p>
     {% endif %}
-    {% if current_user.is_authenticated %}
-        <br>
-        <section class="mx-auto bg-white p-6 rounded-lg shadow-md border-t-4 border-slate-500 max-w-2xl">
-            <h3 class="text-2xl font-semibold text-blue-800 mb-4 border-b pb-2">Rules</h3>
-            <ul class="space-y-4">
-                <li class="border-b pb-3 last:border-b-0 last:pb-0">
-                    <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
-                        1. Don't be toxic
-                    </h4>
-                    <p class="text-gray-700 text-sm">
-                        Passionate debate is fine. Rudeness out of desperation or ignorance is not.
-                    </p>
-                </li>
-                <li class="border-b pb-3 last:border-b-0 last:pb-0">
-                    <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
-                        2. No misinformation
-                    </h4>
-                    <p class="text-gray-700 text-sm">
-                        Controversial takes are welcomed; misinformation is not. “Misinformation” is defined here as
-                        a claim for which there is proof of falsehood or lack of evidence.
-                    </p>
-                </li>
-                <li class="border-b pb-3 last:border-b-0 last:pb-0">
-                    <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
-                        3. Read more than you write
-                    </h4>
-                    <p class="text-gray-700 text-sm">
-                        A well thought-out reply is more appreciated than ten poorly constructed posts.
-                    </p>
-                </li>
-            </ul>
-            <div class="text-center mt-8">
-                <a href="{{ url_for('blog.create_post') }}"
-                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300 ease-in-out">
-                    Create New Post
-                </a>
-            </div>
-        </section>
-    {% endif %}
+    <br>
 {% endblock %}

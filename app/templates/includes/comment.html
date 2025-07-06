@@ -1,5 +1,4 @@
 <li id="c{{ comment.id }}" class="mb-6 p-4 bg-white rounded-lg shadow-md">
-  <!-- header / like button -->
   <div class="flex justify-between items-center mb-2">
     <p class="text-sm text-gray-800">
       <strong class="font-semibold text-blue-700">{{ comment.author.username }}</strong>
@@ -15,13 +14,9 @@
       </button>
     </form>
   </div>
-
-  <!-- content -->
   <div class="text-gray-700 leading-relaxed mb-3">
     {{ comment.content | e }}
   </div>
-
-  <!-- reply toggle & form -->
   {% if current_user.is_authenticated %}
     <div class="flex items-center space-x-4 text-sm">
       <a href="#" class="reply-toggle text-blue-500 hover:underline"
@@ -39,8 +34,6 @@
       {{ form.submit(class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-200 ease-in-out") }}
     </form>
   {% endif %}
-
-  {# --- Nested replies: only if ordered_replies has items --- #}
   {% if comment.ordered_replies %}
     <ul class="ml-8 mt-4 border-l-2 border-gray-200 pl-4 space-y-4">
       {% for reply in comment.ordered_replies %}
