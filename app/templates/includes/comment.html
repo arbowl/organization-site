@@ -14,8 +14,8 @@
       </button>
     </form>
   </div>
-  <div class="text-gray-700 leading-relaxed mb-3">
-    {{ comment.content | e }}
+  <div class="text-gray-700 leading-relaxed mb-3 post-content">
+    {{ comment.content | e | md | safe }}
   </div>
   {% if current_user.is_authenticated %}
     <div class="flex items-center space-x-4 text-sm">

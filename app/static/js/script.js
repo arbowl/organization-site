@@ -7,3 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+document.addEventListener('DOMContentLoaded', function(){
+  new EasyMDE({ element: document.getElementById('content') });
+});

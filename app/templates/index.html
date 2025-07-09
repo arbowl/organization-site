@@ -38,7 +38,7 @@
                             <small class="text-gray-500 text-sm block mb-2">
                                 By <span class="font-semibold"><a href="{{ url_for('blog.user_posts', username=post.author.username) }}">{{ post.author.username }}</a></span> on {{ post.timestamp.strftime('%Y-%m-%d') }}
                             </small>
-                            <p class="text-gray-700 leading-relaxed">{{ post.content[:200] | md | safe }}{% if post.content|length > 200 %}...{% endif %}</p>
+                            <div class="post-content">{{ post.content[:200] | md }}{% if post.content|length > 200 %}...{% endif %}</div>
                         </li>
                     {% endfor %}
                 </ul>

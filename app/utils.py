@@ -5,13 +5,42 @@ from bs4 import BeautifulSoup
 from bleach import clean, sanitizer
 from feedparser import FeedParserDict, parse
 from flask import abort
+from markupsafe import Markup
 from markdown import markdown
 from requests import get
 from requests.exceptions import RequestException
 
-ALLOWED_TAGS = list(sanitizer.ALLOWED_TAGS) + ["img", "hr", "a", "p", "pre", "code", "h1", "h2", "h3", "table", "thead", "tbody", "tr", "td", "img", "blockquote"]
-ALLOWED_ATTRS = {"blockquote": ["class", "data-lang"], "a": ["href"], "img": ["src", "alt", "height", "width"]}
-
+ALLOWED_TAGS = [
+    # inline
+    'a','abbr','acronym','b','blockquote','code','em','i','strong',
+    # lists
+    'ul','ol','li',
+    # headings & sections
+    'h1','h2','h3','h4','h5','h6','p','hr',
+    # code & pre
+    'pre',
+    # images
+    'img',
+    # tables
+    'table','thead','tbody','tr','th','td',
+]
+ALLOWED_ATTRS = {
+    'a':      ['href','title'],
+    'img':    ['src','alt','title','width','height'],
+    'blockquote': ['class','data-lang'],
+    'pre':    ['class','data-lang'],
+    'code':   ['class'],
+    # if you want to allow CSS classes on lists/tables:
+    'ul':     ['class'],  
+    'ol':     ['class'],
+    'li':     ['class'],
+    'table':  ['class'],
+    'thead':  ['class'],
+    'tbody':  ['class'],
+    'tr':     ['class'],
+    'th':     ['class','colspan','rowspan'],
+    'td':     ['class','colspan','rowspan'],
+}
 
 @dataclass
 class Gatherings:
@@ -20,8 +49,23 @@ class Gatherings:
     description: str
 
 
-def md(text):
-    return clean(markdown(text, extensions=["fenced_code", "tables", "smarty"]), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, strip=True)
+
+def md(text: str) -> Markup:
+    """Render Markdown to HTML, sanitize, and mark safe for Jinja."""
+    # 1. Convert Markdown to HTML
+    html = markdown(
+        text,
+        extensions=['fenced_code','tables','smarty']
+    )
+    # 2. Clean it, stripping any tag not in ALLOWED_TAGS
+    cleaned = clean(
+        html,
+        tags=ALLOWED_TAGS,
+        attributes=ALLOWED_ATTRS,
+        strip=True
+    )
+    # 3. Wrap it so Jinja knows it's already safe HTML
+    return Markup(cleaned)
 
 
 def get_rss_highlights():

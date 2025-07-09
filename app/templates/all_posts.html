@@ -22,12 +22,14 @@
                 </li>
             {% endfor %}
         </ul>
+    {% endif %}
         <div class="text-center mt-8">
             <a href="{{ url_for('blog.create_post') }}"
             class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300 ease-in-out">
                 Create New Post
             </a>
         </div>
+    {% if entries %}
         <nav aria-label="Pages" class="mt-12">
             <ul class="flex justify-center items-center space-x-2">
                 {% if pagination.has_prev %}
