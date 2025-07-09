@@ -11,12 +11,15 @@
         <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
         <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
         <link rel="stylesheet" href="https://unpkg.com/github-markdown-css@5.2.0/github-markdown.min.css"/>
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}"/>
     </head>
     <body class="font-sans text-gray-800">
         <header class="bg-white shadow p-4 md:px-6 lg:px-8 sticky top-0 z-50">
             <div class="container mx-auto flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-blue-600">
-                    <a href="{{ url_for('blog.index') }}" class="hover:text-blue-800"> ⃤</a>
+                    <a href="{{ url_for('blog.index') }}">
+                        <img src="{{ url_for('static', filename='favicon.ico') }}" alt="Dismantl Logo" class="h-8">
+                    </a>
                 </h1>
                 <nav class="site-nav">
                     <a href="{{ url_for('blog.index') }}" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md">Home</a>
