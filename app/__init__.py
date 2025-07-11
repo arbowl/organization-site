@@ -7,6 +7,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 
 from app.utils import md
 
@@ -34,6 +35,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     app.register_blueprint(pages_bp)
     with app.app_context():
         db.create_all()
+    CSRFProtect(app)
     return app
 
 from .models import User

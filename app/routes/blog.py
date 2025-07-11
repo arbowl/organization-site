@@ -1,5 +1,6 @@
 """Blog"""
 
+from datetime import datetime, timezone
 from flask import Blueprint, render_template, redirect, url_for, flash, abort, request
 from flask_login import login_required, current_user
 from slugify import slugify
@@ -153,3 +154,25 @@ def user_posts(username):
     pagination = (Post.query.filter_by(author=user).order_by(Post.timestamp.desc()).paginate(page=page, per_page=10, error_out=False))
     posts = pagination.items
     return render_template("user_posts.html", user=user, posts=posts, pagination=pagination)
+
+
+@blog_bp.route("/comment/remove/<int:comment_id>", methods=["POST"])
+@login_required
+def remove_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    is_author = comment.author_id == current_user.id
+    is_mod = current_user.is_moderator()
+    is_admin = current_user.is_admin()
+    if not (is_author or is_mod or is_admin):
+        abort(403)
+    comment.is_removed = True
+    if is_admin:
+        comment.removed_by = "admin"
+    if is_mod:
+        comment.removed_by = "moderator"
+    else:
+        comment.removed_by = "user"
+    comment.removed_at = datetime.now(timezone.utc)
+    db.session.commit()
+    flash("Comment content removed.", "info")
+    return redirect(request.referrer or url_for("blog.view_post", slug=comment.post.slug))

@@ -2,6 +2,20 @@ body {
     background-color: #f1f7ff;
 }
 
+.dismantl-d {
+  display: inline;
+  padding-bottom: 12px;
+  margin-right: 1px;
+}
+
+.ismantl {
+  margin-left: -4px;
+}
+
+.about {
+  margin-top: -45px;
+}
+
 .post-content a {
     text-decoration: underline;
 }

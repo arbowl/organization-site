@@ -7,6 +7,7 @@
     <form method="post"
           action="{{ url_for('blog.toggle_comment_like', comment_id=comment.id) }}"
           class="flex items-center">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit"
               class="flex items-center text-gray-600 hover:text-blue-500 transition duration-200 ease-in-out">
         <span class="text-xl mr-1">👍</span>
@@ -14,14 +15,47 @@
       </button>
     </form>
   </div>
-  <div class="text-gray-700 leading-relaxed mb-3 post-content">
-    {{ comment.content | e | md | safe }}
-  </div>
-  {% if current_user.is_authenticated %}
-    <div class="flex items-center space-x-4 text-sm">
-      <a href="#" class="reply-toggle text-blue-500 hover:underline"
-         data-comment="{{ comment.id }}">Reply</a>
+
+  {% if comment.is_removed %}
+    <p class="italic text-gray-500 mb-3">
+      [removed by {{ comment.removed_by }}
+      at {{ comment.removed_at.strftime('%Y-%m-%d %H:%M') }}]
+    </p>
+  {% else %}
+    <div class="text-gray-700 leading-relaxed mb-3">
+      {{ comment.content | md }}
     </div>
+  {% endif %}
+
+  {# Actions row: Reply + Remove #}
+  <div class="flex items-center space-x-4 mt-2 text-sm">
+    {% if current_user.is_authenticated and not comment.is_removed %}
+      <a href="#"
+         class="reply-toggle text-blue-500 hover:underline"
+         data-comment="{{ comment.id }}">
+        Reply
+      </a>
+    {% endif %}
+
+    {% if current_user.is_authenticated and not comment.is_removed
+          and (comment.author_id == current_user.id
+               or current_user.is_moderator()
+               or current_user.is_admin()) %}
+      <form method="post"
+            action="{{ url_for('blog.remove_comment', comment_id=comment.id) }}"
+            class="inline-block"
+            onsubmit="return confirm('Remove the content of this comment?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit"
+                class="text-red-500 hover:text-red-700">
+          Remove
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+{# Reply form, on its own line #}
+{% if current_user.is_authenticated and not comment.is_removed %}
     <form method="post"
           class="reply-form mt-2 w-full"
           id="reply-{{ comment.id }}"
@@ -33,11 +67,12 @@
                       class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 mb-2") }}
       {{ form.submit(class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-200 ease-in-out") }}
     </form>
-  {% endif %}
+{% endif %}
+
+  {# Nested replies recursion #}
   {% if comment.ordered_replies %}
     <ul class="ml-8 mt-4 border-l-2 border-gray-200 pl-4 space-y-4">
       {% for reply in comment.ordered_replies %}
-        {# bind the inner loop variable and recurse #}
         {% set comment = reply %}
         {% include 'includes/comment.html' %}
       {% endfor %}
