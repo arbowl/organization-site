@@ -7,6 +7,7 @@ Create Date: 2025-07-11 19:03:29.159827
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
 # revision identifiers, used by Alembic.
@@ -17,9 +18,15 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('comments', sa.Column('is_removed', sa.Boolean(), nullable=False, server_default='0'))
-    op.add_column('comments', sa.Column('removed_by', sa.Integer(), nullable=True))
-    op.add_column('comments', sa.Column('removed_at', sa.DateTime(), nullable=True))
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    columns = [col['name'] for col in inspector.get_columns('comments')]
+    if 'is_removed' not in columns:
+        op.add_column('comments', sa.Column('is_removed', sa.Boolean(), nullable=False, server_default='0'))
+    if 'removed_by' not in columns:
+        op.add_column('comments', sa.Column('removed_by', sa.Integer(), nullable=True))
+    if 'removed_at' not in columns:
+        op.add_column('comments', sa.Column('removed_at', sa.DateTime(), nullable=True))
 
     # ### end Alembic commands ###
 
