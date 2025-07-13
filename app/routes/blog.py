@@ -1,4 +1,7 @@
-"""Blog"""
+"""Blog
+
+This handles any routes related to the blog post portion of the site.
+"""
 
 from datetime import datetime, timezone
 from flask import Blueprint, render_template, redirect, url_for, flash, abort, request
@@ -9,13 +12,14 @@ from sqlalchemy import func
 from app import db
 from app.models import Post, User, Comment, PostLike, CommentLike
 from app.forms import PostForm, CommentForm
-from app.utils import get_rss_highlights, roles_required, scrape_events
+from app.utils import get_rss_highlights, scrape_events
 
-blog_bp = Blueprint("blog", __name__)
+blog_bp: Blueprint = Blueprint("blog", __name__)
 
 
 @blog_bp.route("/")
-def index():
+def index() -> str:
+    """The landing page of the site"""
     post_data = (
         db.session.query(
             Post,
@@ -29,26 +33,23 @@ def index():
         .limit(5)
         .all()
     )
-    
     posts = [{
         "post": p,
         "likes": like_count,
         "comments": comment_count
     } for p, comment_count, like_count in post_data]
-    
     bulletins = [{
         "post": p["post"],
         "likes": p["likes"],
         "comments": p["comments"]
     } for p in posts if p["post"].author.role == "admin"][:5]
-    
     news = get_rss_highlights()
     events = scrape_events()[:5]
     return render_template("index.html", posts=posts, bulletins=bulletins, news=news, events=events)
 
 
 @blog_bp.route("/all")
-def all_posts():
+def all_posts() -> str:
     page = request.args.get("page", 1, type=int)
     pagination = (
         db.session.query(
@@ -70,7 +71,7 @@ def all_posts():
     return render_template("all_posts.html", entries=entries, pagination=pagination)
 
 
-def populate_replies(comment):
+def populate_replies(comment: Comment) -> None:
     replies = comment.replies.order_by(Comment.timestamp.asc()).all()
     comment.ordered_replies = replies
     for r in replies:
@@ -78,7 +79,7 @@ def populate_replies(comment):
 
 
 @blog_bp.route("/post/<slug>", methods=["GET", "POST"])
-def view_post(slug):
+def view_post(slug: str) -> str:
     post = Post.query.filter_by(slug=slug).first_or_404()
     form = CommentForm(post_id=post.id)
     if form.validate_on_submit():
@@ -93,7 +94,9 @@ def view_post(slug):
         db.session.add(comment)
         db.session.commit()
         return redirect(url_for("blog.view_post", slug=slug) + f"#c{comment.id}")
-    comments = (Comment.query.filter_by(post_id=post.id, parent_id=None).order_by(Comment.timestamp.desc()).all())
+    comments = (
+        Comment.query.filter_by(post_id=post.id, parent_id=None
+    ).order_by(Comment.timestamp.desc()).all())
     for c in comments:
         populate_replies(c)
     return render_template("post_detail.html", post=post, form=form, comments=comments)

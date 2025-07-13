@@ -80,24 +80,6 @@ def get_rss_highlights():
     return headlines
 
 
-def roles_required(*allowed):
-
-    def decorator(f):
-
-        @wraps(f)
-        def wrapped(*args, **kwargs):
-            if not current_user.is_authenticated:
-                return abort(403)
-            role = getattr(current_user, "role", None)
-            if role not in allowed:
-                return abort(403)
-            return f(*args, **kwargs)
-
-        return wrapped
-
-    return decorator
-
-
 def scrape_events():
     url = "https://masspeaceaction.org/events/"
     headers = {
