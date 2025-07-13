@@ -23,7 +23,7 @@ def upgrade():
     inspector = inspect(bind)
     columns = [col['name'] for col in inspector.get_columns('posts')]
     if 'updated_at' not in columns:
-        op.add_column(sa.Column('updated_at', sa.DateTime(), nullable=True))
+        op.add_column('posts', sa.Column('updated_at', sa.DateTime(), nullable=True))
 
     # ### end Alembic commands ###
 
