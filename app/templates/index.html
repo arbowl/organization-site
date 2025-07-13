@@ -15,15 +15,23 @@
             <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Site News</h3>
             {% if bulletins %}
                 <ul class="space-y-4">
-                    {% for post in bulletins %}
+                    {% for bulletin in bulletins %}
                         <li class="border-b pb-4 last:border-b-0 last:pb-0">
-                            <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
-                                <a href="{{ url_for('blog.view_post', slug=post.slug) }}">{{ post.title }}</a>
-                            </h4>
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900">
+                                    <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}">{{ bulletin.post.title }}</a>
+                                </h4>
+                                <div class="flex items-center space-x-2">
+                                    <span class="inline-flex items-center px-3 py-1
+                                                    bg-blue-100 text-blue-800 rounded-md text-sm">➕ {{ bulletin.likes }}</span>
+                                    <span class="inline-flex items-center px-3 py-1
+                                                    bg-blue-100 text-blue-800 rounded-md text-sm">💬 {{ bulletin.comments }}</span>
+                                </div>
+                            </div>
                             <small class="text-gray-500 text-sm block mb-2">
-                                By <span class="font-semibold"><a href="{{ url_for('blog.user_posts', username=post.author.username) }}">{{ post.author.username }}</a></span> on {{ post.display_date | safe }}
+                                By <span class="font-semibold"><a href="{{ url_for('blog.user_posts', username=bulletin.post.author.username) }}">{{ bulletin.post.author.username }}</a></span> on {{ bulletin.post.display_date | safe }}
                             </small>
-                            <div class="post-content">{{ post.content[:200] | md | striptags }}{% if post.content|length > 200 %}...{% endif %}</div>
+                            <div class="post-content">{{ bulletin.post.content[:200] | md | striptags }}{% if bulletin.post.content|length > 200 %}...{% endif %}</div>
                         </li>
                     {% endfor %}
                 </ul>
@@ -35,16 +43,24 @@
             <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Recent Blog Posts</h3>
             {% if posts %}
                 <ul class="space-y-6">
-                    {% for post in posts %}
-                        {% if post.author.role != "admin" %}
+                    {% for post_item in posts %}
+                        {% if post_item.post.author.role != "admin" %}
                             <li class="border-b pb-4 last:border-b-0 last:pb-0">
-                                <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
-                                    <a href="{{ url_for('blog.view_post', slug=post.slug) }}">{{ post.title }}</a>
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900">
+                                    <a href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}">{{ post_item.post.title }}</a>
                                 </h4>
-                                <small class="text-gray-500 text-sm block mb-2">
-                                    By <span class="font-semibold"><a href="{{ url_for('blog.user_posts', username=post.author.username) }}">{{ post.author.username }}</a></span> on {{ post.display_date | safe }}
-                                </small>
-                                <div class="post-content">{{ post.content[:200] | md | striptags }}{% if post.content|length > 200 %}...{% endif %}</div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="inline-flex items-center px-3 py-1
+                                                    bg-blue-100 text-blue-800 rounded-md text-sm">➕ {{ post_item.likes }}</span>
+                                    <span class="inline-flex items-center px-3 py-1
+                                                    bg-blue-100 text-blue-800 rounded-md text-sm">💬 {{ post_item.comments }}</span>
+                                </div>
+                            </div>
+                            <small class="text-gray-500 text-sm block mb-2">
+                                By <span class="font-semibold"><a href="{{ url_for('blog.user_posts', username=post_item.post.author.username) }}">{{ post_item.post.author.username }}</a></span> on {{ post_item.post.display_date | safe }}
+                            </small>
+                            <div class="post-content">{{ post_item.post.content[:200] | md | striptags }}{% if post_item.post.content|length > 200 %}...{% endif %}</div>
                             </li>
                         {% endif %}
                     {% endfor %}

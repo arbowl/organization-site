@@ -1,4 +1,4 @@
-<li id="c{{ comment.id }}" class="mb-6 p-4 bg-white rounded-lg shadow-md">
+<li id="c{{ comment.id }}" class="mb-6 p-4 bg-white rounded-lg shadow-md border-t-2 border-blue-300">
   <div class="flex justify-between items-center mb-2">
     <p class="text-sm text-gray-800">
       <strong class="font-semibold text-blue-700">{{ comment.author.username }}</strong>
@@ -10,8 +10,9 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit"
               class="flex items-center text-gray-600 hover:text-blue-500 transition duration-200 ease-in-out">
-        <span class="text-xl mr-1">👍</span>
-        <span class="text-sm">{{ comment.likes.count() }}</span>
+        <span class="inline-flex items-center px-4 py-2
+                        bg-blue-100 text-blue-800 rounded-md
+                        hover:bg-blue-200 transition duration-300 ease-in-out">➕ {{ comment.likes.count() }}</span>
       </button>
     </form>
   </div>
@@ -71,7 +72,7 @@
 
   {# Nested replies recursion #}
   {% if comment.ordered_replies %}
-    <ul class="ml-8 mt-4 border-l-2 border-gray-200 pl-4 space-y-4">
+    <ul class="ml-4 mt-4 pl-4 space-y-4">
       {% for reply in comment.ordered_replies %}
         {% set comment = reply %}
         {% include 'includes/comment.html' %}

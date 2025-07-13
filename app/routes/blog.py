@@ -16,8 +16,32 @@ blog_bp = Blueprint("blog", __name__)
 
 @blog_bp.route("/")
 def index():
-    posts = Post.query.order_by(Post.timestamp.desc()).limit(5).all()
-    bulletins = [post for post in posts if post.author.role == "admin"][:5]
+    post_data = (
+        db.session.query(
+            Post,
+            func.count(Comment.id).label("comment_count"),
+            func.count(PostLike.id).label("like_count"),
+        )
+        .outerjoin(Comment, Comment.post_id == Post.id)
+        .outerjoin(PostLike, PostLike.post_id == Post.id)
+        .group_by(Post.id)
+        .order_by(Post.timestamp.desc())
+        .limit(5)
+        .all()
+    )
+    
+    posts = [{
+        "post": p,
+        "likes": like_count,
+        "comments": comment_count
+    } for p, comment_count, like_count in post_data]
+    
+    bulletins = [{
+        "post": p["post"],
+        "likes": p["likes"],
+        "comments": p["comments"]
+    } for p in posts if p["post"].author.role == "admin"][:5]
+    
     news = get_rss_highlights()
     events = scrape_events()[:5]
     return render_template("index.html", posts=posts, bulletins=bulletins, news=news, events=events)
@@ -129,7 +153,6 @@ def edit_post(post_id: int):
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
-        post.updated_at = datetime.now(timezone.utc)
         db.session.commit()
         flash("Post updated.", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
@@ -152,9 +175,25 @@ def delete_post(post_id):
 def user_posts(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get("page", 1, type=int)
-    pagination = (Post.query.filter_by(author=user).order_by(Post.timestamp.desc()).paginate(page=page, per_page=10, error_out=False))
-    posts = pagination.items
-    return render_template("user_posts.html", user=user, posts=posts, pagination=pagination)
+    pagination = (
+        db.session.query(
+            Post,
+            func.count(Comment.id).label("comment_count"),
+            func.count(PostLike.id).label("like_count"),
+        )
+        .outerjoin(Comment, Comment.post_id == Post.id)
+        .outerjoin(PostLike, PostLike.post_id == Post.id)
+        .filter(Post.author_id == user.id)
+        .group_by(Post.id)
+        .order_by(Post.timestamp.desc())
+        .paginate(page=page, per_page=10, error_out=False)
+    )
+    entries = [{
+        "post": p,
+        "likes": like_count,
+        "comments": comment_count
+    } for p, comment_count, like_count in pagination.items]
+    return render_template("user_posts.html", user=user, entries=entries, pagination=pagination)
 
 
 @blog_bp.route("/comment/remove/<int:comment_id>", methods=["POST"])
