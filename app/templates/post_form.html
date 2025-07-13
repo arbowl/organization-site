@@ -35,15 +35,19 @@
             <div>
                 {{ form.content.label(class="block text-gray-700 text-sm font-bold mb-2") }}
                 {{ form.content(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 resize-y", id="post-content", rows=10, cols=80) }}
-                {% for error in form.content.errors %} {# Corrected from form.title.errors #}
+                {% for error in form.content.errors %}
                     <span class="text-red-500 text-xs italic mt-1 block">{{ error }}</span>
                 {% endfor %}
             </div>
 
             <div class="flex items-center justify-end space-x-4 pt-4">
+                {{ form.csrf_token }}
                 {{ form.submit(class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer") }}
                 <a href="{{ url_for('blog.all_posts') }}" class="text-gray-600 hover:text-gray-800 font-medium py-2 px-4">Cancel</a>
             </div>
         </form>
     </div>
+    <br>
+    <br>
+    <br>
 {% endblock %}
