@@ -7,6 +7,7 @@ Create Date: 2025-07-13 14:00:00.000000
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect, Column, DateTime
 
 # revision identifiers, used by Alembic.
 revision = '9d6d12885b93'
@@ -15,7 +16,10 @@ branch_labels = None
 depends_on = None
 
 def upgrade():
-    op.add_column('posts', sa.Column('updated_at', sa.DateTime(), nullable=True))
+    bind = op.get_bind()
+    if "updated_at" not in {c["name"] for c in inspect(bind).get_columns("posts")}:
+        op.add_column("posts", Column("updated_at", DateTime(), nullable=True))
+
 
 def downgrade():
     op.drop_column('posts', 'updated_at')
