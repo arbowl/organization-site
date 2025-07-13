@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Log In - Dismantl{% endblock %}
 {% block content %}
-    <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg mt-10">
+    <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg mt-10 border-t-4 border-teal-200">
         <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Log In</h2>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -55,4 +55,7 @@
             <a href="{{ url_for('auth.register') }}" class="text-blue-500 hover:text-blue-700 font-bold">Register here</a>.
         </p>
     </div>
+    <br>
+    <br>
+    <br>
 {% endblock %}

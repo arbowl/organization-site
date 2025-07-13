@@ -160,10 +160,13 @@ def edit_post(post_id: int):
 
 
 @blog_bp.route("/delete/<int:post_id>", methods=["POST"])
-@roles_required("moderator", "admin")
+@login_required
 def delete_post(post_id):
     post = Post.query.get_or_404(post_id)
-    if post.author != current_user:
+    is_author = post.author_id == current_user.id
+    is_mod = current_user.is_moderator()
+    is_admin = current_user.is_admin()
+    if not (is_author or is_mod or is_admin):
         abort(403)
     db.session.delete(post)
     db.session.commit()
