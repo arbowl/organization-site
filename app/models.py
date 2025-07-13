@@ -44,6 +44,14 @@ class Post(db.Model):
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=timestamp)
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    updated_at = db.Column(db.DateTime, index=True, nullable=True)
+
+    @property
+    def display_date(self):
+        date = self.timestamp.strftime('%Y-%m-%d')
+        if self.updated_at:
+            date += f" ⸱ <i>(edited {self.updated_at.strftime('%Y-%m-%d')})</i>"
+        return date
 
 
 class Comment(db.Model):

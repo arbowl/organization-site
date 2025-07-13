@@ -16,7 +16,7 @@
                         </a>
                     </h4>
                     <small class="text-gray-500 text-sm">
-                        By <span class="font-medium"><a href="{{ url_for('blog.user_posts', username=e.post.author.username) }}">{{ e.post.author.username }}</a></span> on {{ e.post.timestamp.strftime('%Y-%m-%d') }}
+                        By <span class="font-medium"><a href="{{ url_for('blog.user_posts', username=e.post.author.username) }}">{{ e.post.author.username }}</a></span> on {{ e.post.display_date | safe }}
                     </small>
                     👍 {{ e.likes }} 💬 {{ e.comments }}
                 </li>

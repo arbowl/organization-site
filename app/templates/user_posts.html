@@ -15,7 +15,7 @@
                         </a>
                     </h4>
                     <small class="text-gray-500 text-sm">
-                        on {{ post.timestamp.strftime('%Y-%m-%d') }}
+                        on {{ post.display_date | safe }}
                     </small>
                 </li>
             {% endfor %}
