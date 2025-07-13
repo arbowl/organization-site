@@ -12,30 +12,10 @@
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-500">
-            <h3 class="text-2xl font-semibold text-blue-800 mb-4 border-b pb-2">Upcoming Gatherings</h3>
-            {% if gatherings %}
+            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Site News</h3>
+            {% if bulletins %}
                 <ul class="space-y-4">
-                    {% for gathering in gatherings %}
-                        <li class="border-b pb-3 last:border-b-0 last:pb-0">
-                            <h4 class="text-xl font-medium text-blue-700">
-                                {{ gathering.title }}
-                            </h4>
-                            <p class="text-gray-700 text-sm">
-                                <span class="font-semibold">Time:</span> {{ gathering.time }}<br>
-                                <span class="font-semibold">Location:</span> {{ gathering.description }}
-                            </p>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-gray-600 italic">No upcoming events! Please check back later.</p>
-            {% endif %}
-        </section>
-        <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-yellow-500">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Recent Blog Posts</h3>
-            {% if posts %}
-                <ul class="space-y-6">
-                    {% for post in posts %}
+                    {% for post in bulletins %}
                         <li class="border-b pb-4 last:border-b-0 last:pb-0">
                             <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
                                 <a href="{{ url_for('blog.view_post', slug=post.slug) }}">{{ post.title }}</a>
@@ -48,11 +28,33 @@
                     {% endfor %}
                 </ul>
             {% else %}
+                <p class="text-gray-600 italic">No bulletins yet. Check back soon!</p>
+            {% endif %}
+        </section>
+        <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-yellow-500">
+            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Recent Blog Posts</h3>
+            {% if posts %}
+                <ul class="space-y-6">
+                    {% for post in posts %}
+                        {% if post.author.role != "admin" %}
+                            <li class="border-b pb-4 last:border-b-0 last:pb-0">
+                                <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
+                                    <a href="{{ url_for('blog.view_post', slug=post.slug) }}">{{ post.title }}</a>
+                                </h4>
+                                <small class="text-gray-500 text-sm block mb-2">
+                                    By <span class="font-semibold"><a href="{{ url_for('blog.user_posts', username=post.author.username) }}">{{ post.author.username }}</a></span> on {{ post.timestamp.strftime('%Y-%m-%d') }}
+                                </small>
+                                <div class="post-content">{{ post.content[:200] | md | striptags }}{% if post.content|length > 200 %}...{% endif %}</div>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            {% else %}
                 <p class="text-gray-600 italic">No blog posts yet. Check back soon!</p>
             {% endif %}
         </section>
         <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-indigo-500">
-            <h3 class="text-2xl font-semibold text-blue-800 mb-4 border-b pb-2">Upcoming Boston Events</h3>
+            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Upcoming Boston Events</h3>
             {% if events %}
                 <ul class="space-y-4">
                     {% for event in events %}

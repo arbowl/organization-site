@@ -1,8 +1,7 @@
-from dataclasses import dataclass, asdict
 from functools import wraps
 
 from bs4 import BeautifulSoup
-from bleach import clean, sanitizer
+from bleach import clean
 from feedparser import FeedParserDict, parse
 from flask import abort
 from markupsafe import Markup
@@ -41,13 +40,6 @@ ALLOWED_ATTRS = {
     'th':     ['class','colspan','rowspan'],
     'td':     ['class','colspan','rowspan'],
 }
-
-@dataclass
-class Gatherings:
-    title: str
-    time: str
-    description: str
-
 
 
 def md(text: str) -> Markup:
@@ -135,13 +127,3 @@ def scrape_events():
         print(f"Error scraping events: {e}")
         return []
     return events
-
-
-def get_gatherings() -> list[dict[str, str]]:
-    return [
-        asdict(Gatherings(
-            title="Introduction",
-            time="Thurs June 26 @ 5:00 pmEDT",
-            description="First activism night meeting"
-        ))
-    ]
