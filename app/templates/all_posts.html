@@ -31,7 +31,7 @@
             {% endfor %}
         </ul>
     {% endif %}
-    {% if current_user.is_contributor() %}
+    {% if current_user.is_authenticated and current_user.is_contributor() %}
         <div class="text-center mt-8">
             <a href="{{ url_for('blog.create_post') }}"
             class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300 ease-in-out">
