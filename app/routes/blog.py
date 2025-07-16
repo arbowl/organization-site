@@ -131,6 +131,8 @@ def toggle_comment_like(comment_id):
 @blog_bp.route("/create", methods=["GET", "POST"])
 @login_required
 def create_post():
+    if not current_user.is_contributor():
+        abort(403)
     form = PostForm()
     if form.validate_on_submit():
         post = Post(

@@ -1,6 +1,7 @@
 <li id="c{{ comment.id }}" class="mb-6 p-4 bg-white rounded-lg shadow-md border-t-2 border-blue-300">
   <div class="flex justify-between items-center mb-2">
     <p class="text-sm text-gray-800">
+      <span class="badge">{{ post.author.role_icon }}</span>
       <strong class="font-semibold text-blue-700">{{ comment.author.username }}</strong>
       on <span class="text-gray-500">{{ comment.timestamp.strftime('%Y-%m-%d') }}</span>
     </p>
@@ -19,7 +20,7 @@
 
   {% if comment.is_removed %}
     <p class="italic text-gray-500 mb-3">
-      [removed by {{ comment.removed_by }}
+      [removed by {{ comment.author.role_icon }}{{ comment.removed_by }}
       at {{ comment.removed_at.strftime('%Y-%m-%d %H:%M') }}]
     </p>
   {% else %}

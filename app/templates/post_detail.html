@@ -8,9 +8,7 @@
     <p class="post-meta text-gray-600 text-sm mb-6">
         By
         <strong class="font-semibold text-gray-800">
-        <a href="{{ url_for('blog.user_posts', username=post.author.username) }}">
-            {{ post.author.username }}
-        </a>
+        <span class="badge">{{ post.author.role_icon }}</span><a href="{{ url_for('blog.user_posts', username=post.author.username) }}">{{ post.author.username }}</a>
         </strong>
         on
         <span class="text-gray-700">{{ post.display_date | safe }}</span>

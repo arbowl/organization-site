@@ -25,11 +25,13 @@ def login():
         flash("Invalid username or password.", "danger")
     return render_template("auth/login.html", form=form)
 
+
 @auth_bp.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("blog.index"))
+
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():

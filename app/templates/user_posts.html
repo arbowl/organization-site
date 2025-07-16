@@ -2,7 +2,7 @@
 {% block title %}Posts by {{ user.username }} - Dismantl{% endblock %}
 {% block content %}
     <div class="text-center mb-8">
-        <h2 class="text-3xl font-extrabold text-gray-900">Posts by {{ user.username }}</h2>
+        <h2 class="text-3xl font-extrabold text-gray-900">Posts by {{ user.username }}</h2> ({{ user.role.capitalize() }})
     </div>
 
     {% if entries %}

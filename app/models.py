@@ -19,11 +19,26 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default="user")
     posts = db.relationship("Post", backref="author", lazy="dynamic")
 
+    @property
+    def role_icon(self):
+        match self.role:
+            case "admin":
+                return "⭐"
+            case "moderator":
+                return "🛡️"
+            case "contributor":
+                return "📝"
+            case _:
+                return "👤"
+
     def is_admin(self):
         return self.role == "admin"
 
     def is_moderator(self):
         return self.role == "moderator"
+
+    def is_contributor(self):
+        return self.role in ["contributor", "admin", "moderator"]
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
