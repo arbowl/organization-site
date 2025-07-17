@@ -87,7 +87,6 @@ class Comment(db.Model):
     removed_by = db.Column(db.String(20), nullable=True)
     removed_at = db.Column(db.DateTime, nullable=True)
     author = db.relationship("User", backref="comments")
-    #post = db.relationship("Post", backref=db.backref("comments", lazy="dynamic"))
     replies = db.relationship("Comment", backref=db.backref("parent", remote_side=[id]), lazy="dynamic")
 
 

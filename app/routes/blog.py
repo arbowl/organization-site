@@ -183,7 +183,7 @@ def delete_post(post_id):
 def user_posts(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get("page", 1, type=int)
-    pagination = (
+    posts_pagination = (
         db.session.query(
             Post,
             func.count(Comment.id).label("comment_count"),
@@ -196,12 +196,26 @@ def user_posts(username):
         .order_by(Post.timestamp.desc())
         .paginate(page=page, per_page=10, error_out=False)
     )
-    entries = [{
+    posts_entries = [{
         "post": p,
         "likes": like_count,
         "comments": comment_count
-    } for p, comment_count, like_count in pagination.items]
-    return render_template("user_posts.html", user=user, entries=entries, pagination=pagination)
+    } for p, comment_count, like_count in posts_pagination.items]
+
+    comments_pagination = Comment.query.filter_by(author_id=user.id)\
+                                .order_by(Comment.timestamp.desc())\
+                                .paginate(page=page, per_page=10, error_out=False)
+    
+    comments_entries = comments_pagination.items
+    return render_template(
+        "user_posts.html",
+        user=user,
+        posts_entries=posts_entries,
+        posts_pagination=posts_pagination,
+        comments_entries=comments_entries,
+        comments_pagination=comments_pagination
+    )
+
 
 
 @blog_bp.route("/comment/remove/<int:comment_id>", methods=["POST"])

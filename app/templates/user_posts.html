@@ -2,12 +2,14 @@
 {% block title %}Posts by {{ user.username }} - Dismantl{% endblock %}
 {% block content %}
     <div class="text-center mb-8">
-        <h2 class="text-3xl font-extrabold text-gray-900">Posts by {{ user.username }}</h2> ({{ user.role.capitalize() }})
+        <h2 class="text-3xl font-extrabold text-gray-900">{{ user.username }}</h2> ({{ user.role.capitalize() }})
     </div>
 
-    {% if entries %}
+    {# Posts Section #}
+    <h3 class="text-2xl font-bold text-gray-800 mb-4 max-w-2xl mx-auto">Posts ({{ posts_entries|length }})</h3>
+    {% if posts_entries %}
         <ul class="space-y-6 max-w-2xl mx-auto">
-            {% for entry in entries %}
+            {% for entry in posts_entries %}
                 <li class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border-t-4 border-blue-300">
                     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2">
                         <h4 class="text-2xl font-semibold text-blue-700 hover:text-blue-900 mb-1 sm:mb-0 pr-2">
@@ -29,24 +31,25 @@
                 </li>
             {% endfor %}
         </ul>
-        <nav aria-label="Pages" class="mt-12">
+        <nav aria-label="Posts Pages" class="mt-12">
             <ul class="flex justify-center items-center space-x-2">
-                {% if pagination.has_prev %}                            <li>
-                                <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
-                                    href="{{ url_for('blog.user_posts', username=user.username, page=pagination.prev_num) }}">
-                                    Previous
-                                </a>
-                            </li>
+                {% if posts_pagination.has_prev %}
+                    <li>
+                        <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
+                            href="{{ url_for('blog.user_posts', username=user.username, page=posts_pagination.prev_num) }}">
+                            Previous Posts
+                        </a>
+                    </li>
                 {% else %}
                     <li>
                         <span class="px-4 py-2 border border-gray-200 text-gray-400 rounded-md cursor-not-allowed">
-                            Prev
+                            Prev Posts
                         </span>
                     </li>
                 {% endif %}
-                {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% for p in posts_pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if p %}
-                        {% if p == pagination.page %}
+                        {% if p == posts_pagination.page %}
                             <li>
                                 <span class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md">
                                     {{ p }}
@@ -68,16 +71,17 @@
                         </li>
                     {% endif %}
                 {% endfor %}
-                {% if pagination.has_next %}                            <li>
-                                <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
-                                    href="{{ url_for('blog.user_posts', username=user.username, page=pagination.next_num) }}">
-                                    Next
-                                </a>
-                            </li>
+                {% if posts_pagination.has_next %}
+                    <li>
+                        <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
+                            href="{{ url_for('blog.user_posts', username=user.username, page=posts_pagination.next_num) }}">
+                            Next Posts
+                        </a>
+                    </li>
                 {% else %}
                     <li>
                         <span class="px-4 py-2 border border-gray-200 text-gray-400 rounded-md cursor-not-allowed">
-                            Next
+                            Next Posts
                         </span>
                     </li>
                 {% endif %}
@@ -86,6 +90,83 @@
     {% else %}
         <p class="text-center text-gray-600 italic mt-8">{{ user.username }} hasn't written any posts yet.</p>
     {% endif %}
+
+    <hr class="my-12 max-w-2xl mx-auto border-gray-300">
+
+    {# Comments Section #}
+    <h3 class="text-2xl font-bold text-gray-800 mb-4 max-w-2xl mx-auto">Comments ({{ comments_entries|length }})</h3>
+    {% if comments_entries %}
+        <ul class="space-y-6 max-w-2xl mx-auto">
+            {% for comment in comments_entries %}
+                <li class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border-t-4 border-green-300">
+                    <p class="text-gray-800 text-lg mb-2">"{{ comment.content }}"</p>
+                    <small class="text-gray-500 text-sm block mb-2">
+                        Commented on: <a href="{{ url_for('blog.view_post', slug=comment.post.slug) }}" class="text-blue-600 hover:underline">{{ comment.post.title }}</a>
+                        on {{ comment.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                    </small>
+                </li>
+            {% endfor %}
+        </ul>
+        <nav aria-label="Comments Pages" class="mt-12">
+            <ul class="flex justify-center items-center space-x-2">
+                {% if comments_pagination.has_prev %}
+                    <li>
+                        <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
+                            href="{{ url_for('blog.user_posts', username=user.username, page=comments_pagination.prev_num) }}">
+                            Previous Comments
+                        </a>
+                    </li>
+                {% else %}
+                    <li>
+                        <span class="px-4 py-2 border border-gray-200 text-gray-400 rounded-md cursor-not-allowed">
+                            Prev Comments
+                        </span>
+                    </li>
+                {% endif %}
+                {% for p in comments_pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                        {% if p == comments_pagination.page %}
+                            <li>
+                                <span class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md">
+                                    {{ p }}
+                                </span>
+                            </li>
+                        {% else %}
+                            <li>
+                                <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
+                                    href="{{ url_for('blog.user_posts', username=user.username, page=p) }}">
+                                    {{ p }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li>
+                            <span class="px-4 py-2 border border-gray-200 text-gray-500 rounded-md cursor-not-allowed">
+                                ...
+                            </span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                {% if comments_pagination.has_next %}
+                    <li>
+                        <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
+                            href="{{ url_for('blog.user_posts', username=user.username, page=comments_pagination.next_num) }}">
+                            Next Comments
+                        </a>
+                    </li>
+                {% else %}
+                    <li>
+                        <span class="px-4 py-2 border border-gray-200 text-gray-400 rounded-md cursor-not-allowed">
+                            Next Comments
+                        </span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% else %}
+        <p class="text-center text-gray-600 italic mt-8">{{ user.username }} hasn't made any comments yet.</p>
+    {% endif %}
+
     <br>
     <br>
     <br>
