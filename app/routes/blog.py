@@ -257,3 +257,8 @@ def search():
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         posts = pagination.items
     return render_template("search.html", form=form, posts=posts, pagination=pagination)
+
+
+@blog_bp.route("/502")
+def five_oh_two():
+    return render_template("502.html")

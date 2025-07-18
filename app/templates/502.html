@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Site Maintenance - Dismantl{% endblock %}
 {% block content %}
-    <div class="text-center mb-10 mt-20">
+    <div class="text-center mb-10">
         <div>
             <img src="{{ url_for('static', filename='favicon.ico') }}" alt="D" class="h-10 dismantl-d">
                 <h2 class="text-4xl font-extrabold text-gray-900 mb-4 ismantl" style="display: inline;">
@@ -21,9 +21,14 @@
             Please refresh the page in a few minutes.
         </p>
         <div class="mt-6">
-            <button onclick="location.reload()" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
-                Refresh Page
-            </button>
+            <a href="{{ url_for('blog.index') }}">
+                <button class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
+                    Refresh Page
+                </button>
+            </a>
         </div>
     </div>
+    <br>
+    <br>
+    <br>
 {% endblock %}
