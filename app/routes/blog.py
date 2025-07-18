@@ -259,6 +259,6 @@ def search():
     return render_template("search.html", form=form, posts=posts, pagination=pagination)
 
 
-@blog_bp.route("/502")
+@blog_bp.route("/maintenance")
 def five_oh_two():
-    return render_template("502.html")
+    return render_template("maintenance.html")
