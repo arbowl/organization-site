@@ -30,7 +30,6 @@ def index() -> str:
         .outerjoin(PostLike, PostLike.post_id == Post.id)
         .group_by(Post.id)
         .order_by(Post.timestamp.desc())
-        .limit(5)
         .all()
     )
     posts = [{
