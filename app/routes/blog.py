@@ -7,11 +7,11 @@ from datetime import datetime, timezone
 from flask import Blueprint, render_template, redirect, url_for, flash, abort, request
 from flask_login import login_required, current_user
 from slugify import slugify
-from sqlalchemy import func
+from sqlalchemy import or_, func
 
 from app import db
 from app.models import Post, User, Comment, PostLike, CommentLike
-from app.forms import PostForm, CommentForm
+from app.forms import PostForm, CommentForm, SearchForm
 from app.utils import get_rss_highlights, scrape_events
 
 blog_bp: Blueprint = Blueprint("blog", __name__)
@@ -238,3 +238,23 @@ def remove_comment(comment_id):
     db.session.commit()
     flash("Comment content removed.", "info")
     return redirect(request.referrer or url_for("blog.view_post", slug=comment.post.slug))
+
+
+@blog_bp.route("/search")
+def search():
+    form = SearchForm(request.args, meta={"csrf": False})
+    posts = []
+    pagination = None
+    if form.validate():
+        q = f"%{form.q.data}%"
+        page = request.args.get("page", 1, type=int)
+        per_page = 10
+        query = Post.query.filter(
+            or_(
+                Post.title.ilike(q),
+                Post.content.ilike(q)
+            )
+        ).order_by(Post.timestamp.desc())
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        posts = pagination.items
+    return render_template("search.html", form=form, posts=posts, pagination=pagination)

@@ -40,3 +40,8 @@ class CommentForm(FlaskForm):
     parent_id = HiddenField()
     content = TextAreaField("Comment", validators=[DataRequired(), Length(max=5000)])
     submit = SubmitField("Post Comment")
+
+
+class SearchForm(FlaskForm):
+    q = StringField("Search", validators=[DataRequired(), Length(min=1, max=140)])
+    submit = SubmitField("Go")

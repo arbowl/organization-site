@@ -3,9 +3,15 @@
 from os import getenv
 
 from app import create_app
+from app.forms import SearchForm
 
 config_name = getenv("FLASK_CONFIG", "development")
 app = create_app(config_name)
+
+
+@app.context_processor
+def inject_search_form():
+    return {"form": SearchForm(meta={"csrf": False})}
 
 if __name__ == "__main__":
     host = getenv("HOST", "0.0.0.0")
