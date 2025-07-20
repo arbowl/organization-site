@@ -2,8 +2,12 @@
 
 from datetime import datetime, timezone
 from functools import partial
+
 from flask_login import UserMixin
+from sqlalchemy.orm import foreign
+from sqlalchemy.sql import and_
 from werkzeug.security import generate_password_hash, check_password_hash
+
 from app import db
 
 timestamp = partial(datetime.now, timezone.utc)
@@ -57,7 +61,7 @@ class Post(db.Model):
     title = db.Column(db.String(140), nullable=False)
     slug = db.Column(db.String(140), unique=True, nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, index=True, default=timestamp)
+    timestamp = db.Column(db.DateTime, index=True, default=timestamp())
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     updated_at = db.Column(db.DateTime, index=True, nullable=True)
     comments = db.relationship(
@@ -79,7 +83,7 @@ class Comment(db.Model):
     __tablename__ = "comments"
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=timestamp, index=True)
+    timestamp = db.Column(db.DateTime, default=timestamp(), index=True)
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
     parent_id = db.Column(db.Integer, db.ForeignKey("comments.id"), nullable=True)
@@ -95,7 +99,7 @@ class PostLike(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
-    timestamp = db.Column(db.DateTime, default=timestamp)
+    timestamp = db.Column(db.DateTime, default=timestamp())
     user = db.relationship("User", backref="post_likes")
     post = db.relationship("Post", backref=db.backref("likes", lazy="dynamic", cascade="all, delete-orphan"))
 
@@ -105,6 +109,46 @@ class CommentLike(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     comment_id = db.Column(db.Integer, db.ForeignKey("comments.id"), nullable=False)
-    timestamp = db.Column(db.DateTime, default=timestamp)
+    timestamp = db.Column(db.DateTime, default=timestamp())
     user = db.relationship("User", backref="comment_likes")
     comment = db.relationship("Comment", backref=db.backref("likes", lazy="dynamic", cascade="all, delete-orphan"))
+
+
+class Notification(db.Model):
+    __tablename__ = "notifications"
+    id = db.Column(db.Integer, primary_key=True)
+    recipient_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    actor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    verb = db.Column(db.String(50), nullable=False)
+    target_type = db.Column(db.String(20), nullable=False)
+    target_id = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.DateTime, default=timestamp(), index=True)
+    read_at = db.Column(db.DateTime, nullable=True)
+    recipient = db.relationship(
+        User,
+        foreign_keys=[recipient_id],
+        backref="notifications"
+    )
+    actor = db.relationship(
+        User,
+        foreign_keys=[actor_id],
+    )
+    post = db.relationship(
+        Post,
+        primaryjoin=and_(target_type == "post", foreign(target_id) == Post.id),
+        viewonly=True,
+    )
+    comment = db.relationship(
+        Comment,
+        primaryjoin=and_(target_type == "comment", foreign(target_id) == Comment.id),
+        viewonly=True
+    )
+
+    @property
+    def snippet(self):
+        text = ""
+        if self.target_type == "post" and self.post:
+            text = getattr(self.post, "content", "") or ""
+        if self.target_type == "comment" and self.comment:
+            text = getattr(self.comment, "content", "") or ""
+        return (text[:100] + "...") if len(text) > 100 else text

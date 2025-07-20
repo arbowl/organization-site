@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+  <div class="text-center mb-8">
+    <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Notifications</h2>
+  </div>
+  <div class="max-w-2xl mx-auto mb-4 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border-t-4 border-blue-300">
+    {# Tabs #}
+    <nav class="mb-4 border-b">
+      {% for t,label in [
+        ('unread','Unread'),
+        ('read','Read'),
+        ('replies','Replies'),
+        ('likes','Likes')
+      ] %}
+        <a href="{{ url_for('blog.notifications', tab=t) }}"
+          class="inline-block px-3 py-2
+                  {{ 'border-b-2 border-blue-600 font-semibold' 
+                    if active_tab==t else 'text-gray-600 hover:text-gray-800' }}">
+          {{ label }}
+        </a>
+      {% endfor %}
+    </nav>
+
+    {# Pagination nav (above) #}
+    {% if pagination.pages > 1 %}
+      <div class="mb-4">
+        {% for p in pagination.iter_pages() %}
+          {% if not p %}
+            <span class="px-2">…</span>
+          {% elif p == pagination.page %}
+            <span class="px-3 py-1 font-bold">{{ p }}</span>
+          {% else %}
+            <a href="{{ url_for('blog.notifications', tab=active_tab, page=p) }}"
+              class="px-3 py-1 hover:underline">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <ul class="divide-y">
+      {% if notifications %}
+        {% for n in notifications %}
+          {% set is_unread = (n.read_at is none) %}
+          <li class="py-4 {{ 'font-bold italic bg-gray-50' if is_unread }}">
+            <div class="flex items-start space-x-4">
+              <div class="flex-1">
+                <p class="mb-1">
+                  <strong>{{ n.actor.username }}</strong> {{ n.verb }}
+                  {% if n.target_type=='post' %}
+                    <a href="{{ url_for('blog.view_post', slug=n.post.slug) }}"
+                      class="text-blue-600 hover:underline">
+                      your post 
+                    </a>
+                  {% else %}
+                    <a href="{{ url_for('blog.view_post', slug=n.comment.post.slug) }}#c{{ n.comment.id }}"
+                      class="text-blue-600 hover:underline">
+                      {{ "your post" if n.verb=='commented on' else "your comment" }}
+                    </a>
+                  {% endif %}
+                  <small class="text-gray-500 ml-2">{{ n.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                </p>
+                {% if n.snippet %}
+                  <blockquote class="pl-4 border-l-2 italic text-gray-700">
+                    {{ n.snippet }}
+                  </blockquote>
+                {% endif %}
+              </div>
+
+              {# only comment‐type & unread get a “Mark read & go” button #}
+              {% if is_unread and n.target_type=='comment' %}
+                <form method="post"
+                      action="{{ url_for('blog.mark_notification_read', notif_id=n.id) }}"
+                      class="ml-4 flex-shrink-0">
+                  {% set next_url = url_for('blog.view_post', slug=n.comment.post.slug) ~ '#c' ~ n.comment.id %}
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="next" value="{{ next_url }}">
+                  <button type="submit"
+                          class="text-sm text-blue-600 hover:underline">
+                    Mark read &amp; go
+                  </button>
+                </form>
+              {% endif %}
+
+            </div>
+          </li>
+        {% endfor %}
+      {% else %}
+          <p class="text-center text-gray-600 italic mt-8">No notifications to display.</p>
+      {% endif %}
+    </ul>
+
+    {# Pagination nav (below) #}
+    {% if pagination.pages > 1 %}
+      <div class="mt-4">
+        {% for p in pagination.iter_pages() %}
+          {% if not p %}
+            <span class="px-2">…</span>
+          {% elif p == pagination.page %}
+            <span class="px-3 py-1 font-bold">{{ p }}</span>
+          {% else %}
+            <a href="{{ url_for('blog.notifications', tab=active_tab, page=p) }}"
+              class="px-3 py-1 hover:underline">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+  <br>
+  <br>
+  <br>
+{% endblock %}

@@ -4,31 +4,45 @@ This handles any routes related to the blog post portion of the site.
 """
 
 from datetime import datetime, timezone
+from functools import partial
 from flask import Blueprint, render_template, redirect, url_for, flash, abort, request
 from flask_login import login_required, current_user
 from slugify import slugify
 from sqlalchemy import or_, func
+from sqlalchemy.orm import aliased
 
 from app import db
-from app.models import Post, User, Comment, PostLike, CommentLike
+from app.models import Post, User, Comment, PostLike, CommentLike, Notification
 from app.forms import PostForm, CommentForm, SearchForm
 from app.utils import get_rss_highlights, scrape_events
 
 blog_bp: Blueprint = Blueprint("blog", __name__)
+timestamp = partial(datetime.now, timezone.utc)
 
 
 @blog_bp.route("/")
 def index() -> str:
     """The landing page of the site"""
+    comment_count_subq = (
+        db.session.query(
+            Comment.post_id,
+            func.count(Comment.id).label("comment_count")
+        ).group_by(Comment.post_id).subquery()
+    )
+    like_count_subq = (
+        db.session.query(
+            PostLike.post_id,
+            func.count(PostLike.id).label("like_count")
+        ).group_by(PostLike.post_id).subquery()
+    )
     post_data = (
         db.session.query(
             Post,
-            func.count(Comment.id).label("comment_count"),
-            func.count(PostLike.id).label("like_count"),
+            func.coalesce(comment_count_subq.c.comment_count, 0),
+            func.coalesce(like_count_subq.c.like_count, 0)
         )
-        .outerjoin(Comment, Comment.post_id == Post.id)
-        .outerjoin(PostLike, PostLike.post_id == Post.id)
-        .group_by(Post.id)
+        .outerjoin(comment_count_subq, Post.id == comment_count_subq.c.post_id)
+        .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
         .order_by(Post.timestamp.desc())
         .all()
     )
@@ -50,15 +64,26 @@ def index() -> str:
 @blog_bp.route("/all")
 def all_posts() -> str:
     page = request.args.get("page", 1, type=int)
+    comment_count_subq = (
+        db.session.query(
+            Comment.post_id,
+            func.count(Comment.id).label("comment_count")
+        ).group_by(Comment.post_id).subquery()
+    )
+    like_count_subq = (
+        db.session.query(
+            PostLike.post_id,
+            func.count(PostLike.id).label("like_count")
+        ).group_by(PostLike.post_id).subquery()
+    )
     pagination = (
         db.session.query(
             Post,
-            func.count(Comment.id).label("comment_count"),
-            func.count(PostLike.id).label("like_count"),
+            func.coalesce(comment_count_subq.c.comment_count, 0),
+            func.coalesce(like_count_subq.c.like_count, 0)
         )
-        .outerjoin(Comment, Comment.post_id == Post.id)
-        .outerjoin(PostLike, PostLike.post_id == Post.id)
-        .group_by(Post.id)
+        .outerjoin(comment_count_subq, Post.id == comment_count_subq.c.post_id)
+        .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
         .order_by(Post.timestamp.desc())
         .paginate(page=page, per_page=10, error_out=False)
     )
@@ -92,6 +117,22 @@ def view_post(slug: str) -> str:
         )
         db.session.add(comment)
         db.session.commit()
+        if comment.parent_id:
+            recipient = comment.parent.author
+            verb = "replied to"
+        else:
+            recipient = post.author
+            verb = "commented on"
+        if recipient.id != current_user.id:
+            notif = Notification(
+                recipient_id = recipient.id,
+                actor_id = current_user.id,
+                verb = verb,
+                target_type = "comment",
+                target_id = comment.id
+            )
+            db.session.add(notif)
+            db.session.commit()
         return redirect(url_for("blog.view_post", slug=slug) + f"#c{comment.id}")
     comments = (
         Comment.query.filter_by(post_id=post.id, parent_id=None
@@ -110,6 +151,15 @@ def toggle_post_like(post_id):
         db.session.delete(like)
     else:
         db.session.add(PostLike(user=current_user, post=post))
+        if post.author.id != current_user.id:
+            notif = Notification(
+                recipient_id = post.author_id,
+                actor_id = current_user.id,
+                verb = "liked",
+                target_type = "post",
+                target_id = post.id,
+            )
+            db.session.add(notif)
     db.session.commit()
     return redirect(request.referrer or url_for("blog.view_post", slug=post.slug))
 
@@ -123,6 +173,15 @@ def toggle_comment_like(comment_id):
         db.session.delete(like)
     else:
         db.session.add(CommentLike(user=current_user, comment=comment))
+        if comment.author_id != current_user.id:
+            notif = Notification(
+                recipient_id = comment.author_id,
+                actor_id = current_user.id,
+                verb = "liked",
+                target_type = "comment",
+                target_id = comment.id,
+            )
+            db.session.add(notif)
     db.session.commit()
     return redirect(request.referrer or url_for("blog.view_post", slug=comment.post.slug))
 
@@ -216,7 +275,6 @@ def user_posts(username):
     )
 
 
-
 @blog_bp.route("/comment/remove/<int:comment_id>", methods=["POST"])
 @login_required
 def remove_comment(comment_id):
@@ -262,3 +320,44 @@ def search():
 @blog_bp.route("/maintenance")
 def five_oh_two():
     return render_template("maintenance.html")
+
+
+@blog_bp.route("/notifications")
+@login_required
+def notifications():
+    tab = request.args.get("tab", "unread")
+    page = request.args.get("page", 1, type=int)
+    per_page = 20
+    q = Notification.query.filter_by(recipient_id=current_user.id)
+    if tab == "unread":
+        q = q.filter(Notification.read_at == None)
+    elif tab == "read":
+        q = q.filter(Notification.read_at != None)
+    elif tab == "replies":
+        q = q.filter(Notification.verb.in_(["replied to", "commented on"]))
+    elif tab == "likes":
+        q = q.filter(Notification.verb.in_(["liked"]))
+    pagination = q.order_by(Notification.timestamp.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    notifs = pagination.items
+    if tab == "unread":
+        Notification.query.filter(
+            Notification.recipient_id==current_user.id,
+            Notification.verb.in_(["liked"]),
+            Notification.read_at.is_(None),
+        ).update({"read_at": timestamp()})
+        db.session.commit()
+    return render_template("notifications.html", notifications=notifs, pagination=pagination, active_tab=tab)
+
+
+@blog_bp.route("/notifications/read/<int:notif_id>", methods=["POST"])
+@login_required
+def mark_notification_read(notif_id):
+    notif: Notification = Notification.query.filter_by(
+        id=notif_id,
+        recipient_id = current_user.id
+    ).first_or_404()
+    if notif.read_at is None:
+        notif.read_at = timestamp()
+        db.session.commit()
+    next_url = request.form.get("next") or url_for("blog.notifications")
+    return redirect(next_url)
