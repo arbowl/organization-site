@@ -9,10 +9,9 @@ from flask import Blueprint, render_template, redirect, url_for, flash, abort, r
 from flask_login import login_required, current_user
 from slugify import slugify
 from sqlalchemy import or_, func
-from sqlalchemy.orm import aliased
 
 from app import db
-from app.models import Post, User, Comment, PostLike, CommentLike, Notification
+from app.models import Post, User, Comment, PostLike, CommentLike, Notification, Report
 from app.forms import PostForm, CommentForm, SearchForm
 from app.utils import get_rss_highlights, scrape_events
 
@@ -361,3 +360,42 @@ def mark_notification_read(notif_id):
         db.session.commit()
     next_url = request.form.get("next") or url_for("blog.notifications")
     return redirect(next_url)
+
+
+@blog_bp.route("/report", methods=["GET", "POST"])
+@login_required
+def report():
+    if request.method == "GET":
+        post_id = request.args.get("post_id", type=int)
+        comment_id = request.args.get("comment_id", type=int)
+        if not (post_id or comment_id):
+            abort(400)
+        post_content = Post.query.get(post_id) if post_id else None
+        comment_content = Comment.query.get(comment) if comment_id else None
+        return render_template("report_form.html", post=post_content, comment=comment_content)
+    post_id = request.form.get("post_id", type=int)
+    comment_id = request.form.get("comment_id", type=int)
+    reason = request.form.get("reason", "").strip()[:200]
+    if not (post_id or comment_id) or not reason:
+        flash("Please select something to report, and give a reason." "error")
+        return redirect(request.referrer or url_for("blog.all_posts"))
+    if comment_id:
+        comment = Comment.query.get_or_404(comment_id)
+        return_page = lambda: redirect(url_for("blog.view_post", slug=comment.post.slug) + f"#c{comment.id}")
+    else:
+        post = Post.query.get_or_404(post_id)
+        return_page = lambda: redirect(url_for("blog.view_post", slug=post.slug))
+    existing = Report.query.filter_by(reporter_id=current_user.id, post_id=post_id, comment_id=comment_id).first()
+    if existing:
+        flash("You've already reported this.", "info")
+        return return_page()
+    rpt = Report(
+        reporter_id=current_user.id,
+        post_id=post_id,
+        comment_id=comment_id,
+        reason=reason,
+    )
+    db.session.add(rpt)
+    db.session.commit()
+    flash("Report submitted--thank you.", "success")
+    return return_page()

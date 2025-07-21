@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 from functools import partial
 
+from flask import url_for
 from flask_login import UserMixin
 from sqlalchemy.orm import foreign
 from sqlalchemy.sql import and_
@@ -40,6 +41,9 @@ class User(UserMixin, db.Model):
 
     def is_moderator(self):
         return self.role == "moderator"
+
+    def is_authority(self):
+        return self.role in ["admin", "moderator"]
 
     def is_contributor(self):
         return self.role in ["contributor", "admin", "moderator"]
@@ -152,3 +156,27 @@ class Notification(db.Model):
         if self.target_type == "comment" and self.comment:
             text = getattr(self.comment, "content", "") or ""
         return (text[:100] + "...") if len(text) > 100 else text
+
+
+class Report(db.Model):
+    __tablename__ = "reports"
+    id = db.Column(db.Integer, primary_key=True)
+    reporter_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=True)
+    comment_id = db.Column(db.Integer, db.ForeignKey("comments.id"), nullable=True)
+    reason = db.Column(db.String(200), nullable=True)
+    timestamp = db.Column(db.DateTime, default=timestamp(), index=True)
+    status = db.Column(db.String(20), nullable=False, default="new")
+    handled_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    handled_at = db.Column(db.DateTime, nullable=True)
+    reporter = db.relationship("User", foreign_keys=[reporter_id])
+    handler = db.relationship("User", foreign_keys=[handled_by])
+    post = db.relationship("Post", backref="reports")
+    comment = db.relationship("Comment", backref="reports")
+
+    @property
+    def target_url(self):
+        if self.post_id:
+            return url_for("blog.view_post", slug=self.post.slug)
+        elif self.comment_id:
+            return url_for("blog.view_post", slug=self.comment.post.slug) + f"#c{self.comment.id}"

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Report Content{% endblock %}
+
+{% block content %}
+    <div class="text-center mb-8">
+        <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Report Content</h2>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                    <div class="p-3 mb-2 rounded-md
+                        {% if category == 'success' %}bg-green-100 text-green-800 border border-green-200
+                        {% elif category == 'error' %}bg-red-100 text-red-800 border border-red-200
+                        {% elif category == 'info' %}bg-blue-100 text-blue-800 border border-blue-200
+                        {% else %}bg-gray-100 text-gray-800 border border-gray-200{% endif %}
+                    ">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+  <div class="max-w-2xl mx-auto mb-4 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border-t-4 border-red-300">
+    <form method="post" action="{{ url_for('blog.report') }}" class="space-y-4">
+
+        {% if post %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="post_id" value="{{ post.id }}">
+          <p>You are reporting <strong>this post</strong>:</p>
+          <blockquote>
+            {{ post.content | md }}
+          </blockquote>
+        {% endif %}
+        {% if comment %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="comment_id" value="{{ comment.id }}">
+          <p>You are reporting <strong>this comment</strong>:</p>
+          <blockquote>
+          {{ comment.content | e }}
+          </blockquote>
+        {% endif %}
+
+        <div>
+          <label for="reason" class="block font-medium">
+            Please tell us why you’re reporting (required):
+          </label>
+          <textarea id="reason"
+                    name="reason"
+                    rows="4"
+                    required
+                    class="w-full p-2 border rounded focus:ring-blue-500">
+          </textarea>
+        </div>
+
+        <button type="submit"
+                class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+          Submit Report
+        </button>
+      </form>
+    </div>
+    <br>
+    <br>
+    <br>
+{% endblock %}
