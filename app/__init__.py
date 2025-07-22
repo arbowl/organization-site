@@ -9,14 +9,22 @@ from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from flask_login import LoginManager, current_user
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 from markupsafe import Markup
 
 from app.utils import md
 
 
 db = SQLAlchemy()
+app = Flask(__name__, instance_relative_config=True)
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[]
+)
+limiter.init_app(app)
 migrate = Migrate()
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
@@ -31,7 +39,7 @@ class MyAdminView(AdminIndexView):
 
 
 class ReportAdmin(ModelView):
-    column_list = ["timestamp", "reporter.username", "post_id", "comment_id", "reason", "view", "handler", "status"]
+    column_list = ["timestamp", "reporter.username", "post_id", "comment_id", "reason", "view", "remove", "handler", "status"]
     column_labels = {"reporter.username": "Reporter", "view": "View"}
 
     def _get_handler(self):
@@ -56,7 +64,21 @@ class ReportAdmin(ModelView):
     def _view_link_formatter(self, context, model, name):
         return Markup(f'<a href="{model.target_url}" target="_blank">Link</a>')
 
-    column_formatters = {"view": _view_link_formatter}
+    def _remove_content_formatter(self, context, model, name):
+        url = ""
+        if model.comment_id:
+            url = url_for("blog.remove_comment", comment_id=model.comment_id)
+        elif model.post_id:
+            url = url_for("blog.delete_post", post_id=model.post_id)
+        csrf = generate_csrf()
+        return Markup(f'''
+            <form action="{url}" method="post" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{csrf}">
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this?');">Remove</button>
+            </form>
+        ''')
+
+    column_formatters = {"view": _view_link_formatter, "remove": _remove_content_formatter}
 
     def is_accessible(self):
         return current_user.is_authenticated and current_user.is_authority()
@@ -80,9 +102,11 @@ class UserAdmin(ModelView):
 
     form_excluded_columns = ['password_hash']
 
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.is_admin()
+
 
 def create_app(config_name: Optional[str] = None) -> Flask:
-    app = Flask(__name__, instance_relative_config=True)
     admin = Admin(app, name="Site Admin", index_view=MyAdminView())
     config_name = config_name or getenv("FLASK_CONFIG", "development")
     app.config.from_object(f"config.{config_name.capitalize()}Config")

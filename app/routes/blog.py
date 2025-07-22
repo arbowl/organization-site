@@ -10,7 +10,7 @@ from flask_login import login_required, current_user
 from slugify import slugify
 from sqlalchemy import or_, func
 
-from app import db
+from app import db, limiter
 from app.models import Post, User, Comment, PostLike, CommentLike, Notification, Report
 from app.forms import PostForm, CommentForm, SearchForm
 from app.utils import get_rss_highlights, scrape_events
@@ -142,6 +142,7 @@ def view_post(slug: str) -> str:
 
 
 @blog_bp.route("/like/post/<int:post_id>", methods=["POST"])
+@limiter.limit("20 per day", key_func=lambda: current_user.id)
 @login_required
 def toggle_post_like(post_id):
     post = Post.query.get_or_404(post_id)
@@ -164,6 +165,7 @@ def toggle_post_like(post_id):
 
 
 @blog_bp.route("/like/comment/<int:comment_id>", methods=["POST"])
+@limiter.limit("20 per day", key_func=lambda: current_user.id)
 @login_required
 def toggle_comment_like(comment_id):
     comment = Comment.query.get_or_404(comment_id)
@@ -186,6 +188,7 @@ def toggle_comment_like(comment_id):
 
 
 @blog_bp.route("/create", methods=["GET", "POST"])
+@limiter.limit("5 per hour", key_func=lambda: current_user.id)
 @login_required
 def create_post():
     if not current_user.is_contributor():
@@ -338,6 +341,15 @@ def notifications():
         q = q.filter(Notification.verb.in_(["liked"]))
     pagination = q.order_by(Notification.timestamp.desc()).paginate(page=page, per_page=per_page, error_out=False)
     notifs = pagination.items
+    valid_notifs = []
+    for n in notifs:
+        if n.target_type == "post" and not n.post:
+            n.read_at = timestamp()
+            continue
+        if n.target_type == "comment" and (not n.comment or not n.comment.post):
+            n.read_at = timestamp()
+            continue
+        valid_notifs.append(n)
     if tab == "unread":
         Notification.query.filter(
             Notification.recipient_id==current_user.id,
@@ -345,7 +357,7 @@ def notifications():
             Notification.read_at.is_(None),
         ).update({"read_at": timestamp()})
         db.session.commit()
-    return render_template("notifications.html", notifications=notifs, pagination=pagination, active_tab=tab)
+    return render_template("notifications.html", notifications=valid_notifs, pagination=pagination, active_tab=tab)
 
 
 @blog_bp.route("/notifications/read/<int:notif_id>", methods=["POST"])
@@ -363,6 +375,7 @@ def mark_notification_read(notif_id):
 
 
 @blog_bp.route("/report", methods=["GET", "POST"])
+@limiter.limit("25 per day", key_func=lambda: current_user.id)
 @login_required
 def report():
     if request.method == "GET":

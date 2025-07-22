@@ -64,16 +64,18 @@
               <div class="flex-1">
                 <p class="mb-1">
                   <strong>{{ n.actor.username }}</strong> {{ n.verb }}
-                  {% if n.target_type=='post' %}
+                  {% if n.target_type=='post' and n.post %}
                     <a href="{{ url_for('blog.view_post', slug=n.post.slug) }}"
                       class="text-blue-600 hover:underline">
                       your post 
                     </a>
-                  {% else %}
+                  {% elif n.target_type == 'comment' and n.comment and n.comment.post %}
                     <a href="{{ url_for('blog.view_post', slug=n.comment.post.slug) }}#c{{ n.comment.id }}"
                       class="text-blue-600 hover:underline">
                       {{ "your post" if n.verb=='commented on' else "your comment" }}
                     </a>
+                  {% else %}
+                    <span class="text-gray-400 italic">(original content deleted)</span>
                   {% endif %}
                   <small class="text-gray-500 ml-2">{{ n.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
                 </p>
@@ -85,7 +87,7 @@
               </div>
 
               {# only comment‐type & unread get a “Mark read & go” button #}
-              {% if is_unread and n.target_type=='comment' %}
+              {% if is_unread and n.target_type == 'comment' and n.comment and n.comment.post %}
                 <form method="post"
                       action="{{ url_for('blog.mark_notification_read', notif_id=n.id) }}"
                       class="ml-4 flex-shrink-0">

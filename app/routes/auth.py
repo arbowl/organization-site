@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from app import db
+from app import db, limiter
 from app.models import User
 from app.forms import LoginForm, RegistrationForm
 
@@ -34,6 +34,7 @@ def logout():
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
+@limiter.limit("1 per minute; 2 per day", key_func=lambda: current_user.id)
 def register():
     if current_user.is_authenticated:
         return redirect(url_for("blog.index"))
