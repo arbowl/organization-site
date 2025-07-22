@@ -34,7 +34,7 @@ def logout():
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
-@limiter.limit("1 per minute; 2 per day", key_func=lambda: current_user.id)
+@limiter.limit("2 per day")
 def register():
     if current_user.is_authenticated:
         return redirect(url_for("blog.index"))
