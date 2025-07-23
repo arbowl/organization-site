@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from os import getenv
 from typing import Optional
 
-from flask import Flask, redirect, url_for, request
+from flask import Flask, redirect, url_for, render_template, request
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
@@ -28,6 +28,11 @@ limiter.init_app(app)
 migrate = Migrate()
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
+
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return render_template("429.html"), 429
 
 
 class MyAdminView(AdminIndexView):
