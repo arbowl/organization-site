@@ -35,6 +35,8 @@ class User(UserMixin, db.Model):
                 return "🛡️"
             case "contributor":
                 return "📝"
+            case "banned":
+                return "🚫"
             case _:
                 return "👤"
 
@@ -59,6 +61,9 @@ class User(UserMixin, db.Model):
 
     def is_contributor(self):
         return self.role in ["contributor", "admin", "moderator"]
+
+    def is_banned(self):
+        return self.role == "banned"
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

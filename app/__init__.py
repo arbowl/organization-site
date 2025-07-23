@@ -4,14 +4,14 @@ from datetime import datetime, timezone
 from os import getenv
 from typing import Optional
 
-from flask import Flask, redirect, url_for, render_template, request
+from flask import Flask, redirect, url_for, render_template, abort, request
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_login import LoginManager, current_user
+from flask_login import LoginManager, logout_user, current_user
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from markupsafe import Markup
 
@@ -33,6 +33,18 @@ login_manager.login_view = "auth.login"
 @app.errorhandler(429)
 def ratelimit_handler(e):
     return render_template("429.html"), 429
+
+
+@app.errorhandler(403)
+def forbidden(error):
+    return render_template('403.html'), 403
+
+
+@app.before_request
+def block_banned():
+    if current_user.is_authenticated and current_user.is_banned():
+        logout_user()
+        abort(403)
 
 
 class MyAdminView(AdminIndexView):
@@ -98,6 +110,7 @@ class UserAdmin(ModelView):
     column_list = ["username", "email", "role"]
     form_choices = {
         "role": [
+            ("banned", "Banned"),
             ("user", "User"),
             ("contributor", "Contributor"),
             ("moderator", "Moderator"),

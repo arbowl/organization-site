@@ -17,7 +17,10 @@ def login():
         return redirect(url_for("blog.index"))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user: User = User.query.filter_by(username=form.username.data).first()
+        if user.is_banned():
+            flash("Your account has been banned for violating site conduct rules.", "warning")
+            return redirect(request.referrer or url_for("blog.index"))
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get("next")
