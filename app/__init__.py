@@ -118,6 +118,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     from .routes.auth import auth_bp
     from .routes.blog import blog_bp
     from .routes.pages import pages_bp
+    from .routes.social import social_bp
     from app.models import User, Post, Comment, Report
     admin.add_view(UserAdmin(User, db.session))
     admin.add_view(UserAdmin(Post, db.session))
@@ -126,6 +127,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(blog_bp)
     app.register_blueprint(pages_bp)
+    app.register_blueprint(social_bp)
     with app.app_context():
         db.create_all()
     CSRFProtect(app)

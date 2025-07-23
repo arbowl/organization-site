@@ -46,6 +46,33 @@
             <span class="font-semibold">{{ post.likes.count() }}</span>
         </button>
         </form>
+        {% if current_user.id != post.author_id %}
+            {% if not current_user.subscribed_to_post(post) %}
+                <form method="post"
+                    action="{{ url_for('social.subscribe_post', post_id=post.id) }}"
+                    class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2
+                                bg-blue-100 text-blue-800 rounded-md
+                                hover:bg-blue-200 transition duration-300 ease-in-out">
+                    <span class="text-base">🔔</span>
+                </button>
+                </form>
+            {% else %}
+                <form method="post"
+                    action="{{ url_for('social.unsubscribe_post', post_id=post.id) }}"
+                    class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2
+                                bg-blue-100 text-blue-800 rounded-md
+                                hover:bg-blue-200 transition duration-300 ease-in-out">
+                    <span class="text-base">🔕</span>
+                </button>
+                </form>
+			{% endif %}
+        {% endif %}
         {% if post.author_id != current_user.id %}
             <a href="{{ url_for('blog.report', post_id=post.id) }}"
                 class="text-red-500 inline-flex items-center px-4 py-2

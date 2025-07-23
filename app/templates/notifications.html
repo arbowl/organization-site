@@ -63,16 +63,16 @@
             <div class="flex items-start space-x-4">
               <div class="flex-1">
                 <p class="mb-1">
-                  <strong>{{ n.actor.username }}</strong> {{ n.verb }}
+                  <strong>{{ n.actor.username }}</strong>
                   {% if n.target_type=='post' and n.post %}
                     <a href="{{ url_for('blog.view_post', slug=n.post.slug) }}"
                       class="text-blue-600 hover:underline">
-                      your post 
+                      {{ n.verb }}
                     </a>
                   {% elif n.target_type == 'comment' and n.comment and n.comment.post %}
                     <a href="{{ url_for('blog.view_post', slug=n.comment.post.slug) }}#c{{ n.comment.id }}"
                       class="text-blue-600 hover:underline">
-                      {{ "your post" if n.verb=='commented on' else "your comment" }}
+                      {{ n.verb }}
                     </a>
                   {% else %}
                     <span class="text-gray-400 italic">(original content deleted)</span>

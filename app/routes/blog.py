@@ -11,7 +11,7 @@ from slugify import slugify
 from sqlalchemy import or_, func
 
 from app import db, limiter
-from app.models import Post, User, Comment, PostLike, CommentLike, Notification, Report
+from app.models import Post, User, Comment, PostLike, CommentLike, Notification, Report, UserSubscription, PostSubscription
 from app.forms import PostForm, CommentForm, SearchForm
 from app.utils import get_rss_highlights, scrape_events
 
@@ -118,10 +118,22 @@ def view_post(slug: str) -> str:
         db.session.commit()
         if comment.parent_id:
             recipient = comment.parent.author
-            verb = "replied to"
+            verb = "replied to your comment"
         else:
             recipient = post.author
-            verb = "commented on"
+            verb = "commented on your post"
+            subs = PostSubscription.query.filter_by(post_id=post.id).all()
+            for subscriber in subs:
+                if subscriber.subscriber_id != current_user.id:
+                    notif = Notification(
+                        recipient_id = subscriber.subscriber_id,
+                        actor_id = current_user.id,
+                        verb = "commented on a post you subscribed to",
+                        target_type = "comment",
+                        target_id = comment.id
+                    )
+                    db.session.add(notif)
+            db.session.commit()
         if recipient.id != current_user.id:
             notif = Notification(
                 recipient_id = recipient.id,
@@ -155,7 +167,7 @@ def toggle_post_like(post_id):
             notif = Notification(
                 recipient_id = post.author_id,
                 actor_id = current_user.id,
-                verb = "liked",
+                verb = "liked your post",
                 target_type = "post",
                 target_id = post.id,
             )
@@ -178,7 +190,7 @@ def toggle_comment_like(comment_id):
             notif = Notification(
                 recipient_id = comment.author_id,
                 actor_id = current_user.id,
-                verb = "liked",
+                verb = "liked your comment",
                 target_type = "comment",
                 target_id = comment.id,
             )
@@ -202,6 +214,18 @@ def create_post():
             author=current_user,
         )
         db.session.add(post)
+        db.session.commit()
+        subs = UserSubscription.query.filter_by(user_id=current_user.id).all()
+        for subscriber in subs:
+            if subscriber.subscriber_id != current_user.id:
+                notif = Notification(
+                    recipient_id = subscriber.subscriber_id,
+                    actor_id = current_user.id,
+                    verb = "posted a new article",
+                    target_type = "post",
+                    target_id = post.id
+                )
+                db.session.add(notif)
         db.session.commit()
         flash("Post created!", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
@@ -336,9 +360,9 @@ def notifications():
     elif tab == "read":
         q = q.filter(Notification.read_at != None)
     elif tab == "replies":
-        q = q.filter(Notification.verb.in_(["replied to", "commented on"]))
+        q = q.filter(Notification.verb.in_(["replied to your comment", "commented on your post"]))
     elif tab == "likes":
-        q = q.filter(Notification.verb.in_(["liked"]))
+        q = q.filter(Notification.verb.in_(["liked your comment", "liked your post"]))
     pagination = q.order_by(Notification.timestamp.desc()).paginate(page=page, per_page=per_page, error_out=False)
     notifs = pagination.items
     valid_notifs = []
@@ -353,7 +377,7 @@ def notifications():
     if tab == "unread":
         Notification.query.filter(
             Notification.recipient_id==current_user.id,
-            Notification.verb.in_(["liked"]),
+            Notification.verb.in_(["liked your post", "liked your comment", "posted a new article"]),
             Notification.read_at.is_(None),
         ).update({"read_at": timestamp()})
         db.session.commit()

@@ -1,5 +1,7 @@
 """Models"""
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from functools import partial
 
@@ -35,6 +37,16 @@ class User(UserMixin, db.Model):
                 return "📝"
             case _:
                 return "👤"
+
+    def subscribed_to_user(self, user: User):
+        return UserSubscription.query.filter_by(
+            subscriber_id=self.id, user_id=user.id
+        ).first() is not None
+
+    def subscribed_to_post(self, post: Post):
+        return PostSubscription.query.filter_by(
+            subscriber_id=self.id, post_id=post.id
+        ).first() is not None
 
     def is_admin(self):
         return self.role == "admin"
@@ -180,3 +192,26 @@ class Report(db.Model):
             return url_for("blog.view_post", slug=self.post.slug)
         elif self.comment_id:
             return url_for("blog.view_post", slug=self.comment.post.slug) + f"#c{self.comment.id}"
+
+
+class UserSubscription(db.Model):
+    __tablename__ = "user_subscriptions"
+    id = db.Column(db.Integer, primary_key=True)
+    subscriber_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=timestamp())
+    __table_args__ = (
+        db.UniqueConstraint("subscriber_id", "user_id", name="uq_user_sub"),
+    )
+
+
+class PostSubscription(db.Model):
+    __tablename__ = "post_subscriptions"
+    id = db.Column(db.Integer, primary_key=True)
+    subscriber_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=timestamp())
+    __table_args__ = (
+        db.UniqueConstraint("subscriber_id", "post_id", name="uq_post_sub"),
+    )
+
