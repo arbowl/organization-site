@@ -1,7 +1,7 @@
 <li id="c{{ comment.id }}" class="mb-6 p-4 bg-white rounded-lg shadow-md border-t-2 border-green-300">
   <div class="flex justify-between items-center mb-2">
     <p class="text-sm text-gray-800">
-      <span class="badge">{{ post.author.role_icon }}</span>
+      <span class="badge">{{ comment.author.role_icon }}</span>
       <a href="{{ url_for('blog.user_posts', username=comment.author.username) }}">
         <strong class="font-semibold text-blue-700">{{ comment.author.username }}</strong>
       </a>

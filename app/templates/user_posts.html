@@ -20,7 +20,7 @@
         {% endwith %}
         <div class="flex justify-center items-center gap-2">
             <h2 class="text-3xl font-extrabold text-gray-900 mb-0">{{ user.username }}</h2>
-            {% if current_user.username != user.username %}
+            {% if current_user.is_authenticated and current_user.username != user.username %}
                 {% if not current_user.subscribed_to_user(user) %}
                     <form method="post"
                         action="{{ url_for('social.subscribe_user', username=user.username) }}"
