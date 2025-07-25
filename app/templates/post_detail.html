@@ -123,6 +123,7 @@
         <ul class="comments space-y-6">
             {% for c in comments %}
                 {% set comment = c %}
+                {% set depth = 0 %}
                 {% include 'includes/comment.html' %}
             {% endfor %}
         </ul>

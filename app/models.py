@@ -7,6 +7,7 @@ from functools import partial
 
 from flask import url_for
 from flask_login import UserMixin
+from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import foreign
 from sqlalchemy.sql import and_
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -113,6 +114,13 @@ class Comment(db.Model):
     removed_at = db.Column(db.DateTime, nullable=True)
     author = db.relationship("User", backref="comments")
     replies = db.relationship("Comment", backref=db.backref("parent", remote_side=[id]), lazy="dynamic")
+
+    @hybrid_method
+    def descendant_count(self):
+        total = self.replies.count()
+        for reply in self.replies:
+            total += reply.descendant_count()
+        return total
 
 
 class PostLike(db.Model):

@@ -436,3 +436,56 @@ def report():
     db.session.commit()
     flash("Report submitted--thank you.", "success")
     return return_page()
+
+
+def populate_thread(c):
+    c.ordered_replies = c.replies.order_by(Comment.timestamp.asc()).all()
+    for r in c.ordered_replies:
+        populate_thread(r)
+
+
+@blog_bp.route("/comments/thread/<int:comment_id>", methods=["GET", "POST"])
+def comment_thread(comment_id):
+    root: Post = Comment.query.get_or_404(comment_id)
+    form: CommentForm = CommentForm(post_id=root.post_id, parent_id=root.id)
+    if form.validate_on_submit():
+        if not current_user.is_authenticated:
+            abort(403)
+        comment = Comment(
+            content = form.content.data,
+            author = current_user,
+            post_id = form.post_id.data,
+            parent_id = form.parent_id.data or None
+        )
+        db.session.add(comment)
+        db.session.commit()
+        if comment.parent_id:
+            recipient = comment.parent.author
+            verb = "replied to your comment"
+        else:
+            recipient = root.post.author
+            verb = "commented on your post"
+            subs = PostSubscription.query.filter_by(post_id=post.id).all()
+            for subscriber in subs:
+                if subscriber.subscriber_id != current_user.id:
+                    notif = Notification(
+                        recipient_id = subscriber.subscriber_id,
+                        actor_id = current_user.id,
+                        verb = "commented on a post you subscribed to",
+                        target_type = "comment",
+                        target_id = comment.id
+                    )
+                    db.session.add(notif)
+            db.session.commit()
+        if recipient.id != current_user.id:
+            notif = Notification(
+                recipient_id = recipient.id,
+                actor_id = current_user.id,
+                verb = verb,
+                target_type = "comment",
+                target_id = comment.id
+            )
+            db.session.add(notif)
+            db.session.commit()
+    populate_thread(root)
+    return render_template("comment_thread.html", root=root, form=form)

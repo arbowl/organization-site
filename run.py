@@ -14,7 +14,7 @@ app = create_app(config_name)
 
 @app.context_processor
 def inject_search_form():
-    return {"form": SearchForm(meta={"csrf": False})}
+    return {"search_form": SearchForm(meta={"csrf": False})}
 
 
 @app.context_processor
