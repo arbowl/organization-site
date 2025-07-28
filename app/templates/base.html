@@ -12,13 +12,29 @@
         <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
         <link rel="stylesheet" href="https://unpkg.com/github-markdown-css@5.2.0/github-markdown.min.css"/>
         <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}"/>
+        {# Open Graph and Twitter Card Meta Tags #}
+        {% block social_meta %}
+            <meta property="og:title" content="{% block og_title %}Dismantl - Organize, Verify, Share{% endblock %}">
+            <meta property="og:description" content="{% block og_description %}Dismantl provides commentary, organization, and perspective for current events.{% endblock %}">
+            <meta property="og:type" content="website">
+            <meta property="og:url" content="{{ request.base_url }}">
+            <meta property="og:image" content="{{ url_for('static', filename='og-image.png', _external=True) }}">
+            <meta property="og:image:alt" content="Dismantl logo">
+            <meta property="og:site_name" content="Dismantl">
+
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:title" content="{% block twitter_title %}Dismantl - Organize, Verify, Share{% endblock %}">
+            <meta name="twitter:description" content="{% block twitter_description %}Dismantl provides commentary, organization, and perspective for current events.{% endblock %}">
+            <meta name="twitter:image" content="{{ url_for('static', filename='og-image.png', _external=True) }}">
+            <meta name="twitter:image:alt" content="Dismantl logo">
+        {% endblock %}
     </head>
     <body class="font-sans text-gray-800">
         <header class="bg-white shadow p-4 md:px-6 lg:px-8 sticky top-0 z-50">
             <div class="container mx-auto flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-blue-600">
                     <a href="{{ url_for('blog.index') }}">
-                        <img src="{{ url_for('static', filename='favicon.ico') }}" alt="Dismantl Logo" class="h-8">
+                        <img src="{{ url_for('static', filename='favicon.ico') }}" alt="Dismantl logo" class="h-8">
                     </a>
                 </h1>
                 <nav class="site-nav">

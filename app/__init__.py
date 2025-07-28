@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from os import getenv
 from typing import Optional
 
-from flask import Flask, redirect, url_for, render_template, abort, request
+from flask import Flask, redirect, make_response, url_for, render_template, abort, request
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
@@ -45,6 +45,21 @@ def block_banned():
     if current_user.is_authenticated and current_user.is_banned():
         logout_user()
         abort(403)
+
+
+@app.route("/sitemap.xml")
+def sitemap():
+    from app.models import Post
+    pages = []
+    now = datetime.now().date().isoformat()
+    pages.append(["/", now, "daily", 0.8])
+    for post in Post.query.all():
+        url = url_for("blog.view_post", slug=post.slug, _external=True)
+        pages.append([url, post.timestamp.date().isoformat(), "weekly", 0.8])
+    sitemap_xml = render_template("sitemap.xml", pages=pages)
+    response = make_response(sitemap_xml)
+    response.headers["Content-Type"] = "application/xml"
+    return response
 
 
 class MyAdminView(AdminIndexView):
