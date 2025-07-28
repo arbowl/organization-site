@@ -57,7 +57,7 @@ def index() -> str:
     } for p in posts if p["post"].author.role == "admin"]
     news = get_rss_highlights()
     events = scrape_events()[:5]
-    return render_template("index.html", posts=posts[:4], bulletins=bulletins[:4], news=news, events=events)
+    return render_template("index.html", posts=posts[:3], bulletins=bulletins[:3], news=news, events=events)
 
 
 @blog_bp.route("/all")
