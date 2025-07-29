@@ -228,3 +228,16 @@ class PostSubscription(db.Model):
         db.UniqueConstraint("subscriber_id", "post_id", name="uq_post_sub"),
     )
 
+
+class Visit(db.Model):
+    __tablename__ = 'visits'
+
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    path = db.Column(db.String(200), nullable=False)
+    referrer = db.Column(db.String(500), nullable=True)
+    utm_source = db.Column(db.String(100), nullable=True)
+    utm_medium = db.Column(db.String(100), nullable=True)
+    utm_campaign = db.Column(db.String(100), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    ip_address = db.Column(db.String(45), nullable=False)

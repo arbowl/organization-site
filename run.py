@@ -2,14 +2,40 @@
 
 from os import getenv
 
+from flask import request
 from flask_login import current_user
 
-from app import create_app
+from app import create_app, db
 from app.forms import SearchForm
-from app.models import Notification
+from app.models import Notification, Visit
 
 config_name = getenv("FLASK_CONFIG", "development")
 app = create_app(config_name)
+
+
+@app.before_request
+def log_visit():
+    if request.endpoint in ("static", "favicon") or request.path.startswith("/admin"):
+        return
+    visit = Visit(
+        path = request.path,
+        referrer = request.referrer,
+        utm_source = request.args.get("utm_source"),
+        utm_medium = request.args.get("utm_medium"),
+        utm_campaign = request.args.get("utm_campaign"),
+        user_id = getattr(current_user, "id", None),
+        ip_address = request.remote_addr
+    )
+    db.session.add(visit)
+
+
+@app.teardown_request
+def commit_visit(exc):
+    if exc is None:
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
 
 
 @app.context_processor
