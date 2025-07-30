@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Site Analytics{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Analytics Dashboard</h1>
+
+{# Tabs for switching metrics #}
+<nav class="mb-4">
+  <a href="{{ url_for('analytics.dashboard', metric='referrers') }}"
+     class="px-4 py-2 {{ 'border-b-2 border-blue-600 font-semibold' if metric=='referrers' else 'text-gray-600' }}">
+    Referrers
+  </a>
+  <a href="{{ url_for('analytics.dashboard', metric='ips') }}"
+     class="px-4 py-2 {{ 'border-b-2 border-blue-600 font-semibold' if metric=='ips' else 'text-gray-600' }}">
+    IP Addresses
+  </a>
+</nav>
+
+{# Bar chart #}
+<canvas id="{{ metric }}Chart" class="mb-8"></canvas>
+
+{# Sort links toggling asc/desc #}
+{% set other_order = 'asc' if order=='desc' else 'desc' %}
+<table id="analytics-table" class="min-w-full divide-y divide-gray-200">
+  <thead>
+    <tr>
+      <th class="px-4 py-2 text-left">
+        <a href="?metric={{metric}}&sort=label&order={{ 'asc' if sort_by!='label' or order=='desc' else 'desc' }}">
+          {{ 'IP Address' if metric=='ips' else 'Referrer URL' }}
+          {% if sort_by=='label' %}{{ '↑' if order=='asc' else '↓' }}{% endif %}
+        </a>
+      </th>
+      <th class="px-4 py-2 text-right">
+        <a href="?metric={{metric}}&sort=count&order={{ other_order }}">
+          Count
+          {% if sort_by=='count' %}{{ '↑' if order=='asc' else '↓' }}{% endif %}
+        </a>
+      </th>
+    </tr>
+  </thead>
+  <tbody class="bg-white divide-y divide-gray-200">
+    {% for row in rows %}
+      <tr>
+        <td class="px-4 py-2">{{ row.label or '(none)' }}</td>
+        <td class="px-4 py-2 text-right">{{ row.count }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{# Include Chart.js and DataTables #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<link  rel="stylesheet"
+       href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css"/>
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+
+<script>
+  // 1) Render the bar chart
+  const ctx = document.getElementById('{{metric}}Chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: {{ labels|tojson }},
+      datasets: [{
+        label: '{{ metric.title() }} Count',
+        data: {{ counts|tojson }},
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: { title: { display: true, text: '{{ "IP Address" if metric=="ips" else "Referrer URL" }}' } },
+        y: { beginAtZero: true, title: { display: true, text: 'Count' } }
+      }
+    }
+  });
+
+  // 2) Enhance the table with sorting & pagination
+  $(document).ready(function() {
+    $('#analytics-table').DataTable({
+      paging:   true,
+      ordering: true,
+      info:     false,
+      // disable built-in sort on first column (we use server-side links)
+      columnDefs: [{ orderable: false, targets: [0] }]
+    });
+  });
+</script>
+{% endblock %}

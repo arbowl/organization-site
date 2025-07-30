@@ -11,11 +11,16 @@ from app.models import Notification, Visit
 
 config_name = getenv("FLASK_CONFIG", "development")
 app = create_app(config_name)
+endpoints_to_ignore = [
+    "static",
+    "favicon",
+    "analytics.dashboard",
+]
 
 
 @app.before_request
 def log_visit():
-    if request.endpoint in ("static", "favicon") or request.path.startswith("/admin"):
+    if request.endpoint in endpoints_to_ignore or request.path.startswith("/admin"):
         return
     visit = Visit(
         path = request.path,

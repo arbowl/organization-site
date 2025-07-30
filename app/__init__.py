@@ -40,6 +40,11 @@ def forbidden(error):
     return render_template('403.html'), 403
 
 
+@app.errorhandler(404)
+def forbidden(error):
+    return render_template('404.html'), 404
+
+
 @app.before_request
 def block_banned():
     if current_user.is_authenticated and current_user.is_banned():
@@ -152,6 +157,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     from .routes.blog import blog_bp
     from .routes.pages import pages_bp
     from .routes.social import social_bp
+    from .routes.analytics import analytics_bp
     from app.models import User, Post, Comment, Report
     admin.add_view(UserAdmin(User, db.session))
     admin.add_view(UserAdmin(Post, db.session))
@@ -161,6 +167,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     app.register_blueprint(blog_bp)
     app.register_blueprint(pages_bp)
     app.register_blueprint(social_bp)
+    app.register_blueprint(analytics_bp)
     with app.app_context():
         db.create_all()
     CSRFProtect(app)
