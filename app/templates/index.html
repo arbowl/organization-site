@@ -4,11 +4,17 @@
     <div class="text-center mb-10">
         <div>
             <img src="{{ url_for('static', filename='favicon.ico') }}" alt="Dismantl logo" class="h-10 dismantl-d">
-                <h2 class="text-4xl font-extrabold text-gray-900 mb-4 ismantl" style="display: inline;">
-                    ismantl
-                </h2>
-            </div>
+            <h2 class="text-4xl font-extrabold text-gray-900 mb-4 ismantl" style="display: inline;">
+                ismantl
+            </h2>
+        </div>
         <p class="text-xl text-gray-600"><i>Organize ⸱ Verify ⸱ Share</i></p>
+            {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.login') }}"
+                class="inline-block mt-6 px-6 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                <i>Join the discussion today!</i>
+                </a>
+            {% endif %}
     </div>
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
