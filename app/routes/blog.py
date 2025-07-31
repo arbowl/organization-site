@@ -242,7 +242,7 @@ def edit_post(post_id: int):
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
-        db.session.commit()
+        post.updated_at = timestamp()
         flash("Post updated.", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
     return render_template("post_form.html", form=form, action="Edit")
