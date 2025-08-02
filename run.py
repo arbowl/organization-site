@@ -1,9 +1,10 @@
 """Run"""
 
+from datetime import datetime, timezone, timedelta
 from os import getenv
 
-from flask import request
-from flask_login import current_user
+from flask import redirect, url_for, request, session
+from flask_login import logout_user, current_user
 
 from app import create_app, db
 from app.forms import SearchForm
@@ -16,6 +17,21 @@ endpoints_to_ignore = [
     "favicon",
     "analytics.dashboard",
 ]
+
+
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=30)
+
+
+@app.before_request
+def check_user_timeout():
+    if current_user.is_authenticated and session.get('last_seen'):
+        if datetime.now(timezone.utc) - session['last_seen'] > timedelta(minutes=30):
+            logout_user()
+            return redirect(url_for('auth.login'))
+    session['last_seen'] = datetime.now(timezone.utc)
 
 
 @app.before_request
