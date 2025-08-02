@@ -22,6 +22,8 @@ endpoints_to_ignore = [
 def log_visit():
     if request.endpoint in endpoints_to_ignore or request.path.startswith("/admin"):
         return
+    xff = request.headers.get("X-Forwarded-For", request.remote_addr)
+    ip_address = xff.split(",")[0].strip()
     visit = Visit(
         path = request.path,
         referrer = request.referrer,
@@ -29,7 +31,7 @@ def log_visit():
         utm_medium = request.args.get("utm_medium"),
         utm_campaign = request.args.get("utm_campaign"),
         user_id = getattr(current_user, "id", None),
-        ip_address = request.remote_addr
+        ip_address = ip_address
     )
     db.session.add(visit)
 
