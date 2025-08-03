@@ -12,7 +12,7 @@ from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager, logout_user, current_user
-from flask_wtf.csrf import CSRFProtect, generate_csrf
+from flask_wtf.csrf import CSRFProtect, CSRFError, generate_csrf
 from markupsafe import Markup
 
 from app.utils import md
@@ -43,6 +43,11 @@ def forbidden(error):
 @app.errorhandler(404)
 def forbidden(error):
     return render_template('404.html'), 404
+
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(error):
+    return render_template("csrf_error.html"), 400
 
 
 @app.before_request
