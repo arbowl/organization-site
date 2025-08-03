@@ -106,13 +106,14 @@ class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=timestamp(), index=True)
-    author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    guest_name = db.Column(db.String(80), nullable=True)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
     parent_id = db.Column(db.Integer, db.ForeignKey("comments.id"), nullable=True)
     is_removed = db.Column(db.Boolean, default=False, nullable=False)
     removed_by = db.Column(db.String(20), nullable=True)
     removed_at = db.Column(db.DateTime, nullable=True)
-    author = db.relationship("User", backref="comments")
+    author = db.relationship("User", backref="comments", foreign_keys=[author_id])
     replies = db.relationship("Comment", backref=db.backref("parent", remote_side=[id]), lazy="dynamic")
 
     @hybrid_method

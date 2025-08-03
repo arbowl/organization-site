@@ -1,8 +1,10 @@
 """Forms"""
 
+from flask_login import current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, HiddenField
-from wtforms.validators import DataRequired, Length, Email, ValidationError
+from wtforms.validators import DataRequired, Length, Email, ValidationError, Optional
+
 from app.models import User
 
 
@@ -38,8 +40,19 @@ class PostForm(FlaskForm):
 class CommentForm(FlaskForm):
     post_id = HiddenField(validators=[DataRequired()])
     parent_id = HiddenField()
+    guest_name = StringField("Name", validators=[Optional(), Length(1, 80)])
     content = TextAreaField("Comment", validators=[DataRequired(), Length(max=5000)])
     submit = SubmitField("Post Comment")
+
+    def validate(self, extra_validators=None):
+        rv = super().validate(extra_validators=extra_validators)
+        if not rv:
+            return False
+        if not current_user.is_authenticated:
+            if not self.guest_name.data.strip():
+                self.guest_name.errors.append("Name required for guest comments.")
+                return False
+        return True
 
 
 class SearchForm(FlaskForm):

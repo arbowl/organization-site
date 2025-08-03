@@ -106,11 +106,12 @@ def view_post(slug: str) -> str:
     post = Post.query.filter_by(slug=slug).first_or_404()
     form = CommentForm(post_id=post.id)
     if form.validate_on_submit():
-        if not current_user.is_authenticated:
-            abort(403)
+        author_id = current_user.id if current_user.is_authenticated else None
+        guest_name = form.guest_name.data.strip() if not author_id else None
         comment = Comment(
             content = form.content.data,
-            author = current_user,
+            author_id = author_id,
+            guest_name = guest_name,
             post_id = form.post_id.data,
             parent_id = form.parent_id.data or None
         )
@@ -134,7 +135,7 @@ def view_post(slug: str) -> str:
                     )
                     db.session.add(notif)
             db.session.commit()
-        if recipient.id != current_user.id:
+        if current_user.is_authenticated and recipient and recipient.id != current_user.id:
             notif = Notification(
                 recipient_id = recipient.id,
                 actor_id = current_user.id,
@@ -465,7 +466,7 @@ def comment_thread(comment_id):
         else:
             recipient = root.post.author
             verb = "commented on your post"
-            subs = PostSubscription.query.filter_by(post_id=post.id).all()
+            subs = PostSubscription.query.filter_by(post_id=root.post.id).all()
             for subscriber in subs:
                 if subscriber.subscriber_id != current_user.id:
                     notif = Notification(
