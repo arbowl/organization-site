@@ -40,7 +40,7 @@
                     action="{{ url_for('blog.toggle_post_like', post_id=post.id) }}"
                     class="inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit">
+                <button type="submit" class="font-normal">
                     <span class="text-base mr-2">➕</span>
                     <span class="font-semibold">{{ post.likes.count() }}</span>&nbsp;supporter{{ "s" if post.likes.count() != 1 else "" }}
                 </button>
