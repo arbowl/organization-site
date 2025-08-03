@@ -117,6 +117,10 @@ def view_post(slug: str) -> str:
         )
         db.session.add(comment)
         db.session.commit()
+        if current_user.is_authenticated:
+            auto_like = CommentLike(user=current_user, comment=comment)
+            db.session.add(auto_like)
+            db.session.commit()
         if comment.parent_id:
             recipient = comment.parent.author
             verb = "replied to your comment"
@@ -155,7 +159,7 @@ def view_post(slug: str) -> str:
 
 
 @blog_bp.route("/like/post/<int:post_id>", methods=["POST"])
-@limiter.limit("20 per day", key_func=lambda: current_user.id)
+@limiter.limit("20 per day", key_func=lambda: current_user.id if current_user.is_authenticated else "anon")
 @login_required
 def toggle_post_like(post_id):
     post = Post.query.get_or_404(post_id)
@@ -178,7 +182,7 @@ def toggle_post_like(post_id):
 
 
 @blog_bp.route("/like/comment/<int:comment_id>", methods=["POST"])
-@limiter.limit("20 per day", key_func=lambda: current_user.id)
+@limiter.limit("20 per day", key_func=lambda: current_user.id if current_user.is_authenticated else "anon")
 @login_required
 def toggle_comment_like(comment_id):
     comment = Comment.query.get_or_404(comment_id)
@@ -201,7 +205,7 @@ def toggle_comment_like(comment_id):
 
 
 @blog_bp.route("/create", methods=["GET", "POST"])
-@limiter.limit("5 per hour", key_func=lambda: current_user.id)
+@limiter.limit("5 per hour", key_func=lambda: current_user.id if current_user.is_authenticated else "anon")
 @login_required
 def create_post():
     if not current_user.is_contributor():
@@ -215,6 +219,9 @@ def create_post():
             author=current_user,
         )
         db.session.add(post)
+        db.session.commit()
+        auto_like = PostLike(user=current_user, post=post)
+        db.session.add(auto_like)
         db.session.commit()
         subs = UserSubscription.query.filter_by(user_id=current_user.id).all()
         for subscriber in subs:
@@ -400,7 +407,7 @@ def mark_notification_read(notif_id):
 
 
 @blog_bp.route("/report", methods=["GET", "POST"])
-@limiter.limit("25 per day", key_func=lambda: current_user.id)
+@limiter.limit("25 per day", key_func=lambda: current_user.id if current_user.is_authenticated else "anon")
 @login_required
 def report():
     if request.method == "GET":
@@ -459,6 +466,9 @@ def comment_thread(comment_id):
             parent_id = form.parent_id.data or None
         )
         db.session.add(comment)
+        db.session.commit()
+        auto_like = CommentLike(user=current_user, comment=comment)
+        db.session.add(auto_like)
         db.session.commit()
         if comment.parent_id:
             recipient = comment.parent.author

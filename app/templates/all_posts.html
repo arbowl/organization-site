@@ -2,7 +2,7 @@
 {% block title %}All Posts - Dismantl{% endblock %}
 {% block content %}
     <div class="text-center mb-8">
-        <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Posts</h2>
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-4">User-Submitted Articles</h1>
     </div>
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -22,20 +22,31 @@
     {% endwith %}
     {% include 'includes/rules.html' %}
     <br>
-        <div class="max-w-2xl mx-auto mb-4">
-        <form action="{{ url_for('blog.search') }}" methods="get" class="flex items-center relative" novalidate>
-            {{ search_form.hidden_tag() }}
-            <label for="search-input" class="sr-only">Search</label>
-            <div class="relative flex-grow">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                    </svg>
+    <div class="max-w-2xl mx-auto mb-4">
+        <div class="flex items-center space-x-4">
+            {% if current_user.is_authenticated and current_user.is_contributor() %}
+                <a href="{{ url_for('blog.create_post') }}"
+                class="flex-shrink-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300 ease-in-out">
+                    Create Post
+                </a>
+            {% endif %}
+            <form action="{{ url_for('blog.search') }}" methods="get" class="flex items-center flex-grow relative" novalidate>
+                {{ search_form.hidden_tag() }}
+                <label for="search-input" class="sr-only">Search</label>
+                <div class="relative w-full">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    {{ search_form.q(class="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm", id="search-input", placeholder="Search posts...") }}
                 </div>
-                {{ search_form.q(class="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm", id="search-input", placeholder="Search posts...") }}
-            </div>
-            {{ search_form.submit(class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out") }}
-        </form>
+                {{ search_form.submit(class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out") }}
+            </form>
+        </div>
     </div>
     {% if entries %}
         <ul class="space-y-6 max-w-2xl mx-auto">
@@ -61,14 +72,6 @@
                 </li>
             {% endfor %}
         </ul>
-    {% endif %}
-    {% if current_user.is_authenticated and current_user.is_contributor() %}
-        <div class="text-center mt-8">
-            <a href="{{ url_for('blog.create_post') }}"
-            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300 ease-in-out">
-                Create New Post
-            </a>
-        </div>
     {% endif %}
     {% if entries %}
         <nav aria-label="Pages" class="mt-12">

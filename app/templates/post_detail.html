@@ -30,9 +30,28 @@
             </div>
         {% endif %}
     {% endwith %}
-    <h2 class="text-4xl font-extrabold text-gray-900 mb-4">
-        {{ post.title }}
-    </h2>
+    <div class="flex flex-wrap justify-between items-start mb-3">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-1">
+            {{ post.title }}
+        </h1>
+        <div class="flex items-center space-x-2 mt-1 sm:mt-3 flex-shrink-0">
+            <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">
+                <form method="post"
+                    action="{{ url_for('blog.toggle_post_like', post_id=post.id) }}"
+                    class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit">
+                    <span class="text-base mr-2">➕</span>
+                    <span class="font-semibold">{{ post.likes.count() }}</span>&nbsp;supporter{{ "s" if post.likes.count() != 1 else "" }}
+                </button>
+                </form>
+            </span>
+            <a href="#comment-form" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">
+                <span class="text-base mr-2">💬</span>
+                <span class="font-semibold">{{ post.comments.count() }}</span>&nbsp;response{{ "s" if post.comments.count() != 1 else "" }}
+            </a>
+        </div>
+    </div>
     <p class="post-meta text-gray-600 text-sm mb-6">
         By
         <strong class="font-semibold text-gray-800">
@@ -44,81 +63,74 @@
     <div class="post-content mb-6">
         {{ post.content | md }}
     </div>
-    {% if current_user.is_authenticated %}
+    
     <div class="post-actions flex items-center space-x-4 mt-6">
-        <form method="post"
-            action="{{ url_for('blog.toggle_post_like', post_id=post.id) }}"
-            class="inline">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit"
-                class="inline-flex items-center px-4 py-2
-                        bg-blue-100 text-blue-800 rounded-md
-                        hover:bg-blue-200 transition duration-300 ease-in-out">
-            <span class="text-base mr-2">➕</span>
-            <span class="font-semibold">{{ post.likes.count() }}</span>
+        <button id="share-button"
+            class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition duration-300 ease-in-out">
+            <span class="text-base">🔗 Share</span>
         </button>
-        </form>
-        {% if current_user.id != post.author_id %}
-            {% if not current_user.subscribed_to_post(post) %}
-                <form method="post"
-                    action="{{ url_for('social.subscribe_post', post_id=post.id) }}"
-                    class="inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit"
-                        class="inline-flex items-center px-4 py-2
-                                bg-blue-100 text-blue-800 rounded-md
-                                hover:bg-blue-200 transition duration-300 ease-in-out">
-                    <span class="text-base">🔔</span>
-                </button>
-                </form>
-            {% else %}
-                <form method="post"
-                    action="{{ url_for('social.unsubscribe_post', post_id=post.id) }}"
-                    class="inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit"
-                        class="inline-flex items-center px-4 py-2
-                                bg-blue-100 text-blue-800 rounded-md
-                                hover:bg-blue-200 transition duration-300 ease-in-out">
-                    <span class="text-base">🔕</span>
-                </button>
-                </form>
-			{% endif %}
-        {% endif %}
-        {% if post.author_id != current_user.id %}
-            <a href="{{ url_for('blog.report', post_id=post.id) }}"
-                class="text-red-500 inline-flex items-center px-4 py-2
-                        bg-blue-100 text-blue-800 rounded-md
-                        hover:bg-blue-200 transition duration-300 ease-in-out">
-                🚩
+        {% if current_user.is_authenticated %}
+            {% if current_user.id != post.author_id %}
+                {% if not current_user.subscribed_to_post(post) %}
+                    <form method="post"
+                        action="{{ url_for('social.subscribe_post', post_id=post.id) }}"
+                        class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2
+                                    bg-blue-100 text-blue-800 rounded-md
+                                    hover:bg-blue-200 transition duration-300 ease-in-out">
+                        <span class="text-base">🔔 Subscribe</span>
+                    </button>
+                    </form>
+                {% else %}
+                    <form method="post"
+                        action="{{ url_for('social.unsubscribe_post', post_id=post.id) }}"
+                        class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2
+                                    bg-blue-100 text-blue-800 rounded-md
+                                    hover:bg-blue-200 transition duration-300 ease-in-out">
+                        <span class="text-base">🔕 Unsubscribe</span>
+                    </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+            {% if post.author_id != current_user.id %}
+                <a href="{{ url_for('blog.report', post_id=post.id) }}"
+                    class="text-red-500 inline-flex items-center px-4 py-2
+                            bg-blue-100 text-blue-800 rounded-md
+                            hover:bg-blue-200 transition duration-300 ease-in-out">
+                    🚩 Report
+                </a>
+            {% endif %}
+            {% if current_user.id == post.author_id %}
+            <a href="{{ url_for('blog.edit_post', post_id=post.id) }}"
+                class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md
+                        hover:bg-blue-700 transition duration-300 ease-in-out">
+                ✏️ Edit
             </a>
-        {% endif %}
-        {% if current_user.id == post.author_id %}
-        <a href="{{ url_for('blog.edit_post', post_id=post.id) }}"
-            class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md
-                    hover:bg-blue-700 transition duration-300 ease-in-out">
-            Edit
-        </a>
-        {% endif %}
-        {% if current_user.id == post.author_id
-            or current_user.is_moderator()
-            or current_user.is_admin() %}
-        <form method="post"
-                action="{{ url_for('blog.delete_post', post_id=post.id) }}"
-                class="inline"
-                onsubmit="return confirm('Are you sure you want to delete this post?')">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit"
-                    class="px-4 py-2 bg-red-600 text-white font-medium rounded-md
-                        hover:bg-red-700 transition duration-300 ease-in-out">
-            Delete
-            </button>
-        </form>
+            {% endif %}
+            {% if current_user.id == post.author_id
+                or current_user.is_moderator()
+                or current_user.is_admin() %}
+            <form method="post"
+                    action="{{ url_for('blog.delete_post', post_id=post.id) }}"
+                    class="inline"
+                    onsubmit="return confirm('Are you sure you want to delete this post?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="px-4 py-2 bg-red-600 text-white font-medium rounded-md
+                            hover:bg-red-700 transition duration-300 ease-in-out">
+                🗑️ Delete
+                </button>
+            </form>
+            {% endif %}
         {% endif %}
     </div>
-    {% endif %}
     </article>
-    <br>
+    <br id="comment-form">
     <div class="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 border-t-4 border-blue-300">
         <h3 class="text-2xl font-bold text-gray-800 mb-4">Leave a comment</h3>
         <form method="post" class="space-y-4 mb-8" novalidate>
@@ -133,7 +145,11 @@
                     placeholder="Name (required)",
                 ) }}
             {% endif %}
-            {{ form.content(rows=3, class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400") }}
+            {{ form.content(
+                rows=3,
+                class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400",
+                placeholder="Share your thoughts, ask a question, or provide feedback..."
+            ) }}
             {{ form.submit(class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-200 ease-in-out cursor-pointer") }}
         </form>
         <ul class="comments space-y-6">
