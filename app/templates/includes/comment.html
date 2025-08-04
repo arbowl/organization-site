@@ -42,7 +42,7 @@
       at {{ comment.removed_at.strftime('%Y-%m-%d %H:%M') }}]
     </p>
   {% else %}
-    <div class="text-gray-700 leading-relaxed mb-3">
+    <div class="text-gray-700 leading-relaxed mb-3 comment-content">
       {{ comment.content | md }}
     </div>
   {% endif %}

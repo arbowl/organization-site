@@ -3,7 +3,7 @@ html {
 }
 
 body {
-    background-color: #f1f7ff;
+  background-color: #f1f7ff;
 }
 
 .dismantl-d {
@@ -20,31 +20,38 @@ body {
   margin-top: -45px;
 }
 
-.post-content a {
-    text-decoration: underline;
+.post-content a,
+.comment-content a {
+  color: #1a0dab;
+  text-decoration: underline;
 }
 
-.post-content a:hover {
-    color: #586875;
-    text-decoration-line: underline;
-    text-decoration-color: #586875;
-    text-decoration-style: dotted;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.15em;
+.post-content a:hover,
+.comment-content a:hover {
+  color: #586875;
+  text-decoration-line: underline;
+  text-decoration-color: #586875;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  text-decoration: none;
 }
 
-.post-content {
+.post-content,
+.comment-content {
   font-family: inherit;
   font-size: 1rem;
   line-height: 1.75;
   color: #333;
 }
 
-.post-content p {
+.post-content p,
+.comment-content p {
   margin: 1em 0;
 }
 
-.post-content hr {
+.post-content hr,
+.comment-content hr {
   border: none;
   border-top: 1px solid #eee;
   margin: 2em 0;
@@ -55,40 +62,54 @@ body {
 .post-content h3,
 .post-content h4,
 .post-content h5,
-.post-content h6 {
+.post-content h6,
+.comment-content h1,
+.comment-content h2,
+.comment-content h3,
+.comment-content h4,
+.comment-content h5,
+.comment-content h6 {
   margin: 1.5em 0 0.5em;
   line-height: 1.25;
   font-weight: 700;
 }
-.post-content h1 { font-size: 2.25rem; margin: 1px;}
-.post-content h2 { font-size: 1.875rem; margin: 1px; }
-.post-content h3 { font-size: 1.5rem; margin: 1px; }
-.post-content h4 { font-size: 1.25rem; margin: 1px; }
-.post-content h5 { font-size: 1rem; margin: 1px; }
-.post-content h6 { font-size: 0.875rem; margin: 1px; }
 
-.post-content a {
-  color: #1a0dab;
-  text-decoration: underline;
-}
+.post-content h1,
+.comment-content h1 { font-size: 2.25rem; margin: 1px; }
 
-.post-content a:hover {
-  text-decoration: none;
-}
+.post-content h2,
+.comment-content h2 { font-size: 1.875rem; margin: 1px; }
+
+.post-content h3,
+.comment-content h3 { font-size: 1.5rem; margin: 1px; }
+
+.post-content h4,
+.comment-content h4 { font-size: 1.25rem; margin: 1px; }
+
+.post-content h5,
+.comment-content h5 { font-size: 1rem; margin: 1px; }
+
+.post-content h6,
+.comment-content h6 { font-size: 0.875rem; margin: 1px; }
 
 .post-content strong,
-.post-content b {
+.post-content b,
+.comment-content strong,
+.comment-content b {
   font-weight: 700;
   margin: 0;
 }
 
 .post-content em,
-.post-content i {
+.post-content i,
+.comment-content em,
+.comment-content i {
   font-style: italic;
-margin: 0;
+  margin: 0;
 }
 
-.post-content code {
+.post-content code,
+.comment-content code {
   background: #f5f5f5;
   padding: 0.2em 0.4em;
   border-radius: 3px;
@@ -96,7 +117,8 @@ margin: 0;
   font-size: 0.875em;
 }
 
-.post-content pre {
+.post-content pre,
+.comment-content pre {
   background: #f5f5f5;
   padding: 1em;
   margin: 1em 0;
@@ -107,89 +129,106 @@ margin: 0;
 }
 
 .post-content ul,
-.post-content ol {
+.post-content ol,
+.comment-content ul,
+.comment-content ol {
   margin: 1em 0 1em 1.5em;
 }
 
 .post-content ul ul,
-.post-content ol ol {
+.post-content ol ol,
+.comment-content ul ul,
+.comment-content ol ol {
   margin: 0.5em 0 0.5em 1.5em;
 }
 
-.post-content ul {
-    list-style-type:disc;
+.post-content ul,
+.comment-content ul {
+  list-style-type: disc;
 }
 
-.post-content ol {
+.post-content ol,
+.comment-content ol {
   list-style-type: decimal;
 }
 
-.post-content li {
+.post-content li,
+.comment-content li {
   margin: 0.5em 0;
 }
 
-.post-content img {
+.post-content img,
+.comment-content img {
   display: block;
   max-width: 100%;
   height: auto;
   margin: 1em auto;
 }
 
-.post-content figure {
+.post-content figure,
+.comment-content figure {
   margin: 1em 0;
 }
 
-.post-content figcaption {
+.post-content figcaption,
+.comment-content figcaption {
   font-size: 0.875em;
   color: #666;
   text-align: center;
   margin-top: 0.5em;
 }
 
-.post-content dl {
+.post-content dl,
+.comment-content dl {
   margin: 1em 0;
 }
 
-.post-content dl dt {
+.post-content dl dt,
+.comment-content dl dt {
   font-weight: 700;
   margin-top: 0.5em;
 }
 
-.post-content dl dd {
+.post-content dl dd,
+.comment-content dl dd {
   margin: 0 0 0.5em 1em;
 }
 
-.post-content table {
+.post-content table,
+.comment-content table {
   width: 100%;
   border-collapse: collapse;
   margin: 1em 0;
 }
 
 .post-content th,
-.post-content td {
+.post-content td,
+.comment-content th,
+.comment-content td {
   border: 1px solid #ccc;
   padding: 0.5em;
   text-align: left;
 }
 
-.post-content th {
+.post-content th,
+.comment-content th {
   background: #f0f0f0;
   font-weight: 700;
 }
 
 blockquote {
-    padding: 1.5rem;
-    margin: 1.5rem 0;
-    font-style: italic;
-    color: #4a5568;
-    background-color: #f7fafc;
-    border-left: 0.25rem solid #179bed;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: #4a5568;
+  background-color: #f7fafc;
+  border-left: 0.25rem solid #179bed;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 blockquote footer {
-    margin-top: 1rem;
-    font-size: 0.875rem;
-    color: #718096;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #718096;
 }
