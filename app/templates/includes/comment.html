@@ -7,9 +7,13 @@
       {% else %}
         <span class="badge text-gray-600">(Guest)</span>
       {% endif %}
-      <a href="{{ url_for('blog.user_posts', username=comment.author.username) }}">
-        <strong class="font-semibold text-blue-700">{{ comment.author.username if comment.author else comment.guest_name }}</strong>
-      </a>
+      {% if comment.author %}
+        <a href="{{ url_for('blog.user_posts', username=comment.author.username) }}">
+          <strong class="font-semibold text-blue-700">{{ comment.author.username }}</strong>
+        </a>
+      {% else %}
+        <strong class="font-semibold text-gray-700">{{ comment.guest_name }}</strong>
+      {% endif %}
       on <span class="text-gray-500">{{ comment.timestamp.strftime('%Y-%m-%d') }}</span>
     </p>
 
