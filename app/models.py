@@ -148,7 +148,8 @@ class Notification(db.Model):
     __tablename__ = "notifications"
     id = db.Column(db.Integer, primary_key=True)
     recipient_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    actor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    actor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    guest_name = db.Column(db.String(80), nullable=True)
     verb = db.Column(db.String(50), nullable=False)
     target_type = db.Column(db.String(20), nullable=False)
     target_id = db.Column(db.Integer, nullable=False)

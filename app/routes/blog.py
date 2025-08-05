@@ -109,11 +109,11 @@ def view_post(slug: str) -> str:
         author_id = current_user.id if current_user.is_authenticated else None
         guest_name = form.guest_name.data.strip() if not author_id else None
         comment = Comment(
-            content = form.content.data,
-            author_id = author_id,
-            guest_name = guest_name,
-            post_id = form.post_id.data,
-            parent_id = form.parent_id.data or None
+            content=form.content.data,
+            author_id=author_id,
+            guest_name=guest_name,
+            post_id=form.post_id.data,
+            parent_id=form.parent_id.data or None
         )
         db.session.add(comment)
         db.session.commit()
@@ -129,26 +129,33 @@ def view_post(slug: str) -> str:
             verb = "commented on your post"
             subs = PostSubscription.query.filter_by(post_id=post.id).all()
             for subscriber in subs:
-                if subscriber.subscriber_id != current_user.id:
+                if not current_user.is_authenticated or subscriber.subscriber_id != current_user.id:
                     notif = Notification(
-                        recipient_id = subscriber.subscriber_id,
-                        actor_id = current_user.id,
-                        verb = "commented on a post you subscribed to",
-                        target_type = "comment",
-                        target_id = comment.id
+                        recipient_id=subscriber.subscriber_id,
+                        actor_id=author_id,
+                        guest_name=guest_name,
+                        verb="commented on a post you subscribed to",
+                        target_type="comment",
+                        target_id=comment.id
                     )
                     db.session.add(notif)
             db.session.commit()
-        if current_user.is_authenticated and recipient and recipient.id != current_user.id:
-            notif = Notification(
-                recipient_id = recipient.id,
-                actor_id = current_user.id,
-                verb = verb,
-                target_type = "comment",
-                target_id = comment.id
+        if recipient:
+            is_self = (
+                (current_user.is_authenticated and recipient.id == current_user.id) or
+                (not current_user.is_authenticated and recipient is None)
             )
-            db.session.add(notif)
-            db.session.commit()
+            if not is_self:
+                notif = Notification(
+                    recipient_id=recipient.id,
+                    actor_id=author_id,
+                    guest_name=guest_name,
+                    verb=verb,
+                    target_type="comment",
+                    target_id=comment.id
+                )
+                db.session.add(notif)
+                db.session.commit()
         return redirect(url_for("blog.view_post", slug=slug) + f"#c{comment.id}")
     comments = (
         Comment.query.filter_by(post_id=post.id, parent_id=None

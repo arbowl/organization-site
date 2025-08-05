@@ -63,7 +63,13 @@
             <div class="flex items-start space-x-4">
               <div class="flex-1">
                 <p class="mb-1">
-                  <strong>{{ n.actor.username }}</strong>
+                  <strong>
+                    {% if n.actor.username %}
+                      {{ n.actor.username }}
+                    {% else %}
+                      {{ n.guest_name }}
+                    {% endif %}
+                  </strong>
                   {% if n.target_type=='post' and n.post %}
                     <a href="{{ url_for('blog.view_post', slug=n.post.slug) }}"
                       class="text-blue-600 hover:underline">

@@ -1,18 +1,20 @@
 {% extends "base.html" %}
 {% block title %}{{ post.title }} - Dismantl{% endblock %}
-{% block meta_desc %}{{ post.content[:150]|striptags }}{% endblock %}
-<script type="application/ld+json">
-    {
-        "@context": "https://schema.org/",
-        "@type": "BlogPosting",
-        "headline": "{{ post.title|e }}",
-        "author": { "@type": "Person", "name": "{{ post.author.username|e }}" },
-        "datePublished": "{{ post.timestamp.isoformat() }}",
-        "url": "{{ request.url }}",
-        "image": "{{ url_for('static', filename='og-image.png', _external=True) }}"
-    }
-</script>
+{% block meta_description %}
+    <meta name="description" content="{{ post.content[:150]|striptags }}">
+{% endblock %}
 {% block content %}
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org/",
+            "@type": "BlogPosting",
+            "headline": "{{ post.title|e }}",
+            "author": { "@type": "Person", "name": "{{ post.author.username|e }}" },
+            "datePublished": "{{ post.timestamp.isoformat() }}",
+            "url": "{{ request.url }}",
+            "image": "{{ url_for('static', filename='og-image.png', _external=True) }}"
+        }
+    </script>
     <article class="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 border-t-4 border-blue-300">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
