@@ -3,7 +3,7 @@
 from datetime import datetime, timezone, timedelta
 from os import getenv
 
-from flask import redirect, url_for, request, session
+from flask import redirect, url_for, send_from_directory, request, session
 from flask_login import logout_user, current_user
 
 from app import create_app, db
@@ -17,6 +17,10 @@ endpoints_to_ignore = [
     "favicon",
     "analytics.dashboard",
 ]
+
+@app.route('/robots.txt')
+def robots():
+    return send_from_directory(app.static_folder, 'robots.txt')
 
 
 @app.before_request

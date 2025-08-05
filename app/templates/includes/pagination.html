@@ -1,0 +1,39 @@
+{% if pagination.pages > 1 %}
+  <nav aria-label="Page navigation" class="mt-6">
+    <ul class="flex justify-center items-center space-x-2">
+      {% if pagination.has_prev %}
+        <li>
+          <a href="{{ url }}&page={{ pagination.prev_num }}"
+             class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100">
+            Previous
+          </a>
+        </li>
+      {% else %}
+        <li><span class="px-4 py-2 text-gray-400 cursor-not-allowed">Previous</span></li>
+      {% endif %}
+
+      {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+          {% if p == pagination.page %}
+            <li><span class="px-4 py-2 bg-blue-600 text-white rounded-md">{{ p }}</span></li>
+          {% else %}
+            <li><a href="{{ url }}&page={{ p }}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100">{{ p }}</a></li>
+          {% endif %}
+        {% else %}
+          <li><span class="px-4 py-2 text-gray-400">…</span></li>
+        {% endif %}
+      {% endfor %}
+
+      {% if pagination.has_next %}
+        <li>
+          <a href="{{ url }}&page={{ pagination.next_num }}"
+             class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100">
+            Next
+          </a>
+        </li>
+      {% else %}
+        <li><span class="px-4 py-2 text-gray-400 cursor-not-allowed">Next</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}

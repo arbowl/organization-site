@@ -1,87 +1,132 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Reply toggle for comments
     document.querySelectorAll('.reply-toggle').forEach(btn => {
         btn.addEventListener('click', e => {
             e.preventDefault();
             const id = btn.dataset.comment;
-            document.getElementById(`reply-${id}`).style.display = 'block';
+            const replyForm = document.getElementById(`reply-${id}`);
+            if (replyForm) {
+                replyForm.style.display = 'block';
+            }
         });
     });
-    const easyMDE = new EasyMDE({ element: document.getElementById('post-content') });
-    const charCountSpan = document.getElementById('char-count');
-    const maxCharsSpan = document.getElementById('max-chars');
+
+    // EasyMDE Markdown Editor (for post content)
     const contentField = document.getElementById('post-content');
-    const maxLength = contentField.getAttribute('maxlength');
+    if (contentField) {
+        const easyMDE = new EasyMDE({ element: contentField });
 
-    if (maxCharsSpan && maxLength) {
-        maxCharsSpan.textContent = maxLength;
-    }
+        const charCountSpan = document.getElementById('char-count');
+        const maxCharsSpan = document.getElementById('max-chars');
+        const maxLength = contentField.getAttribute('maxlength');
 
-    function updateCharCount() {
-        const currentLength = easyMDE.value().length;
-        charCountSpan.textContent = currentLength;
-
-        if (currentLength > maxLength) {
-            charCountSpan.style.color = 'red';
-        } else {
-            charCountSpan.style.color = '';
+        if (maxCharsSpan && maxLength) {
+            maxCharsSpan.textContent = maxLength;
         }
-    }
-    updateCharCount();
-    easyMDE.codemirror.on("change", updateCharCount);
-});
 
-document.addEventListener("DOMContentLoaded", function () {
+        function updateCharCount() {
+            const currentLength = easyMDE.value().length;
+            if (charCountSpan) {
+                charCountSpan.textContent = currentLength;
+                charCountSpan.style.color = currentLength > maxLength ? 'red' : '';
+            }
+        }
+
+        updateCharCount();
+        easyMDE.codemirror.on("change", updateCharCount);
+    }
+
+    // Post-level share button
     const shareButton = document.getElementById("share-button");
+    if (shareButton) {
+        shareButton.addEventListener("click", async () => {
+            const url = window.location.href;
 
-    shareButton.addEventListener("click", async () => {
-        const url = window.location.href;
-
-        // Try native share on mobile
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: document.title,
-                    url: url
-                });
-                return;
-            } catch (err) {
-                console.error("Native share failed:", err);
-                // Continue to clipboard fallback
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: document.title,
+                        url: url
+                    });
+                    return;
+                } catch (err) {
+                    console.error("Native share failed:", err);
+                }
             }
-        }
 
-        // Clipboard API (secure contexts only)
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            try {
-                await navigator.clipboard.writeText(url);
-                showCopiedFeedback();
-                return;
-            } catch (err) {
-                console.error("Clipboard API failed:", err);
-                // Continue to fallback method
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(url);
+                    showCopiedFeedback(shareButton);
+                    return;
+                } catch (err) {
+                    console.error("Clipboard API failed:", err);
+                }
             }
-        }
 
-        // Fallback for older/unsupported browsers
-        try {
-            const textarea = document.createElement("textarea");
-            textarea.value = url;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textarea);
-            showCopiedFeedback();
-        } catch (err) {
-            console.error("Fallback copy failed:", err);
-            alert("Unable to share. Please copy the URL manually.");
-        }
+            try {
+                const textarea = document.createElement("textarea");
+                textarea.value = url;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+                showCopiedFeedback(shareButton);
+            } catch (err) {
+                console.error("Fallback copy failed:", err);
+                alert("Unable to share. Please copy the URL manually.");
+            }
+        });
+    }
+
+    // Comment-level share buttons
+    document.querySelectorAll(".comment-share-button").forEach(button => {
+        button.addEventListener("click", async () => {
+            const commentId = button.dataset.commentId;
+            const commentUrl = `${window.location.origin}${window.location.pathname}#c${commentId}`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: document.title,
+                        url: commentUrl
+                    });
+                    return;
+                } catch (err) {
+                    console.error("Native comment share failed:", err);
+                }
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(commentUrl);
+                    showCopiedFeedback(button);
+                    return;
+                } catch (err) {
+                    console.error("Clipboard API failed:", err);
+                }
+            }
+
+            try {
+                const textarea = document.createElement("textarea");
+                textarea.value = commentUrl;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+                showCopiedFeedback(button);
+            } catch (err) {
+                console.error("Fallback comment copy failed:", err);
+                alert("Unable to share. Please copy the comment URL manually.");
+            }
+        });
     });
 
-    function showCopiedFeedback() {
-        const originalHTML = shareButton.innerHTML;
-        shareButton.innerHTML = "✅ Copied!";
+    function showCopiedFeedback(buttonElement) {
+        const originalHTML = buttonElement.innerHTML;
+        buttonElement.innerHTML = "✅ Copied!";
         setTimeout(() => {
-            shareButton.innerHTML = originalHTML;
+            buttonElement.innerHTML = originalHTML;
         }, 2000);
     }
 });

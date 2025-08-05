@@ -5,12 +5,15 @@
       {% if comment.author %}
         <span class="badge">{{ comment.author.role_icon }}</span>
       {% else %}
-        <span class="badge text-gray-600">(Guest)</span>
+        <span class="badge text-gray-600">[Guest]</span>
       {% endif %}
       {% if comment.author %}
         <a href="{{ url_for('blog.user_posts', username=comment.author.username) }}">
           <strong class="font-semibold text-blue-700">{{ comment.author.username }}</strong>
         </a>
+        {% if comment.author_id == comment.post.author_id %}
+          <span class="text-gray-500">(author)</span>
+        {% endif %}
       {% else %}
         <strong class="font-semibold text-gray-700">{{ comment.guest_name }}</strong>
       {% endif %}
@@ -51,31 +54,43 @@
     </div>
   {% endif %}
 
-  {# Actions row: Reply + Remove #}
-  <div class="flex items-center space-x-4 mt-2 text-sm">
+  {# Actions row: Reply + Share + Delete #}
+  <div class="flex items-center space-x-3 mt-2 text-sm">
+
+    {# Reply button #}
     {% if current_user.is_authenticated and not comment.is_removed %}
-      <a href="#"
-         class="reply-toggle text-blue-500 hover:underline"
-         data-comment="{{ comment.id }}">
-        Reply
-      </a>
+      <button type="button"
+          class="reply-toggle inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition duration-300 ease-in-out"
+          data-comment="{{ comment.id }}">
+        🗨️ <span class="hidden sm:inline ml-1">Reply</span>
+      </button>
     {% endif %}
 
+    {# Share button #}
+    <button type="button"
+        class="comment-share-button inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition duration-300 ease-in-out"
+        data-comment-id="{{ comment.id }}"
+        data-post-id="{{ comment.post_id }}">
+      🔗 <span class="hidden sm:inline ml-1">Share</span>
+    </button>
+
+    {# Delete button (for author/mods/admins) #}
     {% if current_user.is_authenticated and not comment.is_removed
           and (comment.author_id == current_user.id
-               or current_user.is_moderator()
-               or current_user.is_admin()) %}
+              or current_user.is_moderator()
+              or current_user.is_admin()) %}
       <form method="post"
             action="{{ url_for('blog.remove_comment', comment_id=comment.id) }}"
             class="inline-block"
             onsubmit="return confirm('Remove the content of this comment?');">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit"
-                class="text-red-500 hover:text-red-700">
-          Remove
+                class="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition duration-300 ease-in-out">
+          🗑️ <span class="hidden sm:inline ml-1">Delete</span>
         </button>
       </form>
     {% endif %}
+
   </div>
 
 {# Reply form, on its own line #}

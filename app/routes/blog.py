@@ -281,40 +281,57 @@ def delete_post(post_id):
 @blog_bp.route("/user/<username>")
 def user_posts(username):
     user = User.query.filter_by(username=username).first_or_404()
-    page = request.args.get("page", 1, type=int)
-    posts_pagination = (
-        db.session.query(
-            Post,
-            func.count(Comment.id).label("comment_count"),
-            func.count(PostLike.id).label("like_count"),
-        )
-        .outerjoin(Comment, Comment.post_id == Post.id)
-        .outerjoin(PostLike, PostLike.post_id == Post.id)
-        .filter(Post.author_id == user.id)
-        .group_by(Post.id)
-        .order_by(Post.timestamp.desc())
-        .paginate(page=page, per_page=10, error_out=False)
-    )
-    posts_entries = [{
-        "post": p,
-        "likes": like_count,
-        "comments": comment_count
-    } for p, comment_count, like_count in posts_pagination.items]
 
-    comments_pagination = Comment.query.filter_by(author_id=user.id)\
-                                .order_by(Comment.timestamp.desc())\
-                                .paginate(page=page, per_page=10, error_out=False)
-    
-    comments_entries = comments_pagination.items
+    # Get the active tab (default: 'posts')
+    active_tab = request.args.get("tab", "posts")
+
+    # Separate page args per tab
+    page_posts = request.args.get("page", 1, type=int) if active_tab == "posts" else 1
+    page_comments = request.args.get("page", 1, type=int) if active_tab == "comments" else 1
+
+    posts_entries = []
+    comments_entries = []
+    posts_pagination = None
+    comments_pagination = None
+
+    if active_tab == "posts":
+        posts_pagination = (
+            db.session.query(
+                Post,
+                func.count(Comment.id).label("comment_count"),
+                func.count(PostLike.id).label("like_count"),
+            )
+            .outerjoin(Comment, Comment.post_id == Post.id)
+            .outerjoin(PostLike, PostLike.post_id == Post.id)
+            .filter(Post.author_id == user.id)
+            .group_by(Post.id)
+            .order_by(Post.timestamp.desc())
+            .paginate(page=page_posts, per_page=10, error_out=False)
+        )
+        posts_entries = [{
+            "post": p,
+            "likes": like_count,
+            "comments": comment_count
+        } for p, comment_count, like_count in posts_pagination.items]
+
+    elif active_tab == "comments":
+        comments_pagination = (
+            Comment.query
+            .filter_by(author_id=user.id)
+            .order_by(Comment.timestamp.desc())
+            .paginate(page=page_comments, per_page=10, error_out=False)
+        )
+        comments_entries = comments_pagination.items
+
     return render_template(
         "user_posts.html",
         user=user,
+        active_tab=active_tab,
         posts_entries=posts_entries,
         posts_pagination=posts_pagination,
         comments_entries=comments_entries,
-        comments_pagination=comments_pagination
+        comments_pagination=comments_pagination,
     )
-
 
 @blog_bp.route("/comment/remove/<int:comment_id>", methods=["POST"])
 @login_required
@@ -423,7 +440,7 @@ def report():
         if not (post_id or comment_id):
             abort(400)
         post_content = Post.query.get(post_id) if post_id else None
-        comment_content = Comment.query.get(comment) if comment_id else None
+        comment_content = Comment.query.get(comment_id) if comment_id else None
         return render_template("report_form.html", post=post_content, comment=comment_content)
     post_id = request.form.get("post_id", type=int)
     comment_id = request.form.get("comment_id", type=int)

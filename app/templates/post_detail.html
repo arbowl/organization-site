@@ -68,7 +68,7 @@
     <div class="post-actions flex flex-wrap items-center gap-x-4 gap-y-4 mt-6">
         <button id="share-button"
             class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition duration-300 ease-in-out">
-            <span class="text-base">🔗 Share</span>
+            <span class="text-base">🔗 <span class="hidden sm:inline ml-1">Share</span></span>
         </button>
         {% if current_user.is_authenticated %}
             {% if current_user.id != post.author_id %}
@@ -81,7 +81,7 @@
                             class="inline-flex items-center px-4 py-2
                                     bg-blue-100 text-blue-800 rounded-md
                                     hover:bg-blue-200 transition duration-300 ease-in-out font-normal">
-                        <span class="text-base">🔔 Subscribe</span>
+                        <span class="text-base">🔔 <span class="hidden sm:inline ml-1">Subscribe</span></span>
                     </button>
                     </form>
                 {% else %}
@@ -93,7 +93,7 @@
                             class="inline-flex items-center px-4 py-2
                                     bg-blue-100 text-blue-800 rounded-md
                                     hover:bg-blue-200 transition duration-300 ease-in-out font-normal">
-                        <span class="text-base">🔕 Unsubscribe</span>
+                        <span class="text-base">🔕 <span class="hidden sm:inline ml-1">Unsubscribe</span></span>
                     </button>
                     </form>
                 {% endif %}
@@ -103,14 +103,14 @@
                     class="inline-flex items-center px-4 py-2
                                     bg-blue-100 text-blue-800 rounded-md
                                     hover:bg-blue-200 transition duration-300 ease-in-out"">
-                    <span class="text-base">🚩 Report</span>
+                    <span class="text-base">🚩 <span class="hidden sm:inline ml-1">Report</span></span>
                 </a>
             {% endif %}
             {% if current_user.id == post.author_id %}
             <a href="{{ url_for('blog.edit_post', post_id=post.id) }}"
                 class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md
                         hover:bg-blue-700 transition duration-300 ease-in-out">
-                ✏️ Edit
+                ✏️ <span class="hidden sm:inline ml-1">Edit</span>
             </a>
             {% endif %}
             {% if current_user.id == post.author_id
@@ -124,7 +124,7 @@
                 <button type="submit"
                         class="px-4 py-2 bg-red-600 text-white font-medium rounded-md
                             hover:bg-red-700 transition duration-300 ease-in-out">
-                🗑️ Delete
+                🗑️ <span class="hidden sm:inline ml-1">Delete</span>
                 </button>
             </form>
             {% endif %}

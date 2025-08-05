@@ -1,26 +1,17 @@
-from functools import wraps
-
 from bs4 import BeautifulSoup
 from bleach import clean
 from feedparser import FeedParserDict, parse
-from flask import abort
 from markupsafe import Markup
 from markdown import markdown
 from requests import get
 from requests.exceptions import RequestException
 
 ALLOWED_TAGS = [
-    # inline
     'a','abbr','acronym','b','blockquote','code','em','i','strong',
-    # lists
     'ul','ol','li',
-    # headings & sections
     'h1','h2','h3','h4','h5','h6','p','hr',
-    # code & pre
     'pre',
-    # images
     'img',
-    # tables
     'table','thead','tbody','tr','th','td',
 ]
 ALLOWED_ATTRS = {
@@ -29,7 +20,6 @@ ALLOWED_ATTRS = {
     'blockquote': ['class','data-lang'],
     'pre':    ['class','data-lang'],
     'code':   ['class'],
-    # if you want to allow CSS classes on lists/tables:
     'ul':     ['class'],  
     'ol':     ['class'],
     'li':     ['class'],
@@ -44,23 +34,21 @@ ALLOWED_ATTRS = {
 
 def md(text: str) -> Markup:
     """Render Markdown to HTML, sanitize, and mark safe for Jinja."""
-    # 1. Convert Markdown to HTML
     html = markdown(
         text,
         extensions=['fenced_code','tables','smarty']
     )
-    # 2. Clean it, stripping any tag not in ALLOWED_TAGS
     cleaned = clean(
         html,
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRS,
         strip=True
     )
-    # 3. Wrap it so Jinja knows it's already safe HTML
     return Markup(cleaned)
 
 
 def get_rss_highlights():
+    """Pulls international and local news sources"""
     feeds = [
         "https://www.boston.com/tag/national-news/feed",
         "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml",
@@ -81,13 +69,14 @@ def get_rss_highlights():
 
 
 def scrape_events():
+    """Pulls local MA protests from Mass Peace Action"""
     url = "https://masspeaceaction.org/events/"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
     }
     events = []
     try:
-        response = get(url, headers=headers)
+        response = get(url, headers=headers, timeout=1)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, "html.parser")
         event_articles = soup.find_all("article", class_="tribe-events-calendar-list__event")
@@ -98,7 +87,9 @@ def scrape_events():
             title = title_elem.get_text(strip=True) if title_elem else "No title"
             link = title_elem["href"] if title_elem and "href" in title_elem.attrs else "#"
             time_str = time_elem.get_text(strip=True) if time_elem else "Time not available"
-            location = venue_elem.get_text(strip=True, separator="; ") if venue_elem else "Location not available"
+            location = venue_elem.get_text(
+                strip=True, separator="; "
+            ) if venue_elem else "Location not available"
             events.append({
                 "title": title,
                 "link": link,
