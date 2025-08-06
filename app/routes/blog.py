@@ -12,7 +12,7 @@ from sqlalchemy import or_, func
 
 from app import db, limiter
 from app.models import Post, User, Comment, PostLike, CommentLike, Notification, Report, UserSubscription, PostSubscription
-from app.forms import PostForm, CommentForm, SearchForm
+from app.forms import PostForm, CommentForm, SearchForm, CommentEditForm
 from app.utils import get_rss_highlights, scrape_events
 
 blog_bp: Blueprint = Blueprint("blog", __name__)
@@ -524,3 +524,19 @@ def comment_thread(comment_id):
             db.session.commit()
     populate_thread(root)
     return render_template("comment_thread.html", root=root, form=form)
+
+
+@blog_bp.route("/comment/<int:comment_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_comment(comment_id):
+    comment: Comment = Comment.query.get_or_404(comment_id)
+    if comment.author_id != current_user.id and not current_user.is_admin():
+        abort(403)
+    form = CommentEditForm(comment_id=comment.id)
+    if form.validate_on_submit():
+        comment.content = form.content.data
+        comment.mark_edited()
+        db.session.commit()
+        return redirect(url_for("blog.view_post", slug=comment.post.slug) + f"#c{comment.id}")
+    form.content.data = comment.content
+    return render_template("edit_comment.html", form=form, comment=comment)

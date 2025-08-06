@@ -129,4 +129,26 @@ document.addEventListener('DOMContentLoaded', () => {
             buttonElement.innerHTML = originalHTML;
         }, 2000);
     }
+
+    document.querySelectorAll('.reply-form textarea').forEach(textarea => {
+        const charCountSpan = document.getElementById(`char-count-${textarea.closest('form').id.split('-')[1]}`);
+        const maxCharsSpan = document.getElementById(`max-chars-${textarea.closest('form').id.split('-')[1]}`);
+        const maxLength = 5000; // Max characters for comment
+
+        if (charCountSpan && maxCharsSpan) {
+            maxCharsSpan.textContent = maxLength;
+        }
+
+        function updateCharCount() {
+            const currentLength = textarea.value.length;
+            if (charCountSpan) {
+                charCountSpan.textContent = currentLength;
+                charCountSpan.style.color = currentLength > maxLength ? 'red' : ''; // Red color if over max length
+            }
+        }
+
+        // Update on typing
+        updateCharCount();
+        textarea.addEventListener("input", updateCharCount);
+    });
 });

@@ -113,6 +113,7 @@ class Comment(db.Model):
     is_removed = db.Column(db.Boolean, default=False, nullable=False)
     removed_by = db.Column(db.String(20), nullable=True)
     removed_at = db.Column(db.DateTime, nullable=True)
+    edited_at = db.Column(db.DateTime, nullable=True)
     author = db.relationship("User", backref="comments", foreign_keys=[author_id])
     replies = db.relationship("Comment", backref=db.backref("parent", remote_side=[id]), lazy="dynamic")
 
@@ -122,6 +123,9 @@ class Comment(db.Model):
         for reply in self.replies:
             total += reply.descendant_count()
         return total
+
+    def mark_edited(self):
+        self.edited_at = timestamp()
 
 
 class PostLike(db.Model):

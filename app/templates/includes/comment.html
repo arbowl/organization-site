@@ -17,7 +17,7 @@
       {% else %}
         <strong class="font-semibold text-gray-700">{{ comment.guest_name }}</strong>
       {% endif %}
-      on <span class="text-gray-500">{{ comment.timestamp.strftime('%Y-%m-%d') }}</span>
+      on <span class="text-gray-500">{{ comment.timestamp.strftime('%Y-%m-%d') }} {% if comment.edited_at %}(edited){% endif %}</span>
     </p>
 
     <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0"> {# Added mt-1 sm:mt-0 and flex-shrink-0 #}
@@ -55,20 +55,28 @@
   {% endif %}
 
   {# Actions row: Reply + Share + Delete #}
-  <div class="flex items-center space-x-3 mt-2 text-sm">
+  <div class="flex items-center space-x-3 mt-2 text-sm flex-wrap gap-1">
 
     {# Reply button #}
     {% if current_user.is_authenticated and not comment.is_removed %}
       <button type="button"
-          class="reply-toggle inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition duration-300 ease-in-out"
+          class="reply-toggle inline-flex items-center px-2 py-1 text-blue-800 rounded-md transition duration-300 ease-in-out sm:bg-blue-100 hover:bg-blue-200"
           data-comment="{{ comment.id }}">
-        🗨️ <span class="hidden sm:inline ml-1">Reply</span>
+        💬 <span class="hidden sm:inline ml-1">Reply</span>
       </button>
+    {% endif %}
+
+    {# Edit button #}
+    {% if current_user.is_authenticated and current_user.id == comment.author.id %}
+      <a href="{{ url_for('blog.edit_comment', comment_id=comment.id) }}"
+        class="inline-flex items-center px-2 py-1 text-blue-800 rounded-md transition duration-300 ease-in-out sm:bg-blue-100 hover:bg-blue-200">
+        ✏️ <span class="hidden sm:inline ml-1">Edit</span>
+      </a>
     {% endif %}
 
     {# Share button #}
     <button type="button"
-        class="comment-share-button inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition duration-300 ease-in-out"
+        class="comment-share-button inline-flex items-center px-2 py-1 text-blue-800 rounded-md transition duration-300 ease-in-out sm:bg-blue-100 hover:bg-blue-200"
         data-comment-id="{{ comment.id }}"
         data-post-id="{{ comment.post_id }}">
       🔗 <span class="hidden sm:inline ml-1">Share</span>
@@ -85,7 +93,7 @@
             onsubmit="return confirm('Remove the content of this comment?');">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit"
-                class="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition duration-300 ease-in-out">
+                class="inline-flex items-center px-2 py-1 text-red-700 rounded-md transition duration-300 ease-in-out sm:bg-red-100 hover:bg-red-200">
           🗑️ <span class="hidden sm:inline ml-1">Delete</span>
         </button>
       </form>
@@ -104,6 +112,10 @@
       <input type="hidden" name="parent_id" value="{{ comment.id }}">
       {{ form.content(rows=2,
                       class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 mb-2") }}
+      <div class="text-sm text-gray-500 mt-1">
+        <span id="char-count-{{ comment.id }}" class="font-semibold text-gray-700">0</span> / 
+        <span id="max-chars-{{ comment.id }}" class="font-semibold text-gray-700">5000</span>
+      </div>
       {{ form.submit(class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-200 ease-in-out") }}
     </form>
 {% endif %}

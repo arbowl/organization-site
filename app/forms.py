@@ -55,6 +55,12 @@ class CommentForm(FlaskForm):
         return True
 
 
+class CommentEditForm(FlaskForm):
+    comment_id = HiddenField(validators=[DataRequired()])
+    content = TextAreaField("Edit your comment", validators=[DataRequired(), Length(min=1, max=5000)])
+    submit = SubmitField("Save")
+
+
 class SearchForm(FlaskForm):
     q = StringField("Search", validators=[DataRequired(), Length(min=1, max=140)])
     submit = SubmitField("Go")
