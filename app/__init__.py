@@ -62,7 +62,9 @@ def sitemap():
     from app.models import Post
     pages = []
     now = datetime.now().date().isoformat()
-    pages.append(["/", now, "daily", 0.8])
+    host = getenv("HOST_DOMAIN")
+    if host:
+        pages.append([f"https://{host}/", now, "daily", 0.8])
     for post in Post.query.all():
         url = url_for("blog.view_post", slug=post.slug, _external=True)
         pages.append([url, post.timestamp.date().isoformat(), "weekly", 0.8])
