@@ -88,7 +88,8 @@
                 <ul class="space-y-4">
                     {% for bulletin in bulletins %}
                         <li class="border-b pb-4 last:border-b-0 last:pb-0">
-                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1">
+                            <div class="flex flex-wrap justify-between items-center gap-y-2">
+
                                 <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1 sm:mb-0 pr-2">
                                     <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}">{{ bulletin.post.title }}</a>
                                 </h4>

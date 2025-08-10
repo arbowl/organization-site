@@ -114,19 +114,6 @@
            class="block px-3 py-2 rounded-md hover:bg-gray-100">
             Create Post
           </a>
-          <form method="post" action="{{ url_for('auth.logout') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit"
-                    class="w-full text-left px-3 py-2 rounded-md
-                           hover:bg-gray-100">
-              Logout
-            </button>
-          </form>
-        {% else %}
-          <a href="{{ url_for('auth.login') }}"
-             class="block px-3 py-2 rounded-md hover:bg-gray-100">
-            Login
-          </a>
         {% endif %}
       </div>
     </div>
