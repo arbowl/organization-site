@@ -56,10 +56,18 @@
                 {% endfor %}
             </div>
 
-            <div>
-                {{ form.submit(class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full cursor-pointer") }}
+
+            <div class="flex items-center space-x-2">
+                    {{ form.newsletter(class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded") }}
+                    {{ form.newsletter.label(class="text-gray-700 font-medium") }}
             </div>
-        </form>
+            {% for error in form.newsletter.errors %}
+                <span class="text-red-500 text-xs italic mt-1 block">{{ error }}</span>
+            {% endfor %}
+                    <div>
+                        {{ form.submit(class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full cursor-pointer") }}
+                    </div>
+                </form>
 
         <p class="text-center text-gray-600 text-sm mt-6">
             Already have an account?

@@ -1,0 +1,143 @@
+<nav class="bg-white border-b border-gray-200 shadow sticky top-0">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <!-- Left: logo -->
+      <div class="flex-shrink-0">
+        <a href="{{ url_for('blog.index') }}">
+          <img class="h-8 w-auto"
+               src="{{ url_for('static', filename='favicon.ico') }}"
+               alt="Dismantl">
+        </a>
+      </div>
+
+      <!-- Center (desktop): Posts button + centered, max-width search -->
+      <div class="hidden md:flex flex-1 justify-center items-right space-x-4 ml-2 mr-2">
+        <form action="{{ url_for('blog.search') }}"
+              method="get"
+              class="w-full flex  max-w-md">
+          <label for="search" class="sr-only">Search</label>
+          <input id="search" name="q" type="search"
+                placeholder="Search posts…"
+                class="w-full border border-gray-300 rounded-md
+                        px-3 py-1 focus:outline-none
+                        focus:ring-2 focus:ring-blue-400">
+        </form>
+        <a href="{{ url_for('blog.all_posts') }}"
+           class="text-gray-700 bg-gray-100 hover:text-blue-300 px-3 py-2 rounded-md">
+          🔍
+        </a>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('blog.create_post') }}"
+            class="text-gray-700 bg-gray-100 hover:text-blue-100 px-3 py-2 rounded-md">
+            📝
+          </a>
+        {% endif %}
+
+      </div>
+
+      <!-- Right: auth links + mobile toggle -->
+      <div class="flex items-center ml-auto space-x-2">
+        {% if current_user.is_authenticated %}
+          <!-- Desktop greeting -->
+          <span class="text-gray-700 hidden md:inline"></span>
+          <a href="{{ url_for('blog.user_posts', username=current_user.username) }}"
+             class="text-gray-700 underline hidden md:inline
+                    hover:text-blue-600">
+            {{ current_user.username }}
+          </a>
+          <!-- Mobile profile icon -->
+          <a href="{{ url_for('blog.user_posts', username=current_user.username) }}"
+             class="text-gray-700 md:hidden text-xl p-1">
+            👤
+          </a>
+
+          <!-- Notifications -->
+          <a href="{{ url_for('blog.notifications') }}"
+             class="relative inline-flex items-center justify-center
+                    p-1 hover:bg-gray-100 rounded">
+            <span class="text-xl">✉️</span>
+            {% if unread_count %}
+              <span class="absolute top-0 right-0
+                            transform translate-x-1/3 -translate-y-1/3
+                            bg-red-500 text-white text-xs
+                            font-semibold rounded-full
+                            h-4 w-4 flex items-center justify-center
+                            leading-none">
+                {{ unread_count }}
+              </span>
+            {% endif %}
+          </a>
+
+          <!-- Logout -->
+          <a href="{{ url_for('auth.logout') }}"
+             class="bg-red-500 text-white px-3 py-2 rounded-md
+                    hover:bg-red-600">
+            Logout
+          </a>
+        {% else %}
+          <!-- Login -->
+          <a href="{{ url_for('auth.login') }}"
+             class="bg-blue-500 text-white px-3 py-2 rounded-md
+                    hover:bg-blue-600 ml-auto">
+            Login
+          </a>
+        {% endif %}
+
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-button"
+                class="text-2xl mb-1 md:hidden p-1 rounded hover:bg-gray-100
+                       focus:outline-none">
+          ☰
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu, hidden by default -->
+    <div id="mobile-menu" class="md:hidden hidden border-t border-gray-200">
+      <div class="px-2 pt-2 pb-3 space-y-1">
+        <form action="{{ url_for('blog.search') }}"
+              method="get"
+              class="w-full">
+          <label for="search" class="sr-only">Search</label>
+          <input id="search" name="q" type="search"
+                 placeholder="Search posts…"
+                 class="w-full border border-gray-300 rounded-md
+                        px-3 py-1 focus:outline-none
+                        focus:ring-2 focus:ring-blue-400">
+        </form>
+        <a href="{{ url_for('blog.all_posts') }}"
+           class="block px-3 py-2 rounded-md hover:bg-gray-100">
+          Posts
+        </a>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('blog.create_post') }}"
+           class="block px-3 py-2 rounded-md hover:bg-gray-100">
+            Create Post
+          </a>
+          <form method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+                    class="w-full text-left px-3 py-2 rounded-md
+                           hover:bg-gray-100">
+              Logout
+            </button>
+          </form>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}"
+             class="block px-3 py-2 rounded-md hover:bg-gray-100">
+            Login
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // simple mobile menu toggle
+    document.getElementById('mobile-menu-button')
+      .addEventListener('click', () => {
+        document.getElementById('mobile-menu')
+                .classList.toggle('hidden');
+      });
+  </script>
+</nav>

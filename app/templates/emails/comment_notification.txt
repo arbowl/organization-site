@@ -1,0 +1,6 @@
+{{ actor }} {{ verb }} ("{{ post.title }}")
+
+Comment:
+{{ comment.content }}
+
+Read it in context: {{ link }}

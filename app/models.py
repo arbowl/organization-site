@@ -24,6 +24,8 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(25), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
+    newsletter = db.Column(db.Boolean, default=False)
+    email_notifications = db.Column(db.Boolean, default=False)
     role = db.Column(db.String(20), nullable=False, default="user")
     posts = db.relationship("Post", backref="author", lazy="dynamic")
 

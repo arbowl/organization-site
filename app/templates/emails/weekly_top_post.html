@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top post of the week</title>
+</head>
+<body style="font-family: sans-serif; color: #333;">
+  <h1>Top post of the week: {{ post.title }}</h1>
+  <p><strong>Score:</strong> {{ score }} ({{ comments|length }} comments, {{ likes|length }} likes)</p>
+  <h2>Comments from the past week</h2>
+  <ul>
+    {% for c in comments %}
+    <li style="margin-bottom: 0.5em;">
+      <strong>{{ c.author.username if c.author else c.guest_name }}</strong>
+      <span style="color: #666; font-size: 0.9em;">on {{ c.timestamp.strftime('%Y-%m-%d') }}</span><br>
+      {{ c.content|safe }}
+    </li>
+    {% endfor %}
+  </ul>
+  <p>
+    <a href="{{ url_for('blog.view_post', slug=post.slug, _external=True) }}#c{{ comments[-1].id if comments else '' }}"
+       style="color: #1a73e8; text-decoration: none;">
+      Read the full post and join the discussion »
+    </a>
+  </p>
+  <p style="margin-top: 2em; color: #777; font-size: 0.9em;">
+    — Dismantl
+  </p>
+</body>
+</html>

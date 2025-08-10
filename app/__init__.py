@@ -7,7 +7,9 @@ from typing import Optional
 from flask import Flask, redirect, make_response, url_for, render_template, abort, request
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
+from flask_apscheduler import APScheduler
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -19,6 +21,7 @@ from app.utils import md
 
 
 db = SQLAlchemy()
+scheduler = APScheduler()
 app = Flask(__name__, instance_relative_config=True)
 limiter = Limiter(
     key_func=get_remote_address,
@@ -156,6 +159,27 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     config_name = config_name or getenv("FLASK_CONFIG", "development")
     app.config.from_object(f"config.{config_name.capitalize()}Config")
     app.config.from_pyfile("config.py", silent=True)
+    app.config.update({
+        "MAIL_SERVER": getenv("MAIL_SERVER"),
+        "MAIL_PORT": int(getenv("MAIL_PORT")),
+        "MAIL_USE_TLS": True,
+        "MAIL_USERNAME": getenv("SMTP_USER"),
+        "MAIL_DEFAULT_SENDER": getenv("SMTP_USER"),
+        "MAIL_PASSWORD": getenv("SMTP_PASS")
+    })
+    app.config["JOBS"] = [{
+        'id': 'newsletter',
+        'func': 'app.tasks:send_weekly_top_post_email',
+        'trigger': 'cron',
+        'day_of_week': 'mon',
+        'hour': 10,
+        'minute': 0,
+        'timezone': 'America/New_York'
+    }]
+    scheduler.init_app(app)
+    scheduler.start()
+    mail = Mail(app)
+    app.mail = mail
     app.jinja_env.filters["md"] = md
     db.init_app(app)
     migrate.init_app(app, db)
@@ -164,6 +188,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     from .routes.blog import blog_bp
     from .routes.pages import pages_bp
     from .routes.social import social_bp
+    from .routes.account import account_bp
     from .routes.analytics import analytics_bp
     from app.models import User, Post, Comment, Report
     admin.add_view(UserAdmin(User, db.session))
@@ -174,6 +199,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     app.register_blueprint(blog_bp)
     app.register_blueprint(pages_bp)
     app.register_blueprint(social_bp)
+    app.register_blueprint(account_bp)
     app.register_blueprint(analytics_bp)
     with app.app_context():
         db.create_all()

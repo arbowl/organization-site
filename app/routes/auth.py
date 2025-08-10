@@ -46,7 +46,8 @@ def register():
         new_user = User(
             username=form.username.data,
             email=form.email.data,
-            password_hash=generate_password_hash(form.password.data)
+            password_hash=generate_password_hash(form.password.data),
+            newsletter=form.newsletter.data,
         )
         db.session.add(new_user)
         db.session.commit()

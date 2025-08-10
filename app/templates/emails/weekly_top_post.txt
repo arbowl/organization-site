@@ -1,0 +1,13 @@
+Top post of the week: {{ post.title }}
+
+Score: {{ score }} ({{ comments|length }} comments, {{ likes|length }} likes)
+
+Comments from the past week:
+{% for c in comments %}
+- {{ c.author.username if c.author else c.guest_name }} ({{ c.timestamp.strftime('%Y-%m-%d') }}): {{ c.content|striptags }}
+{% endfor %}
+
+Read the full post and join the discussion:
+{{ url_for('blog.view_post', slug=post.slug, _external=True) }}#c{{ comments[-1].id if comments else '' }}
+
+— Dismantl

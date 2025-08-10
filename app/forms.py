@@ -20,6 +20,7 @@ class RegistrationForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField("Password", validators=[DataRequired(), Length(min=6)])
     password2 = PasswordField("Repeat Password", validators=[DataRequired()])
+    newsletter = BooleanField("Subscribe to our weekly newsletter", default=False)
     submit = SubmitField("Register")
 
     def validate_username(self, username):
@@ -64,3 +65,12 @@ class CommentEditForm(FlaskForm):
 class SearchForm(FlaskForm):
     q = StringField("Search", validators=[DataRequired(), Length(min=1, max=140)])
     submit = SubmitField("Go")
+
+
+class ContactForm(FlaskForm):
+    name = StringField("Your name", validators=[DataRequired(), Length(1, 80)])
+    email = StringField("Your email", validators=[DataRequired(), Email(), Length(1, 200)])
+    subject = StringField("Subject", validators=[DataRequired(), Length(1, 120)])
+    message = TextAreaField("Message", validators=[DataRequired(), Length(1, 5000)])
+    submit = SubmitField("Send Message")
+

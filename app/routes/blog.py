@@ -3,20 +3,24 @@
 This handles any routes related to the blog post portion of the site.
 """
 
+from os import getenv
+
 from datetime import datetime, timezone
 from functools import partial
 from flask import Blueprint, render_template, redirect, url_for, flash, abort, request
 from flask_login import login_required, current_user
+from flask_mail import Message
 from slugify import slugify
 from sqlalchemy import or_, func
 
-from app import db, limiter
+from app import app, db, limiter
 from app.models import Post, User, Comment, PostLike, CommentLike, Notification, Report, UserSubscription, PostSubscription
 from app.forms import PostForm, CommentForm, SearchForm, CommentEditForm
 from app.utils import get_rss_highlights, scrape_events
 
 blog_bp: Blueprint = Blueprint("blog", __name__)
 timestamp = partial(datetime.now, timezone.utc)
+MAIL_NOTIFICATION = getenv("MAIL_NOTIFICATIONS")
 
 
 @blog_bp.route("/")
@@ -57,7 +61,7 @@ def index() -> str:
     } for p in posts if p["post"].author.role == "admin"]
     news = get_rss_highlights()
     events = scrape_events()[:5]
-    return render_template("index.html", posts=posts[:3], bulletins=bulletins[:3], news=news, events=events)
+    return render_template("index.html", posts=posts[:16], bulletins=bulletins[:3], news=news, events=events)
 
 
 @blog_bp.route("/all")
@@ -139,6 +143,7 @@ def view_post(slug: str) -> str:
                         target_id=comment.id
                     )
                     db.session.add(notif)
+                    attach_email_to_notification(notif)
             db.session.commit()
         if recipient:
             is_self = (
@@ -155,6 +160,7 @@ def view_post(slug: str) -> str:
                     target_id=comment.id
                 )
                 db.session.add(notif)
+                attach_email_to_notification(notif)
                 db.session.commit()
         return redirect(url_for("blog.view_post", slug=slug) + f"#c{comment.id}")
     comments = (
@@ -241,6 +247,7 @@ def create_post():
                     target_id = post.id
                 )
                 db.session.add(notif)
+                attach_email_to_notification(notif)
         db.session.commit()
         flash("Post created!", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
@@ -332,6 +339,7 @@ def user_posts(username):
         comments_entries=comments_entries,
         comments_pagination=comments_pagination,
     )
+
 
 @blog_bp.route("/comment/remove/<int:comment_id>", methods=["POST"])
 @login_required
@@ -511,6 +519,7 @@ def comment_thread(comment_id):
                         target_id = comment.id
                     )
                     db.session.add(notif)
+                    attach_email_to_notification(notif)
             db.session.commit()
         if recipient.id != current_user.id:
             notif = Notification(
@@ -521,6 +530,7 @@ def comment_thread(comment_id):
                 target_id = comment.id
             )
             db.session.add(notif)
+            attach_email_to_notification(notif)
             db.session.commit()
     populate_thread(root)
     return render_template("comment_thread.html", root=root, form=form)
@@ -540,3 +550,47 @@ def edit_comment(comment_id):
         return redirect(url_for("blog.view_post", slug=comment.post.slug) + f"#c{comment.id}")
     form.content.data = comment.content
     return render_template("edit_comment.html", form=form, comment=comment)
+
+
+
+def attach_email_to_notification(notif: Notification) -> None:
+    db.session.flush()
+    if notif.target_type != 'comment':
+        return
+    if not notif.recipient.email_notifications:
+        return
+    if notif.actor:
+        actor_name = notif.actor.username
+    else:
+        actor_name = notif.guest_name or "Someone"
+    comment = notif.comment
+    post = comment.post
+    link = (
+        url_for('blog.view_post', slug=post.slug, _external=True)
+        + f"#c{comment.id}"
+    )
+    subject = f"{actor_name} {notif.verb}"
+    text_body = render_template(
+        'emails/comment_notification.txt',
+        actor=actor_name,
+        verb=notif.verb,
+        post=post,
+        comment=comment,
+        link=link
+    )
+    html_body = render_template(
+        'emails/comment_notification.html',
+        actor=actor_name,
+        verb=notif.verb,
+        post=post,
+        comment=comment,
+        link=link
+    )
+    app.config["MAIL_DEFAULT_SENDER"] = MAIL_NOTIFICATION
+    msg = Message(
+        subject=subject,
+        recipients=[notif.recipient.email],
+        body=text_body,
+        html=html_body
+    )
+    app.mail.send(msg)
