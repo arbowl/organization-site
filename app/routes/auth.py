@@ -36,21 +36,25 @@ def logout():
     return redirect(url_for("blog.index"))
 
 
-@auth_bp.route("/register", methods=["GET", "POST"])
 @limiter.limit("2 per day")
+def submit_registration(form: RegistrationForm):
+    new_user = User(
+        username=form.username.data,
+        email=form.email.data,
+        password_hash=generate_password_hash(form.password.data),
+        newsletter=form.newsletter.data,
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    flash("Registration successful--please login.", "success")
+    return redirect(url_for("auth.login"))
+
+
+@auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for("blog.index"))
     form = RegistrationForm()
     if form.validate_on_submit():
-        new_user = User(
-            username=form.username.data,
-            email=form.email.data,
-            password_hash=generate_password_hash(form.password.data),
-            newsletter=form.newsletter.data,
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        flash("Registration successful--please login.", "success")
-        return redirect(url_for("auth.login"))
+        return submit_registration(form)
     return render_template("auth/register.html", form=form)
