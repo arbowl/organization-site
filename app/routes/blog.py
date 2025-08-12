@@ -12,9 +12,20 @@ from flask_login import login_required, current_user
 from flask_mail import Message
 from slugify import slugify
 from sqlalchemy import or_, func
+from sqlalchemy.exc import IntegrityError
 
 from app import app, db, limiter
-from app.models import Post, User, Comment, PostLike, CommentLike, Notification, Report, UserSubscription, PostSubscription
+from app.models import (
+    Post,
+    User,
+    Comment,
+    PostLike,
+    CommentLike,
+    Notification,
+    Report,
+    UserSubscription,
+    PostSubscription,
+)
 from app.forms import PostForm, CommentForm, SearchForm, CommentEditForm
 from app.utils import get_rss_highlights, scrape_events
 
@@ -27,74 +38,74 @@ MAIL_NOTIFICATION = getenv("MAIL_NOTIFICATIONS")
 def index() -> str:
     """The landing page of the site"""
     comment_count_subq = (
-        db.session.query(
-            Comment.post_id,
-            func.count(Comment.id).label("comment_count")
-        ).group_by(Comment.post_id).subquery()
+        db.session.query(Comment.post_id, func.count(Comment.id).label("comment_count"))
+        .group_by(Comment.post_id)
+        .subquery()
     )
     like_count_subq = (
-        db.session.query(
-            PostLike.post_id,
-            func.count(PostLike.id).label("like_count")
-        ).group_by(PostLike.post_id).subquery()
+        db.session.query(PostLike.post_id, func.count(PostLike.id).label("like_count"))
+        .group_by(PostLike.post_id)
+        .subquery()
     )
     post_data = (
         db.session.query(
             Post,
             func.coalesce(comment_count_subq.c.comment_count, 0),
-            func.coalesce(like_count_subq.c.like_count, 0)
+            func.coalesce(like_count_subq.c.like_count, 0),
         )
         .outerjoin(comment_count_subq, Post.id == comment_count_subq.c.post_id)
         .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
         .order_by(Post.timestamp.desc())
         .all()
     )
-    posts = [{
-        "post": p,
-        "likes": like_count,
-        "comments": comment_count
-    } for p, comment_count, like_count in post_data]
-    bulletins = [{
-        "post": p["post"],
-        "likes": p["likes"],
-        "comments": p["comments"]
-    } for p in posts if p["post"].author.role == "admin"]
+    posts = [
+        {"post": p, "likes": like_count, "comments": comment_count}
+        for p, comment_count, like_count in post_data
+    ]
+    bulletins = [
+        {"post": p["post"], "likes": p["likes"], "comments": p["comments"]}
+        for p in posts
+        if p["post"].author.role == "admin"
+    ]
     news = get_rss_highlights()
     events = scrape_events()[:5]
-    return render_template("index.html", posts=posts[:16], bulletins=bulletins[:3], news=news, events=events)
+    return render_template(
+        "index.html",
+        posts=posts[:16],
+        bulletins=bulletins[:3],
+        news=news,
+        events=events,
+    )
 
 
 @blog_bp.route("/all")
 def all_posts() -> str:
     page = request.args.get("page", 1, type=int)
     comment_count_subq = (
-        db.session.query(
-            Comment.post_id,
-            func.count(Comment.id).label("comment_count")
-        ).group_by(Comment.post_id).subquery()
+        db.session.query(Comment.post_id, func.count(Comment.id).label("comment_count"))
+        .group_by(Comment.post_id)
+        .subquery()
     )
     like_count_subq = (
-        db.session.query(
-            PostLike.post_id,
-            func.count(PostLike.id).label("like_count")
-        ).group_by(PostLike.post_id).subquery()
+        db.session.query(PostLike.post_id, func.count(PostLike.id).label("like_count"))
+        .group_by(PostLike.post_id)
+        .subquery()
     )
     pagination = (
         db.session.query(
             Post,
             func.coalesce(comment_count_subq.c.comment_count, 0),
-            func.coalesce(like_count_subq.c.like_count, 0)
+            func.coalesce(like_count_subq.c.like_count, 0),
         )
         .outerjoin(comment_count_subq, Post.id == comment_count_subq.c.post_id)
         .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
         .order_by(Post.timestamp.desc())
         .paginate(page=page, per_page=10, error_out=False)
     )
-    entries = [{
-        "post": p,
-        "likes": like_count,
-        "comments": comment_count
-    } for p, comment_count, like_count in pagination.items]
+    entries = [
+        {"post": p, "likes": like_count, "comments": comment_count}
+        for p, comment_count, like_count in pagination.items
+    ]
     return render_template("all_posts.html", entries=entries, pagination=pagination)
 
 
@@ -117,7 +128,7 @@ def view_post(slug: str) -> str:
             author_id=author_id,
             guest_name=guest_name,
             post_id=form.post_id.data,
-            parent_id=form.parent_id.data or None
+            parent_id=form.parent_id.data or None,
         )
         db.session.add(comment)
         db.session.commit()
@@ -133,23 +144,25 @@ def view_post(slug: str) -> str:
             verb = "commented on your post"
             subs = PostSubscription.query.filter_by(post_id=post.id).all()
             for subscriber in subs:
-                if not current_user.is_authenticated or subscriber.subscriber_id != current_user.id:
+                if (
+                    not current_user.is_authenticated
+                    or subscriber.subscriber_id != current_user.id
+                ):
                     notif = Notification(
                         recipient_id=subscriber.subscriber_id,
                         actor_id=author_id,
                         guest_name=guest_name,
                         verb="commented on a post you subscribed to",
                         target_type="comment",
-                        target_id=comment.id
+                        target_id=comment.id,
                     )
                     db.session.add(notif)
                     attach_email_to_notification(notif)
             db.session.commit()
         if recipient:
             is_self = (
-                (current_user.is_authenticated and recipient.id == current_user.id) or
-                (not current_user.is_authenticated and recipient is None)
-            )
+                current_user.is_authenticated and recipient.id == current_user.id
+            ) or (not current_user.is_authenticated and recipient is None)
             if not is_self:
                 notif = Notification(
                     recipient_id=recipient.id,
@@ -157,22 +170,27 @@ def view_post(slug: str) -> str:
                     guest_name=guest_name,
                     verb=verb,
                     target_type="comment",
-                    target_id=comment.id
+                    target_id=comment.id,
                 )
                 db.session.add(notif)
                 attach_email_to_notification(notif)
                 db.session.commit()
         return redirect(url_for("blog.view_post", slug=slug) + f"#c{comment.id}")
     comments = (
-        Comment.query.filter_by(post_id=post.id, parent_id=None
-    ).order_by(Comment.timestamp.desc()).all())
+        Comment.query.filter_by(post_id=post.id, parent_id=None)
+        .order_by(Comment.timestamp.desc())
+        .all()
+    )
     for c in comments:
         populate_replies(c)
     return render_template("post_detail.html", post=post, form=form, comments=comments)
 
 
 @blog_bp.route("/like/post/<int:post_id>", methods=["POST"])
-@limiter.limit("20 per day", key_func=lambda: current_user.id if current_user.is_authenticated else "anon")
+@limiter.limit(
+    "20 per day",
+    key_func=lambda: current_user.id if current_user.is_authenticated else "anon",
+)
 @login_required
 def toggle_post_like(post_id):
     post = Post.query.get_or_404(post_id)
@@ -183,11 +201,11 @@ def toggle_post_like(post_id):
         db.session.add(PostLike(user=current_user, post=post))
         if post.author.id != current_user.id:
             notif = Notification(
-                recipient_id = post.author_id,
-                actor_id = current_user.id,
-                verb = "liked your post",
-                target_type = "post",
-                target_id = post.id,
+                recipient_id=post.author_id,
+                actor_id=current_user.id,
+                verb="liked your post",
+                target_type="post",
+                target_id=post.id,
             )
             db.session.add(notif)
     db.session.commit()
@@ -195,30 +213,40 @@ def toggle_post_like(post_id):
 
 
 @blog_bp.route("/like/comment/<int:comment_id>", methods=["POST"])
-@limiter.limit("20 per day", key_func=lambda: current_user.id if current_user.is_authenticated else "anon")
+@limiter.limit(
+    "20 per day",
+    key_func=lambda: current_user.id if current_user.is_authenticated else "anon",
+)
 @login_required
 def toggle_comment_like(comment_id):
     comment = Comment.query.get_or_404(comment_id)
-    like = CommentLike.query.filter_by(user_id=current_user.id, comment_id=comment_id).first()
+    like = CommentLike.query.filter_by(
+        user_id=current_user.id, comment_id=comment_id
+    ).first()
     if like:
         db.session.delete(like)
     else:
         db.session.add(CommentLike(user=current_user, comment=comment))
         if comment.author_id != current_user.id:
             notif = Notification(
-                recipient_id = comment.author_id,
-                actor_id = current_user.id,
-                verb = "liked your comment",
-                target_type = "comment",
-                target_id = comment.id,
+                recipient_id=comment.author_id,
+                actor_id=current_user.id,
+                verb="liked your comment",
+                target_type="comment",
+                target_id=comment.id,
             )
             db.session.add(notif)
     db.session.commit()
-    return redirect(request.referrer or url_for("blog.view_post", slug=comment.post.slug))
+    return redirect(
+        request.referrer or url_for("blog.view_post", slug=comment.post.slug)
+    )
 
 
 @blog_bp.route("/create", methods=["GET", "POST"])
-@limiter.limit("5 per hour", key_func=lambda: current_user.id if current_user.is_authenticated else "anon")
+@limiter.limit(
+    "5 per hour",
+    key_func=lambda: current_user.id if current_user.is_authenticated else "anon",
+)
 @login_required
 def create_post():
     if not current_user.is_contributor():
@@ -240,11 +268,11 @@ def create_post():
         for subscriber in subs:
             if subscriber.subscriber_id != current_user.id:
                 notif = Notification(
-                    recipient_id = subscriber.subscriber_id,
-                    actor_id = current_user.id,
-                    verb = "posted a new article",
-                    target_type = "post",
-                    target_id = post.id
+                    recipient_id=subscriber.subscriber_id,
+                    actor_id=current_user.id,
+                    verb="posted a new article",
+                    target_type="post",
+                    target_id=post.id,
                 )
                 db.session.add(notif)
                 attach_email_to_notification(notif)
@@ -288,19 +316,15 @@ def delete_post(post_id):
 @blog_bp.route("/user/<username>")
 def user_posts(username):
     user = User.query.filter_by(username=username).first_or_404()
-
-    # Get the active tab (default: 'posts')
     active_tab = request.args.get("tab", "posts")
-
-    # Separate page args per tab
     page_posts = request.args.get("page", 1, type=int) if active_tab == "posts" else 1
-    page_comments = request.args.get("page", 1, type=int) if active_tab == "comments" else 1
-
+    page_comments = (
+        request.args.get("page", 1, type=int) if active_tab == "comments" else 1
+    )
     posts_entries = []
     comments_entries = []
     posts_pagination = None
     comments_pagination = None
-
     if active_tab == "posts":
         posts_pagination = (
             db.session.query(
@@ -315,21 +339,17 @@ def user_posts(username):
             .order_by(Post.timestamp.desc())
             .paginate(page=page_posts, per_page=10, error_out=False)
         )
-        posts_entries = [{
-            "post": p,
-            "likes": like_count,
-            "comments": comment_count
-        } for p, comment_count, like_count in posts_pagination.items]
-
+        posts_entries = [
+            {"post": p, "likes": like_count, "comments": comment_count}
+            for p, comment_count, like_count in posts_pagination.items
+        ]
     elif active_tab == "comments":
         comments_pagination = (
-            Comment.query
-            .filter_by(author_id=user.id)
+            Comment.query.filter_by(author_id=user.id)
             .order_by(Comment.timestamp.desc())
             .paginate(page=page_comments, per_page=10, error_out=False)
         )
         comments_entries = comments_pagination.items
-
     return render_template(
         "user_posts.html",
         user=user,
@@ -360,7 +380,9 @@ def remove_comment(comment_id):
     comment.removed_at = datetime.now(timezone.utc)
     db.session.commit()
     flash("Comment content removed.", "info")
-    return redirect(request.referrer or url_for("blog.view_post", slug=comment.post.slug))
+    return redirect(
+        request.referrer or url_for("blog.view_post", slug=comment.post.slug)
+    )
 
 
 @blog_bp.route("/search")
@@ -373,10 +395,7 @@ def search():
         page = request.args.get("page", 1, type=int)
         per_page = 10
         query = Post.query.filter(
-            or_(
-                Post.title.ilike(q),
-                Post.content.ilike(q)
-            )
+            or_(Post.title.ilike(q), Post.content.ilike(q))
         ).order_by(Post.timestamp.desc())
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         posts = pagination.items
@@ -400,10 +419,14 @@ def notifications():
     elif tab == "read":
         q = q.filter(Notification.read_at != None)
     elif tab == "replies":
-        q = q.filter(Notification.verb.in_(["replied to your comment", "commented on your post"]))
+        q = q.filter(
+            Notification.verb.in_(["replied to your comment", "commented on your post"])
+        )
     elif tab == "likes":
         q = q.filter(Notification.verb.in_(["liked your comment", "liked your post"]))
-    pagination = q.order_by(Notification.timestamp.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    pagination = q.order_by(Notification.timestamp.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
     notifs = pagination.items
     valid_notifs = []
     for n in notifs:
@@ -416,20 +439,26 @@ def notifications():
         valid_notifs.append(n)
     if tab == "unread":
         Notification.query.filter(
-            Notification.recipient_id==current_user.id,
-            Notification.verb.in_(["liked your post", "liked your comment", "posted a new article"]),
+            Notification.recipient_id == current_user.id,
+            Notification.verb.in_(
+                ["liked your post", "liked your comment", "posted a new article"]
+            ),
             Notification.read_at.is_(None),
         ).update({"read_at": timestamp()})
         db.session.commit()
-    return render_template("notifications.html", notifications=valid_notifs, pagination=pagination, active_tab=tab)
+    return render_template(
+        "notifications.html",
+        notifications=valid_notifs,
+        pagination=pagination,
+        active_tab=tab,
+    )
 
 
 @blog_bp.route("/notifications/read/<int:notif_id>", methods=["POST"])
 @login_required
 def mark_notification_read(notif_id):
     notif: Notification = Notification.query.filter_by(
-        id=notif_id,
-        recipient_id = current_user.id
+        id=notif_id, recipient_id=current_user.id
     ).first_or_404()
     if notif.read_at is None:
         notif.read_at = timestamp()
@@ -439,7 +468,10 @@ def mark_notification_read(notif_id):
 
 
 @blog_bp.route("/report", methods=["GET", "POST"])
-@limiter.limit("25 per day", key_func=lambda: current_user.id if current_user.is_authenticated else "anon")
+@limiter.limit(
+    "25 per day",
+    key_func=lambda: current_user.id if current_user.is_authenticated else "anon",
+)
 @login_required
 def report():
     if request.method == "GET":
@@ -449,7 +481,9 @@ def report():
             abort(400)
         post_content = Post.query.get(post_id) if post_id else None
         comment_content = Comment.query.get(comment_id) if comment_id else None
-        return render_template("report_form.html", post=post_content, comment=comment_content)
+        return render_template(
+            "report_form.html", post=post_content, comment=comment_content
+        )
     post_id = request.form.get("post_id", type=int)
     comment_id = request.form.get("comment_id", type=int)
     reason = request.form.get("reason", "").strip()[:200]
@@ -458,11 +492,15 @@ def report():
         return redirect(request.referrer or url_for("blog.all_posts"))
     if comment_id:
         comment = Comment.query.get_or_404(comment_id)
-        return_page = lambda: redirect(url_for("blog.view_post", slug=comment.post.slug) + f"#c{comment.id}")
+        return_page = lambda: redirect(
+            url_for("blog.view_post", slug=comment.post.slug) + f"#c{comment.id}"
+        )
     else:
         post = Post.query.get_or_404(post_id)
         return_page = lambda: redirect(url_for("blog.view_post", slug=post.slug))
-    existing = Report.query.filter_by(reporter_id=current_user.id, post_id=post_id, comment_id=comment_id).first()
+    existing = Report.query.filter_by(
+        reporter_id=current_user.id, post_id=post_id, comment_id=comment_id
+    ).first()
     if existing:
         flash("You've already reported this.", "info")
         return return_page()
@@ -492,10 +530,10 @@ def comment_thread(comment_id):
         if not current_user.is_authenticated:
             abort(403)
         comment = Comment(
-            content = form.content.data,
-            author = current_user,
-            post_id = form.post_id.data,
-            parent_id = form.parent_id.data or None
+            content=form.content.data,
+            author=current_user,
+            post_id=form.post_id.data,
+            parent_id=form.parent_id.data or None,
         )
         db.session.add(comment)
         db.session.commit()
@@ -512,22 +550,22 @@ def comment_thread(comment_id):
             for subscriber in subs:
                 if subscriber.subscriber_id != current_user.id:
                     notif = Notification(
-                        recipient_id = subscriber.subscriber_id,
-                        actor_id = current_user.id,
-                        verb = "commented on a post you subscribed to",
-                        target_type = "comment",
-                        target_id = comment.id
+                        recipient_id=subscriber.subscriber_id,
+                        actor_id=current_user.id,
+                        verb="commented on a post you subscribed to",
+                        target_type="comment",
+                        target_id=comment.id,
                     )
                     db.session.add(notif)
                     attach_email_to_notification(notif)
             db.session.commit()
         if recipient.id != current_user.id:
             notif = Notification(
-                recipient_id = recipient.id,
-                actor_id = current_user.id,
-                verb = verb,
-                target_type = "comment",
-                target_id = comment.id
+                recipient_id=recipient.id,
+                actor_id=current_user.id,
+                verb=verb,
+                target_type="comment",
+                target_id=comment.id,
             )
             db.session.add(notif)
             attach_email_to_notification(notif)
@@ -547,15 +585,16 @@ def edit_comment(comment_id):
         comment.content = form.content.data
         comment.mark_edited()
         db.session.commit()
-        return redirect(url_for("blog.view_post", slug=comment.post.slug) + f"#c{comment.id}")
+        return redirect(
+            url_for("blog.view_post", slug=comment.post.slug) + f"#c{comment.id}"
+        )
     form.content.data = comment.content
     return render_template("edit_comment.html", form=form, comment=comment)
 
 
-
 def attach_email_to_notification(notif: Notification) -> None:
     db.session.flush()
-    if notif.target_type != 'comment':
+    if notif.target_type != "comment":
         return
     if not notif.recipient.email_notifications:
         return
@@ -565,32 +604,29 @@ def attach_email_to_notification(notif: Notification) -> None:
         actor_name = notif.guest_name or "Someone"
     comment = notif.comment
     post = comment.post
-    link = (
-        url_for('blog.view_post', slug=post.slug, _external=True)
-        + f"#c{comment.id}"
-    )
+    link = url_for("blog.view_post", slug=post.slug, _external=True) + f"#c{comment.id}"
     subject = f"{actor_name} {notif.verb}"
     text_body = render_template(
-        'emails/comment_notification.txt',
+        "emails/comment_notification.txt",
         actor=actor_name,
         verb=notif.verb,
         post=post,
         comment=comment,
-        link=link
+        link=link,
     )
     html_body = render_template(
-        'emails/comment_notification.html',
+        "emails/comment_notification.html",
         actor=actor_name,
         verb=notif.verb,
         post=post,
         comment=comment,
-        link=link
+        link=link,
     )
     app.config["MAIL_DEFAULT_SENDER"] = MAIL_NOTIFICATION
     msg = Message(
         subject=subject,
         recipients=[notif.recipient.email],
         body=text_body,
-        html=html_body
+        html=html_body,
     )
     app.mail.send(msg)

@@ -44,14 +44,20 @@ class User(UserMixin, db.Model):
                 return "👤"
 
     def subscribed_to_user(self, user: User):
-        return UserSubscription.query.filter_by(
-            subscriber_id=self.id, user_id=user.id
-        ).first() is not None
+        return (
+            UserSubscription.query.filter_by(
+                subscriber_id=self.id, user_id=user.id
+            ).first()
+            is not None
+        )
 
     def subscribed_to_post(self, post: Post):
-        return PostSubscription.query.filter_by(
-            subscriber_id=self.id, post_id=post.id
-        ).first() is not None
+        return (
+            PostSubscription.query.filter_by(
+                subscriber_id=self.id, post_id=post.id
+            ).first()
+            is not None
+        )
 
     def is_admin(self):
         return self.role == "admin"
@@ -89,15 +95,12 @@ class Post(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     updated_at = db.Column(db.DateTime, index=True, nullable=True)
     comments = db.relationship(
-        "Comment",
-        backref="post",
-        lazy="dynamic",
-        cascade="all, delete-orphan"
+        "Comment", backref="post", lazy="dynamic", cascade="all, delete-orphan"
     )
 
     @property
     def display_date(self):
-        date = self.timestamp.strftime('%Y-%m-%d')
+        date = self.timestamp.strftime("%Y-%m-%d")
         if self.updated_at:
             date += f" ⸱ <i>(edited {self.updated_at.strftime('%Y-%m-%d')})</i>"
         return date
@@ -117,7 +120,9 @@ class Comment(db.Model):
     removed_at = db.Column(db.DateTime, nullable=True)
     edited_at = db.Column(db.DateTime, nullable=True)
     author = db.relationship("User", backref="comments", foreign_keys=[author_id])
-    replies = db.relationship("Comment", backref=db.backref("parent", remote_side=[id]), lazy="dynamic")
+    replies = db.relationship(
+        "Comment", backref=db.backref("parent", remote_side=[id]), lazy="dynamic"
+    )
 
     @hybrid_method
     def descendant_count(self):
@@ -137,7 +142,10 @@ class PostLike(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
     timestamp = db.Column(db.DateTime, default=timestamp())
     user = db.relationship("User", backref="post_likes")
-    post = db.relationship("Post", backref=db.backref("likes", lazy="dynamic", cascade="all, delete-orphan"))
+    post = db.relationship(
+        "Post",
+        backref=db.backref("likes", lazy="dynamic", cascade="all, delete-orphan"),
+    )
 
 
 class CommentLike(db.Model):
@@ -147,7 +155,10 @@ class CommentLike(db.Model):
     comment_id = db.Column(db.Integer, db.ForeignKey("comments.id"), nullable=False)
     timestamp = db.Column(db.DateTime, default=timestamp())
     user = db.relationship("User", backref="comment_likes")
-    comment = db.relationship("Comment", backref=db.backref("likes", lazy="dynamic", cascade="all, delete-orphan"))
+    comment = db.relationship(
+        "Comment",
+        backref=db.backref("likes", lazy="dynamic", cascade="all, delete-orphan"),
+    )
 
 
 class Notification(db.Model):
@@ -162,9 +173,7 @@ class Notification(db.Model):
     timestamp = db.Column(db.DateTime, default=timestamp(), index=True)
     read_at = db.Column(db.DateTime, nullable=True)
     recipient = db.relationship(
-        User,
-        foreign_keys=[recipient_id],
-        backref="notifications"
+        User, foreign_keys=[recipient_id], backref="notifications"
     )
     actor = db.relationship(
         User,
@@ -178,7 +187,7 @@ class Notification(db.Model):
     comment = db.relationship(
         Comment,
         primaryjoin=and_(target_type == "comment", foreign(target_id) == Comment.id),
-        viewonly=True
+        viewonly=True,
     )
 
     @property
@@ -212,7 +221,10 @@ class Report(db.Model):
         if self.post_id:
             return url_for("blog.view_post", slug=self.post.slug)
         elif self.comment_id:
-            return url_for("blog.view_post", slug=self.comment.post.slug) + f"#c{self.comment.id}"
+            return (
+                url_for("blog.view_post", slug=self.comment.post.slug)
+                + f"#c{self.comment.id}"
+            )
 
 
 class UserSubscription(db.Model):
@@ -238,7 +250,7 @@ class PostSubscription(db.Model):
 
 
 class Visit(db.Model):
-    __tablename__ = 'visits'
+    __tablename__ = "visits"
 
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
@@ -247,5 +259,5 @@ class Visit(db.Model):
     utm_source = db.Column(db.String(100), nullable=True)
     utm_medium = db.Column(db.String(100), nullable=True)
     utm_campaign = db.Column(db.String(100), nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     ip_address = db.Column(db.String(45), nullable=False)

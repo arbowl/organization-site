@@ -29,23 +29,23 @@ def privacy():
 @limiter.limit("2 per day")
 def send_mail(form: ContactForm) -> Response:
     msg = Message(
-        subject = f"[Contact] {form.subject.data}",
-        recipients = [MAIL_CONTACT],
-        reply_to = form.email.data
+        subject=f"[Contact] {form.subject.data}",
+        recipients=[MAIL_CONTACT],
+        reply_to=form.email.data,
     )
     msg.body = render_template(
         "emails/contact.txt",
-        name = form.name.data,
-        email = form.email.data,
-        subject = form.subject.data,
-        message = form.message.data
+        name=form.name.data,
+        email=form.email.data,
+        subject=form.subject.data,
+        message=form.message.data,
     )
     msg.html = render_template(
         "emails/contact.html",
-        name = form.name.data,
-        email = form.email.data,
-        subject = form.subject.data,
-        message = form.message.data
+        name=form.name.data,
+        email=form.email.data,
+        subject=form.subject.data,
+        message=form.message.data,
     )
     app.config["MAIL_DEFAULT_SENDER"] = MAIL_CONTACT
     app.mail.send(msg)

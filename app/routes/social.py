@@ -13,10 +13,7 @@ def subscribe_user(username):
     target: User = User.query.filter_by(username=username).first_or_404()
     if target.id == current_user.id:
         abort(400)
-    sub = UserSubscription(
-        subscriber_id=current_user.id,
-        user_id=target.id
-    )
+    sub = UserSubscription(subscriber_id=current_user.id, user_id=target.id)
     db.session.add(sub)
     try:
         db.session.commit()
@@ -47,10 +44,7 @@ def subscribe_post(post_id):
     post: Post = Post.query.get_or_404(post_id)
     if post.author.id == current_user.id:
         abort(400)
-    sub = PostSubscription(
-        subscriber_id=current_user.id,
-        post_id=post.id
-    )
+    sub = PostSubscription(subscriber_id=current_user.id, post_id=post.id)
     db.session.add(sub)
     try:
         db.session.commit()

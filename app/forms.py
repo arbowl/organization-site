@@ -2,10 +2,19 @@
 
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, HiddenField
+from slugify import slugify
+from wtforms import (
+    StringField,
+    PasswordField,
+    BooleanField,
+    SubmitField,
+    TextAreaField,
+    HiddenField,
+    Field,
+)
 from wtforms.validators import DataRequired, Length, Email, ValidationError, Optional
 
-from app.models import User
+from app.models import User, Post
 
 
 class LoginForm(FlaskForm):
@@ -16,7 +25,9 @@ class LoginForm(FlaskForm):
 
 
 class RegistrationForm(FlaskForm):
-    username = StringField("Username", validators=[DataRequired(), Length(min=4, max=25)])
+    username = StringField(
+        "Username", validators=[DataRequired(), Length(min=4, max=25)]
+    )
     email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField("Password", validators=[DataRequired(), Length(min=6)])
     password2 = PasswordField("Repeat Password", validators=[DataRequired()])
@@ -25,17 +36,28 @@ class RegistrationForm(FlaskForm):
 
     def validate_username(self, username):
         if User.query.filter_by(username=username.data).first():
-            raise ValidationError("Username already taken. Please choose a different one.")
+            raise ValidationError(
+                "Username already taken. Please choose a different one."
+            )
 
     def validate_email(self, email):
         if User.query.filter_by(email=email.data).first():
-            raise ValidationError("Email already registered. Please use a different address.")
+            raise ValidationError(
+                "Email already registered. Please use a different address."
+            )
 
 
 class PostForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired(), Length(max=140)])
     content = TextAreaField("Content", validators=[DataRequired()])
     submit = SubmitField("Publish")
+
+    def validate_title(self, field: Field):
+        slug = slugify(field.data)
+        if Post.query.filter_by(slug=slug).first():
+            raise ValidationError(
+                "That title has already been used; please choose another."
+            )
 
 
 class CommentForm(FlaskForm):
@@ -58,7 +80,9 @@ class CommentForm(FlaskForm):
 
 class CommentEditForm(FlaskForm):
     comment_id = HiddenField(validators=[DataRequired()])
-    content = TextAreaField("Edit your comment", validators=[DataRequired(), Length(min=1, max=5000)])
+    content = TextAreaField(
+        "Edit your comment", validators=[DataRequired(), Length(min=1, max=5000)]
+    )
     submit = SubmitField("Save")
 
 
@@ -69,8 +93,9 @@ class SearchForm(FlaskForm):
 
 class ContactForm(FlaskForm):
     name = StringField("Your name", validators=[DataRequired(), Length(1, 80)])
-    email = StringField("Your email", validators=[DataRequired(), Email(), Length(1, 200)])
+    email = StringField(
+        "Your email", validators=[DataRequired(), Email(), Length(1, 200)]
+    )
     subject = StringField("Subject", validators=[DataRequired(), Length(1, 120)])
     message = TextAreaField("Message", validators=[DataRequired(), Length(1, 5000)])
     submit = SubmitField("Send Message")
-

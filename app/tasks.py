@@ -19,12 +19,12 @@ def get_weekly_stats() -> Optional[Post] | int:
     best, best_score = None, -1
     post: Post
     for post in Post.query:
-        c_count = (
-            Comment.query.filter(Comment.post_id==post.id, Comment.timestamp >= cutoff).count()
-        )
-        l_count = (
-            PostLike.query.filter(PostLike.post_id==post.id, Comment.timestamp >= cutoff).count()
-        )
+        c_count = Comment.query.filter(
+            Comment.post_id == post.id, Comment.timestamp >= cutoff
+        ).count()
+        l_count = PostLike.query.filter(
+            PostLike.post_id == post.id, Comment.timestamp >= cutoff
+        ).count()
         score = c_count + l_count
         if score > best_score:
             best, best_score = post, score
@@ -37,26 +37,24 @@ def send_weekly_top_post_email():
         return
     cutoff = timestamp() - timedelta(days=7)
     comments = Comment.query.filter(
-        Comment.post_id==post.id,
-        Comment.timestamp>=cutoff
+        Comment.post_id == post.id, Comment.timestamp >= cutoff
     ).all()
     likes = PostLike.query.filter(
-        PostLike.post_id==post.id,
-        PostLike.timestamp>=cutoff
+        PostLike.post_id == post.id, PostLike.timestamp >= cutoff
     ).all()
     text_body = render_template(
-        'emails/weekly_top_post.txt',
+        "emails/weekly_top_post.txt",
         post=post,
         comments=comments,
         likes=likes,
-        score=score
+        score=score,
     )
     html_body = render_template(
-        'emails/weekly_top_post.html',
+        "emails/weekly_top_post.html",
         post=post,
         comments=comments,
         likes=likes,
-        score=score
+        score=score,
     )
     app.config["MAIL_DEFAULT_SENDER"] = MAIL_NEWSLETTER
     subscribers = User.query.filter_by(newsletter=True).all()
@@ -64,6 +62,6 @@ def send_weekly_top_post_email():
         subject=f"Weekly Top Post: {post.title}",
         recipients=[user.email for user in subscribers],
         body=text_body,
-        html=html_body
+        html=html_body,
     )
     app.mail.send(msg)

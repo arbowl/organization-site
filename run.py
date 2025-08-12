@@ -18,9 +18,10 @@ endpoints_to_ignore = [
     "analytics.dashboard",
 ]
 
-@app.route('/robots.txt')
+
+@app.route("/robots.txt")
 def robots():
-    return send_from_directory(app.static_folder, 'robots.txt')
+    return send_from_directory(app.static_folder, "robots.txt")
 
 
 @app.before_request
@@ -31,11 +32,11 @@ def make_session_permanent():
 
 @app.before_request
 def check_user_timeout():
-    if current_user.is_authenticated and session.get('last_seen'):
-        if datetime.now(timezone.utc) - session['last_seen'] > timedelta(minutes=30):
+    if current_user.is_authenticated and session.get("last_seen"):
+        if datetime.now(timezone.utc) - session["last_seen"] > timedelta(minutes=30):
             logout_user()
-            return redirect(url_for('auth.login'))
-    session['last_seen'] = datetime.now(timezone.utc)
+            return redirect(url_for("auth.login"))
+    session["last_seen"] = datetime.now(timezone.utc)
 
 
 @app.before_request
@@ -45,13 +46,13 @@ def log_visit():
     xff = request.headers.get("X-Forwarded-For", request.remote_addr)
     ip_address = xff.split(",")[0].strip()
     visit = Visit(
-        path = request.path,
-        referrer = request.referrer,
-        utm_source = request.args.get("utm_source"),
-        utm_medium = request.args.get("utm_medium"),
-        utm_campaign = request.args.get("utm_campaign"),
-        user_id = getattr(current_user, "id", None),
-        ip_address = ip_address
+        path=request.path,
+        referrer=request.referrer,
+        utm_source=request.args.get("utm_source"),
+        utm_medium=request.args.get("utm_medium"),
+        utm_campaign=request.args.get("utm_campaign"),
+        user_id=getattr(current_user, "id", None),
+        ip_address=ip_address,
     )
     db.session.add(visit)
 
@@ -73,7 +74,9 @@ def inject_search_form():
 @app.context_processor
 def inject_unread_count():
     if current_user.is_authenticated:
-        count = Notification.query.filter_by(recipient_id=current_user.id, read_at=None).count()
+        count = Notification.query.filter_by(
+            recipient_id=current_user.id, read_at=None
+        ).count()
     else:
         count = 0
     return {"unread_count": count}

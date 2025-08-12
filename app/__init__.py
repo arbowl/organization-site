@@ -4,7 +4,15 @@ from datetime import datetime, timezone
 from os import getenv
 from typing import Optional
 
-from flask import Flask, redirect, make_response, url_for, render_template, abort, request
+from flask import (
+    Flask,
+    redirect,
+    make_response,
+    url_for,
+    render_template,
+    abort,
+    request,
+)
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_apscheduler import APScheduler
@@ -23,10 +31,7 @@ from app.utils import md
 db = SQLAlchemy()
 scheduler = APScheduler()
 app = Flask(__name__, instance_relative_config=True)
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=[]
-)
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
 limiter.init_app(app)
 migrate = Migrate()
 login_manager = LoginManager()
@@ -40,12 +45,12 @@ def ratelimit_handler(e):
 
 @app.errorhandler(403)
 def forbidden(error):
-    return render_template('403.html'), 403
+    return render_template("403.html"), 403
 
 
 @app.errorhandler(404)
 def forbidden(error):
-    return render_template('404.html'), 404
+    return render_template("404.html"), 404
 
 
 @app.errorhandler(CSRFError)
@@ -63,6 +68,7 @@ def block_banned():
 @app.route("/sitemap.xml")
 def sitemap():
     from app.models import Post
+
     pages = []
     now = datetime.now().date().isoformat()
     host = getenv("HOST_DOMAIN")
@@ -86,7 +92,17 @@ class MyAdminView(AdminIndexView):
 
 
 class ReportAdmin(ModelView):
-    column_list = ["timestamp", "reporter.username", "post_id", "comment_id", "reason", "view", "remove", "handler", "status"]
+    column_list = [
+        "timestamp",
+        "reporter.username",
+        "post_id",
+        "comment_id",
+        "reason",
+        "view",
+        "remove",
+        "handler",
+        "status",
+    ]
     column_labels = {"reporter.username": "Reporter", "view": "View"}
 
     def _get_handler(self):
@@ -103,7 +119,13 @@ class ReportAdmin(ModelView):
             ("actioned", "Actioned"),
         ],
     }
-    form_columns = ["post", "comment", "reporter", "reason", "status",]
+    form_columns = [
+        "post",
+        "comment",
+        "reporter",
+        "reason",
+        "status",
+    ]
     can_create = False
     can_edit = True
     can_delete = False
@@ -118,14 +140,19 @@ class ReportAdmin(ModelView):
         elif model.post_id:
             url = url_for("blog.delete_post", post_id=model.post_id)
         csrf = generate_csrf()
-        return Markup(f'''
+        return Markup(
+            f"""
             <form action="{url}" method="post" style="display:inline;">
                 <input type="hidden" name="csrf_token" value="{csrf}">
                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this?');">Remove</button>
             </form>
-        ''')
+        """
+        )
 
-    column_formatters = {"view": _view_link_formatter, "remove": _remove_content_formatter}
+    column_formatters = {
+        "view": _view_link_formatter,
+        "remove": _remove_content_formatter,
+    }
 
     def is_accessible(self):
         return current_user.is_authenticated and current_user.is_authority()
@@ -148,7 +175,7 @@ class UserAdmin(ModelView):
         ]
     }
 
-    form_excluded_columns = ['password_hash']
+    form_excluded_columns = ["password_hash"]
 
     def is_accessible(self):
         return current_user.is_authenticated and current_user.is_admin()
@@ -159,23 +186,27 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     config_name = config_name or getenv("FLASK_CONFIG", "development")
     app.config.from_object(f"config.{config_name.capitalize()}Config")
     app.config.from_pyfile("config.py", silent=True)
-    app.config.update({
-        "MAIL_SERVER": getenv("MAIL_SERVER"),
-        "MAIL_PORT": int(getenv("MAIL_PORT")),
-        "MAIL_USE_TLS": True,
-        "MAIL_USERNAME": getenv("SMTP_USER"),
-        "MAIL_DEFAULT_SENDER": getenv("SMTP_USER"),
-        "MAIL_PASSWORD": getenv("SMTP_PASS")
-    })
-    app.config["JOBS"] = [{
-        'id': 'newsletter',
-        'func': 'app.tasks:send_weekly_top_post_email',
-        'trigger': 'cron',
-        'day_of_week': 'mon',
-        'hour': 10,
-        'minute': 0,
-        'timezone': 'America/New_York'
-    }]
+    app.config.update(
+        {
+            "MAIL_SERVER": getenv("MAIL_SERVER"),
+            "MAIL_PORT": int(getenv("MAIL_PORT")),
+            "MAIL_USE_TLS": True,
+            "MAIL_USERNAME": getenv("SMTP_USER"),
+            "MAIL_DEFAULT_SENDER": getenv("SMTP_USER"),
+            "MAIL_PASSWORD": getenv("SMTP_PASS"),
+        }
+    )
+    app.config["JOBS"] = [
+        {
+            "id": "newsletter",
+            "func": "app.tasks:send_weekly_top_post_email",
+            "trigger": "cron",
+            "day_of_week": "mon",
+            "hour": 10,
+            "minute": 0,
+            "timezone": "America/New_York",
+        }
+    ]
     scheduler.init_app(app)
     scheduler.start()
     mail = Mail(app)
@@ -191,6 +222,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     from .routes.account import account_bp
     from .routes.analytics import analytics_bp
     from app.models import User, Post, Comment, Report
+
     admin.add_view(UserAdmin(User, db.session))
     admin.add_view(UserAdmin(Post, db.session))
     admin.add_view(UserAdmin(Comment, db.session))
@@ -205,6 +237,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
         db.create_all()
     CSRFProtect(app)
     return app
+
 
 from .models import User
 
