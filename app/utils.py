@@ -164,7 +164,7 @@ def color_from_slug(
     if gray_gate < grayscale_ratio:
         L_jitter = ((h[1] / 255.0) - 0.5) * 0.06
         S_jitter = ((h[2] / 255.0) - 0.5) * 0.06
-        L = clamp(0.88 + L_jitter, 0.84, 0.92)
+        L = clamp(0.78 + L_jitter, 0.74, 0.82)
         S = clamp(0.04 + S_jitter, 0.02, 0.08)
         H = 0.0
     else:
