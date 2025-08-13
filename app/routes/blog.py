@@ -285,14 +285,15 @@ def create_post():
 @blog_bp.route("/edit/<int:post_id>", methods=["GET", "POST"])
 @login_required
 def edit_post(post_id: int):
-    post = Post.query.get_or_404(post_id)
+    post: Post = Post.query.get_or_404(post_id)
     if post.author != current_user:
         abort(403)
-    form = PostForm(obj=post)
+    form = PostForm(obj=post, post_id=post.id)
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
         post.updated_at = timestamp()
+        post.slug = slugify(post.title)
         flash("Post updated.", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
     return render_template("post_form.html", form=form, action="Edit")

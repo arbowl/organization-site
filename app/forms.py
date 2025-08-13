@@ -10,7 +10,6 @@ from wtforms import (
     SubmitField,
     TextAreaField,
     HiddenField,
-    Field,
 )
 from wtforms.validators import DataRequired, Length, Email, ValidationError, Optional
 
@@ -50,11 +49,19 @@ class RegistrationForm(FlaskForm):
 class PostForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired(), Length(max=140)])
     content = TextAreaField("Content", validators=[DataRequired()])
+    tags = StringField('Tags (comma-separated)', validators=[Optional(), Length(max=200)])
     submit = SubmitField("Publish")
 
-    def validate_title(self, field: Field):
+    def __init__(self, *args, post_id=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.post_id = post_id
+
+    def validate_title(self, field):
         slug = slugify(field.data)
-        if Post.query.filter_by(slug=slug).first():
+        q = Post.query.filter_by(slug=slug)
+        if self.post_id:
+            q = q.filter(Post.id != self.post_id)
+        if q.first():
             raise ValidationError(
                 "That title has already been used; please choose another."
             )
