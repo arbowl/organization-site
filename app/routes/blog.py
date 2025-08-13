@@ -279,7 +279,7 @@ def create_post():
         except ValidationError as e:
             form.tags.errors.append(str(e))
             flash(str(e), "error")
-            return render_template("post_form.html", form=form, action="Create"), 400
+            return render_template("post_form.html", form=form, tag=Tag, action="Create"), 400
         db.session.commit()
         auto_like = PostLike(user=current_user, post=post)
         db.session.add(auto_like)
@@ -299,7 +299,7 @@ def create_post():
         db.session.commit()
         flash("Post created!", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
-    return render_template("post_form.html", form=form, action="Create")
+    return render_template("post_form.html", form=form, tag=Tag, action="Create")
 
 
 @blog_bp.route("/edit/<int:post_id>", methods=["GET", "POST"])
@@ -319,14 +319,14 @@ def edit_post(post_id: int):
         except ValidationError as e:
             form.tags.errors.append(str(e))
             flash(str(e), "error")
-            return render_template("post_form.html", form=form, action="Edit"), 400
+            return render_template("post_form.html", form=form, tag=Tag, action="Edit"), 400
         post.tags = new_tags
         db.session.commit()
         flash("Post updated.", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
     if request.method == "GET":
         form.tags.data = ", ".join([t.name for t in post.tags.order_by(Tag.name).all()])
-    return render_template("post_form.html", form=form, action="Edit", Tag=Tag)
+    return render_template("post_form.html", form=form, action="Edit", tag=Tag)
 
 
 @blog_bp.route("/delete/<int:post_id>", methods=["POST"])
