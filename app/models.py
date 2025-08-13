@@ -7,6 +7,7 @@ from functools import partial
 
 from flask import url_for
 from flask_login import UserMixin
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import foreign
 from sqlalchemy.sql import and_
@@ -15,6 +16,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 
 timestamp = partial(datetime.now, timezone.utc)
+post_tags = db.Table(
+    "post_tags",
+    db.Column("post_id", db.Integer, db.ForeignKey("posts.id"), nullable=False),
+    db.Column("tag_id", db.Integer, db.ForeignKey("tags.id"), nullable=False),
+    db.UniqueConstraint("post_id", "tag_id", name="uq_post_tag"),
+)
+
 
 
 class User(UserMixin, db.Model):
@@ -96,6 +104,12 @@ class Post(db.Model):
     updated_at = db.Column(db.DateTime, index=True, nullable=True)
     comments = db.relationship(
         "Comment", backref="post", lazy="dynamic", cascade="all, delete-orphan"
+    )
+    tags = db.relationship(
+        "Tag",
+        secondary=post_tags,
+        back_populates="posts",
+        lazy="dynamic",
     )
 
     @property
@@ -261,3 +275,15 @@ class Visit(db.Model):
     utm_campaign = db.Column(db.String(100), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     ip_address = db.Column(db.String(45), nullable=False)
+
+
+class Tag(db.Model):
+    __tablename__ = "tags"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(40), nullable=False, unique=True, index=True)
+    slug = db.Column(db.String(50), nullable=False, unique=True, index=True)
+    color_hex = db.Column(db.String(7), nullable=False)
+    posts = db.relationship("Post", secondary=post_tags, back_populates="tags", lazy="dynamic")
+
+    def __str__(self):
+        return f""

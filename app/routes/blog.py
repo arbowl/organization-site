@@ -12,7 +12,7 @@ from flask_login import login_required, current_user
 from flask_mail import Message
 from slugify import slugify
 from sqlalchemy import or_, func
-from sqlalchemy.exc import IntegrityError
+from wtforms.validators import ValidationError
 
 from app import app, db, limiter
 from app.models import (
@@ -25,9 +25,10 @@ from app.models import (
     Report,
     UserSubscription,
     PostSubscription,
+    Tag,
 )
 from app.forms import PostForm, CommentForm, SearchForm, CommentEditForm
-from app.utils import get_rss_highlights, scrape_events
+from app.utils import get_rss_highlights, scrape_events, color_from_slug
 
 blog_bp: Blueprint = Blueprint("blog", __name__)
 timestamp = partial(datetime.now, timezone.utc)
@@ -75,12 +76,15 @@ def index() -> str:
         bulletins=bulletins[:3],
         news=news,
         events=events,
+        Tag=Tag,
     )
 
 
 @blog_bp.route("/all")
 def all_posts() -> str:
     page = request.args.get("page", 1, type=int)
+    raw_tags = (request.args.get("tags") or "").strip()
+    tag_slugs = [slugify(t.strip()) for t in raw_tags.split(",") if t.strip()]
     comment_count_subq = (
         db.session.query(Comment.post_id, func.count(Comment.id).label("comment_count"))
         .group_by(Comment.post_id)
@@ -91,7 +95,7 @@ def all_posts() -> str:
         .group_by(PostLike.post_id)
         .subquery()
     )
-    pagination = (
+    base = (
         db.session.query(
             Post,
             func.coalesce(comment_count_subq.c.comment_count, 0),
@@ -99,14 +103,23 @@ def all_posts() -> str:
         )
         .outerjoin(comment_count_subq, Post.id == comment_count_subq.c.post_id)
         .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
-        .order_by(Post.timestamp.desc())
-        .paginate(page=page, per_page=10, error_out=False)
     )
+    if tag_slugs:
+        for s in tag_slugs:
+            base = base.filter(Post.tags.any(Tag.slug == s))
+    base = base.order_by(Post.timestamp.desc())
+    pagination = base.paginate(page=page, per_page=10, error_out=False)
     entries = [
-        {"post": p, "likes": like_count, "comments": comment_count}
+        {"post": p, "comments": comment_count, "likes": like_count}
         for p, comment_count, like_count in pagination.items
     ]
-    return render_template("all_posts.html", entries=entries, pagination=pagination)
+    return render_template(
+        "all_posts.html",
+        entries=entries,
+        pagination=pagination,
+        tag_slugs=tag_slugs,
+        tag=Tag,
+    )
 
 
 def populate_replies(comment: Comment) -> None:
@@ -183,7 +196,7 @@ def view_post(slug: str) -> str:
     )
     for c in comments:
         populate_replies(c)
-    return render_template("post_detail.html", post=post, form=form, comments=comments)
+    return render_template("post_detail.html", post=post, form=form, comments=comments, Tag=Tag)
 
 
 @blog_bp.route("/like/post/<int:post_id>", methods=["POST"])
@@ -253,13 +266,20 @@ def create_post():
         abort(403)
     form = PostForm()
     if form.validate_on_submit():
-        post = Post(
+        post: Post = Post(
             title=form.title.data,
             slug=slugify(form.title.data),
             content=form.content.data,
             author=current_user,
         )
         db.session.add(post)
+        try:
+            for name in form.clean_tags():
+                post.tags.append(get_or_create_tag(name))
+        except ValidationError as e:
+            form.tags.errors.append(str(e))
+            flash(str(e), "error")
+            return render_template("post_form.html", form=form, action="Create"), 400
         db.session.commit()
         auto_like = PostLike(user=current_user, post=post)
         db.session.add(auto_like)
@@ -288,15 +308,25 @@ def edit_post(post_id: int):
     post: Post = Post.query.get_or_404(post_id)
     if post.author != current_user:
         abort(403)
-    form = PostForm(obj=post, post_id=post.id)
+    form: PostForm = PostForm(obj=post, post_id=post.id)
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
         post.updated_at = timestamp()
         post.slug = slugify(post.title)
+        try:
+            new_tags = [get_or_create_tag(n) for n in form.clean_tags()]
+        except ValidationError as e:
+            form.tags.errors.append(str(e))
+            flash(str(e), "error")
+            return render_template("post_form.html", form=form, action="Edit"), 400
+        post.tags = new_tags
+        db.session.commit()
         flash("Post updated.", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
-    return render_template("post_form.html", form=form, action="Edit")
+    if request.method == "GET":
+        form.tags.data = ", ".join([t.name for t in post.tags.order_by(Tag.name).all()])
+    return render_template("post_form.html", form=form, action="Edit", Tag=Tag)
 
 
 @blog_bp.route("/delete/<int:post_id>", methods=["POST"])
@@ -311,7 +341,7 @@ def delete_post(post_id):
     db.session.delete(post)
     db.session.commit()
     flash("Post deleted.", "info")
-    return redirect(url_for("blog.all_posts"))
+    return redirect(url_for("blog.all_posts", Tag=Tag))
 
 
 @blog_bp.route("/user/<username>")
@@ -359,6 +389,7 @@ def user_posts(username):
         posts_pagination=posts_pagination,
         comments_entries=comments_entries,
         comments_pagination=comments_pagination,
+        Tag=Tag,
     )
 
 
@@ -490,7 +521,7 @@ def report():
     reason = request.form.get("reason", "").strip()[:200]
     if not (post_id or comment_id) or not reason:
         flash("Please select something to report, and give a reason." "error")
-        return redirect(request.referrer or url_for("blog.all_posts"))
+        return redirect(request.referrer or url_for("blog.all_posts", Tag=Tag))
     if comment_id:
         comment = Comment.query.get_or_404(comment_id)
         return_page = lambda: redirect(
@@ -631,3 +662,18 @@ def attach_email_to_notification(notif: Notification) -> None:
         html=html_body,
     )
     app.mail.send(msg)
+
+
+def get_or_create_tag(name: str) -> Tag:
+    slug = slugify(name)
+    tag = Tag.query.filter_by(slug=slug).first()
+    if tag:
+        return tag
+    tag = Tag(name=name, slug=slug, color_hex=color_from_slug(slug))
+    db.session.add(tag)
+    return tag
+
+
+@blog_bp.route("/tag/<slug>")
+def tag_view(slug):
+    return redirect(url_for("blog.all_posts", tag=Tag(), tags=slug))

@@ -238,3 +238,56 @@ blockquote footer {
   font-size: 0.875rem;
   color: #718096;
 }
+
+
+.tag {
+  --bg: #e8f2ff;
+  --fg: #1f3b7a;
+  --h: 24px;
+  --tip: 12px;
+  --r: 10px;
+
+  position: relative;
+  display: inline-block;
+  height: var(--h);
+  line-height: var(--h);
+  padding: 0 10px 0 calc(2px + var(--tip));
+  background: var(--bg);
+  color: var(--fg);
+  border-left: 0;
+  border-radius: 0 var(--r) var(--r) 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  vertical-align: middle;
+  margin-right: 15px;
+}
+
+.tag::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0; height: 0;
+  border-top: calc(var(--h) / 2) solid transparent;
+  border-bottom: calc(var(--h) / 2) solid transparent;
+  border-right: var(--tip) solid var(--bg);
+  transform: translateX(calc(-1 * var(--tip)));
+}
+
+.tag::after {
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--tip) + 9px);
+  top: 50%;
+  width: 6px; height: 6px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.12);
+  opacity: .9;
+}
+
+.tag:hover { 
+  text-decoration: underline;
+}

@@ -1,5 +1,7 @@
 """Forms"""
 
+import re
+
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from slugify import slugify
@@ -14,6 +16,8 @@ from wtforms import (
 from wtforms.validators import DataRequired, Length, Email, ValidationError, Optional
 
 from app.models import User, Post
+
+TAG_RE = re.compile(r"^[a-z0-9][a-z0-9\- ]{0,38}[a-z0-9]$", re.I)
 
 
 class LoginForm(FlaskForm):
@@ -65,6 +69,22 @@ class PostForm(FlaskForm):
             raise ValidationError(
                 "That title has already been used; please choose another."
             )
+
+    def clean_tags(self):
+        raw = (self.tags.data or "").strip()
+        if not raw:
+            return []
+        parts = [p.strip() for p in raw.split(",") if p.strip()]
+        if len(parts) > 5:
+            raise ValidationError("Please add at most 5 tags.")
+        cleaned = []
+        for p in parts:
+            if not TAG_RE.match(p):
+                raise ValidationError(f"Tag '{p}' has invalid characters.")
+            cleaned.append(p.lower())
+        seen = set()
+        deduped = [t for t in cleaned if not (t in seen or seen.add(t))]
+        return deduped
 
 
 class CommentForm(FlaskForm):

@@ -26,8 +26,8 @@
         <div class="flex items-center justify-center">
             {% if current_user.is_authenticated and current_user.is_contributor() %}
                     <a href="{{ url_for('blog.create_post') }}"
-                        class="bg-green-100 border border-green-300 hover:bg-green-200 rounded-lg p-4 text-center shadow-sm mt-6 w-full">
-                        📝 Share something new
+                        class="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg p-4 text-center shadow-sm mt-6 w-full">
+                        📝 Start a discussion
                     </a>
             {% endif %}
         </div>
@@ -53,6 +53,17 @@
                         By <span class="font-medium">{{ e.post.author.role_icon }}<a href="{{ url_for('blog.user_posts', username=e.post.author.username) }}">{{ e.post.author.username }}</a></span> on {{ e.post.display_date | safe }}
                     </small>
                     <div class="post-content mt-2">{{ e.post.content[:200] | md | striptags }}{% if e.post.content|length > 200 %}...{% endif %}</div>
+                    {% if e.post.tags.count() %}
+                        <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-400"><em class="mr-4">tags: </em>
+                            {% for tag in e.post.tags.order_by(tag.name).all() %}
+                                <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+                                    class="tag inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded"
+                                    style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
+                                {{ tag.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>

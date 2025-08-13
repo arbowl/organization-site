@@ -28,7 +28,7 @@ from markupsafe import Markup
 from app.utils import md
 
 
-db = SQLAlchemy()
+db: SQLAlchemy = SQLAlchemy()
 scheduler = APScheduler()
 app = Flask(__name__, instance_relative_config=True)
 limiter = Limiter(key_func=get_remote_address, default_limits=[])

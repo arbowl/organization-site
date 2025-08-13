@@ -102,6 +102,17 @@
             </div>
             <small class="text-gray-500 text-sm mb-2 block">on {{ entry.post.display_date | safe }}</small>
             <div class="post-content">{{ entry.post.content[:200] | md | striptags }}{% if entry.post.content|length > 200 %}...{% endif %}</div>
+            {% if entry.post.tags.count() %}
+                <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-400"><em class="mr-4">Tags: </em>
+                    {% for tag in entry.post.tags.order_by(Tag.name).all() %}
+                        <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+                            class="tag inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded"
+                            style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
+                        {{ tag.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
           </li>
         {% endfor %}
       </ul>

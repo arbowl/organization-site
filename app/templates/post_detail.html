@@ -130,6 +130,17 @@
             {% endif %}
         {% endif %}
     </div>
+    {% if post.tags.count() %}
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-4 mt-6 ml-4 text-sm text-gray-400"><em class="mr-4">Tags: </em>
+            {% for tag in post.tags.order_by(Tag.name).all() %}
+                <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+                    class="tag inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded"
+                    style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
+                {{ tag.name }}
+            </a>
+            {% endfor %}
+        </div>
+    {% endif %}
     </article>
     <br id="comment-form">
     <div class="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 border-t-4 border-blue-300">
