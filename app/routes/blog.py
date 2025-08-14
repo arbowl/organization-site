@@ -12,6 +12,7 @@ from flask_login import login_required, current_user
 from flask_mail import Message
 from slugify import slugify
 from sqlalchemy import or_, func
+from sqlalchemy.orm import joinedload
 from wtforms.validators import ValidationError
 
 from app import app, db, limiter
@@ -26,6 +27,7 @@ from app.models import (
     UserSubscription,
     PostSubscription,
     Tag,
+    post_tags,
 )
 from app.forms import PostForm, CommentForm, SearchForm, CommentEditForm
 from app.utils import get_rss_highlights, scrape_events, color_from_slug
@@ -107,18 +109,38 @@ def all_posts() -> str:
     if tag_slugs:
         for s in tag_slugs:
             base = base.filter(Post.tags.any(Tag.slug == s))
+
     base = base.order_by(Post.timestamp.desc())
     pagination = base.paginate(page=page, per_page=10, error_out=False)
     entries = [
         {"post": p, "comments": comment_count, "likes": like_count}
         for p, comment_count, like_count in pagination.items
     ]
+    recent_comments = (
+        Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
+    )
+    tag_counts = (
+        db.session.query(Tag)
+        .order_by(Tag.name)
+        .all()
+    )
+    trending_tags = []
+    for t in tag_counts:
+        try:
+            cnt = t.posts.count()
+        except Exception:
+            cnt = Post.query.filter(Post.tags.any(Tag.id == t.id)).count()
+        trending_tags.append((t, cnt))
+    trending_tags.sort(key=lambda x: x[1], reverse=True)
+    trending_tags = trending_tags[:15]
     return render_template(
         "all_posts.html",
         entries=entries,
         pagination=pagination,
         tag_slugs=tag_slugs,
         tag=Tag,
+        recent_comments=recent_comments,
+        trending_tags=trending_tags,
     )
 
 
@@ -129,74 +151,66 @@ def populate_replies(comment: Comment) -> None:
         populate_replies(r)
 
 
+
 @blog_bp.route("/post/<slug>", methods=["GET", "POST"])
-def view_post(slug: str) -> str:
-    post = Post.query.filter_by(slug=slug).first_or_404()
+def view_post(slug: str):
+    post = (
+        Post.query.options(joinedload(Post.author))
+        .filter_by(slug=slug)
+        .first_or_404()
+    )
     form = CommentForm(post_id=post.id)
-    if form.validate_on_submit():
-        author_id = current_user.id if current_user.is_authenticated else None
-        guest_name = form.guest_name.data.strip() if not author_id else None
-        comment = Comment(
-            content=form.content.data,
-            author_id=author_id,
-            guest_name=guest_name,
-            post_id=form.post_id.data,
-            parent_id=form.parent_id.data or None,
-        )
-        db.session.add(comment)
-        db.session.commit()
+    if request.method == "POST" and form.validate_on_submit():
+        content = (form.content.data or "").strip()
+        if not content:
+            flash("Comment cannot be empty.", "error")
+            return redirect(url_for("blog.view_post", slug=slug))
+        new_comment = Comment(post_id=post.id, content=content)
         if current_user.is_authenticated:
-            auto_like = CommentLike(user=current_user, comment=comment)
-            db.session.add(auto_like)
-            db.session.commit()
-        if comment.parent_id:
-            recipient = comment.parent.author
-            verb = "replied to your comment"
+            new_comment.author_id = current_user.id
+            new_comment.guest_name = None
         else:
-            recipient = post.author
-            verb = "commented on your post"
-            subs = PostSubscription.query.filter_by(post_id=post.id).all()
-            for subscriber in subs:
-                if (
-                    not current_user.is_authenticated
-                    or subscriber.subscriber_id != current_user.id
-                ):
-                    notif = Notification(
-                        recipient_id=subscriber.subscriber_id,
-                        actor_id=author_id,
-                        guest_name=guest_name,
-                        verb="commented on a post you subscribed to",
-                        target_type="comment",
-                        target_id=comment.id,
-                    )
-                    db.session.add(notif)
-                    attach_email_to_notification(notif)
-            db.session.commit()
-        if recipient:
-            is_self = (
-                current_user.is_authenticated and recipient.id == current_user.id
-            ) or (not current_user.is_authenticated and recipient is None)
-            if not is_self:
-                notif = Notification(
-                    recipient_id=recipient.id,
-                    actor_id=author_id,
-                    guest_name=guest_name,
-                    verb=verb,
-                    target_type="comment",
-                    target_id=comment.id,
-                )
-                db.session.add(notif)
-                attach_email_to_notification(notif)
-                db.session.commit()
-        return redirect(url_for("blog.view_post", slug=slug) + f"#c{comment.id}")
+            guest_name_field = getattr(form, "guest_name", None)
+            guest_name = (guest_name_field.data if guest_name_field else "").strip()
+            if not guest_name:
+                flash("Please enter your name to comment as a guest.", "error")
+                return redirect(url_for("blog.view_post", slug=slug))
+            new_comment.guest_name = guest_name
+        db.session.add(new_comment)
+        db.session.commit()
+        flash("Thanks for contributing.", "success")
+        return redirect(url_for("blog.view_post", slug=slug) + f"#c{new_comment.id}")
     comments = (
-        Comment.query.filter_by(post_id=post.id, parent_id=None)
-        .order_by(Comment.timestamp.desc())
+        Comment.query
+        .filter(Comment.post_id == post.id, Comment.parent_id.is_(None))
+        .order_by(Comment.timestamp.asc())
         .all()
     )
     for c in comments:
         populate_replies(c)
-    return render_template("post_detail.html", post=post, form=form, comments=comments, Tag=Tag)
+    recent_comments = (
+        Comment.query
+        .order_by(Comment.timestamp.desc())
+        .limit(5)
+        .all()
+    )
+    trending_tags = (
+        db.session.query(Tag, func.count(post_tags.c.post_id).label("cnt"))
+        .join(post_tags, Tag.id == post_tags.c.tag_id)
+        .group_by(Tag.id)
+        .order_by(func.count(post_tags.c.post_id).desc())
+        .limit(15)
+        .all()
+    )
+    return render_template(
+        "post_detail.html",
+        post=post,
+        form=form,
+        comments=comments,
+        recent_comments=recent_comments,
+        trending_tags=trending_tags,
+        Tag=Tag,
+    )
 
 
 @blog_bp.route("/like/post/<int:post_id>", methods=["POST"])
@@ -422,16 +436,48 @@ def search():
     form = SearchForm(request.args, meta={"csrf": False})
     posts = []
     pagination = None
-    if form.validate():
+    if form.validate() and (form.q.data or "").strip():
         q = f"%{form.q.data}%"
         page = request.args.get("page", 1, type=int)
         per_page = 10
-        query = Post.query.filter(
-            or_(Post.title.ilike(q), Post.content.ilike(q))
-        ).order_by(Post.timestamp.desc())
+        query = (
+            Post.query
+            .filter(or_(Post.title.ilike(q), Post.content.ilike(q)))
+            .order_by(Post.timestamp.desc())
+        )
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         posts = pagination.items
-    return render_template("search.html", form=form, posts=posts, pagination=pagination)
+    recent_comments = (
+        Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
+    )
+    try:
+        trending_tags = (
+            db.session.query(Tag, func.count(Post.id).label("cnt"))
+            .join(Tag.posts)
+            .group_by(Tag.id)
+            .order_by(func.count(Post.id).desc())
+            .limit(15)
+            .all()
+        )
+    except Exception:
+        trending_tags = []
+        for t in Tag.query.order_by(Tag.name).all():
+            try:
+                cnt = t.posts.count()
+            except Exception:
+                cnt = Post.query.filter(Post.tags.any(Tag.id == t.id)).count()
+            trending_tags.append((t, cnt))
+        trending_tags.sort(key=lambda x: x[1], reverse=True)
+        trending_tags = trending_tags[:15]
+    return render_template(
+        "search.html",
+        form=form,
+        posts=posts,
+        pagination=pagination,
+        Tag=Tag,
+        recent_comments=recent_comments,
+        trending_tags=trending_tags,
+    )
 
 
 @blog_bp.route("/maintenance")
