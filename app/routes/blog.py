@@ -224,7 +224,29 @@ def view_post(slug: str) -> str:
     )
     for c in comments:
         populate_replies(c)
-    return render_template("post_detail.html", post=post, form=form, comments=comments)
+    try:
+        trending_tags = (
+            db.session.query(Tag, func.count(Post.id).label("cnt"))
+            .join(Tag.posts)
+            .group_by(Tag.id)
+            .order_by(func.count(Post.id).desc())
+            .limit(15)
+            .all()
+        )
+    except Exception:
+        trending_tags = []
+        for t in Tag.query.order_by(Tag.name).all():
+            try:
+                cnt = t.posts.count()
+            except Exception:
+                cnt = Post.query.filter(Post.tags.any(Tag.id == t.id)).count()
+            trending_tags.append((t, cnt))
+        trending_tags.sort(key=lambda x: x[1], reverse=True)
+        trending_tags = trending_tags[:15]
+    recent_comments = (
+        Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
+    )
+    return render_template("post_detail.html", post=post, trending_tags=trending_tags, form=form, comments=comments, recent_comments=recent_comments)
 
 
 @blog_bp.route("/like/post/<int:post_id>", methods=["POST"])
