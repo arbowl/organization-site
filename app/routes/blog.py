@@ -117,16 +117,10 @@ def all_posts() -> str:
         {"post": p, "comments": comment_count, "likes": like_count}
         for p, comment_count, like_count in pagination.items
     ]
-    recent_comments = (
-        Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
-    )
+    recent_comments = Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
     for post in entries:
         post["tags"] = sorted(post["post"].tags, key=lambda t: t.name.lower())
-    tag_counts = (
-        db.session.query(Tag)
-        .order_by(Tag.name)
-        .all()
-    )
+    tag_counts = db.session.query(Tag).order_by(Tag.name).all()
     trending_tags = []
     for t in tag_counts:
         try:
@@ -151,7 +145,6 @@ def populate_replies(comment: Comment) -> None:
     comment.ordered_replies = replies
     for r in replies:
         populate_replies(r)
-
 
 
 @blog_bp.route("/post/<slug>", methods=["GET", "POST"])
@@ -184,29 +177,34 @@ def view_post(slug: str) -> str:
             verb = "commented on your post"
             subs = PostSubscription.query.filter_by(post_id=post.id).all()
             for subscriber in subs:
-                if (not current_user.is_authenticated) or (subscriber.subscriber_id != current_user.id):
-                    pending_notifs.append(Notification(
-                        recipient_id=subscriber.subscriber_id,
-                        actor_id=author_id,
-                        guest_name=guest_name,
-                        verb="commented on a post you subscribed to",
-                        target_type="comment",
-                        target_id=comment.id,
-                    ))
+                if (not current_user.is_authenticated) or (
+                    subscriber.subscriber_id != current_user.id
+                ):
+                    pending_notifs.append(
+                        Notification(
+                            recipient_id=subscriber.subscriber_id,
+                            actor_id=author_id,
+                            guest_name=guest_name,
+                            verb="commented on a post you subscribed to",
+                            target_type="comment",
+                            target_id=comment.id,
+                        )
+                    )
         if recipient is not None:
             is_self = (
-                (current_user.is_authenticated and recipient.id == current_user.id)
-                or (not current_user.is_authenticated and recipient is None)
-            )
+                current_user.is_authenticated and recipient.id == current_user.id
+            ) or (not current_user.is_authenticated and recipient is None)
             if not is_self:
-                pending_notifs.append(Notification(
-                    recipient_id=recipient.id,
-                    actor_id=author_id,
-                    guest_name=guest_name,
-                    verb=verb,
-                    target_type="comment",
-                    target_id=comment.id,
-                ))
+                pending_notifs.append(
+                    Notification(
+                        recipient_id=recipient.id,
+                        actor_id=author_id,
+                        guest_name=guest_name,
+                        verb=verb,
+                        target_type="comment",
+                        target_id=comment.id,
+                    )
+                )
         if pending_notifs:
             for n in pending_notifs:
                 db.session.add(n)
@@ -243,10 +241,15 @@ def view_post(slug: str) -> str:
             trending_tags.append((t, cnt))
         trending_tags.sort(key=lambda x: x[1], reverse=True)
         trending_tags = trending_tags[:15]
-    recent_comments = (
-        Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
+    recent_comments = Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
+    return render_template(
+        "post_detail.html",
+        post=post,
+        trending_tags=trending_tags,
+        form=form,
+        comments=comments,
+        recent_comments=recent_comments,
     )
-    return render_template("post_detail.html", post=post, trending_tags=trending_tags, form=form, comments=comments, recent_comments=recent_comments)
 
 
 @blog_bp.route("/like/post/<int:post_id>", methods=["POST"])
@@ -314,7 +317,7 @@ def toggle_comment_like(comment_id):
 def create_post():
     if not current_user.is_contributor():
         abort(403)
-    tag_queries = (Tag.query.order_by(Tag.name).all() if request.method == 'GET' else [])
+    tag_queries = Tag.query.order_by(Tag.name).all() if request.method == "GET" else []
     form = PostForm()
     if form.validate_on_submit():
         post: Post = Post(
@@ -330,7 +333,15 @@ def create_post():
         except ValidationError as e:
             form.tags.errors.append(str(e))
             flash(str(e), "error")
-            return render_template("post_form.html", form=form, tag_queries=tag_queries, action="Create"), 400
+            return (
+                render_template(
+                    "post_form.html",
+                    form=form,
+                    tag_queries=tag_queries,
+                    action="Create",
+                ),
+                400,
+            )
         db.session.commit()
         auto_like = PostLike(user=current_user, post=post)
         db.session.add(auto_like)
@@ -350,7 +361,9 @@ def create_post():
         db.session.commit()
         flash("Post created!", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
-    return render_template("post_form.html", form=form, tag_queries=tag_queries, action="Create")
+    return render_template(
+        "post_form.html", form=form, tag_queries=tag_queries, action="Create"
+    )
 
 
 @blog_bp.route("/edit/<int:post_id>", methods=["GET", "POST"])
@@ -359,7 +372,7 @@ def edit_post(post_id: int):
     post: Post = Post.query.get_or_404(post_id)
     if post.author != current_user:
         abort(403)
-    tag_queries = (Tag.query.order_by(Tag.name).all() if request.method == 'GET' else [])
+    tag_queries = Tag.query.order_by(Tag.name).all() if request.method == "GET" else []
     form: PostForm = PostForm(obj=post, post_id=post.id)
     if form.validate_on_submit():
         post.title = form.title.data
@@ -371,14 +384,21 @@ def edit_post(post_id: int):
         except ValidationError as e:
             form.tags.errors.append(str(e))
             flash(str(e), "error")
-            return render_template("post_form.html", form=form, tag_queries=tag_queries, action="Edit"), 400
+            return (
+                render_template(
+                    "post_form.html", form=form, tag_queries=tag_queries, action="Edit"
+                ),
+                400,
+            )
         post.tags = new_tags
         db.session.commit()
         flash("Post updated.", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
     if request.method == "GET":
         form.tags.data = ", ".join([t.name for t in post.tags.order_by(Tag.name).all()])
-    return render_template("post_form.html", form=form, tag_queries=tag_queries, action="Edit")
+    return render_template(
+        "post_form.html", form=form, tag_queries=tag_queries, action="Edit"
+    )
 
 
 @blog_bp.route("/delete/<int:post_id>", methods=["POST"])
@@ -479,16 +499,12 @@ def search():
         q = f"%{form.q.data}%"
         page = request.args.get("page", 1, type=int)
         per_page = 10
-        query = (
-            Post.query
-            .filter(or_(Post.title.ilike(q), Post.content.ilike(q)))
-            .order_by(Post.timestamp.desc())
-        )
+        query = Post.query.filter(
+            or_(Post.title.ilike(q), Post.content.ilike(q))
+        ).order_by(Post.timestamp.desc())
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         posts = pagination.items
-    recent_comments = (
-        Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
-    )
+    recent_comments = Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
     try:
         trending_tags = (
             db.session.query(Tag, func.count(Post.id).label("cnt"))

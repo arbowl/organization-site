@@ -24,7 +24,6 @@ post_tags = db.Table(
 )
 
 
-
 class User(UserMixin, db.Model):
     __tablename__ = "users"
 
@@ -283,7 +282,9 @@ class Tag(db.Model):
     name = db.Column(db.String(40), nullable=False, unique=True, index=True)
     slug = db.Column(db.String(50), nullable=False, unique=True, index=True)
     color_hex = db.Column(db.String(7), nullable=False)
-    posts = db.relationship("Post", secondary=post_tags, back_populates="tags", lazy="dynamic")
+    posts = db.relationship(
+        "Post", secondary=post_tags, back_populates="tags", lazy="dynamic"
+    )
 
     def __str__(self):
         return f""

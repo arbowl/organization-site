@@ -53,7 +53,9 @@ class RegistrationForm(FlaskForm):
 class PostForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired(), Length(max=140)])
     content = TextAreaField("Content", validators=[DataRequired()])
-    tags = StringField('Tags (comma-separated)', validators=[Optional(), Length(max=200)])
+    tags = StringField(
+        "Tags (comma-separated)", validators=[Optional(), Length(max=200)]
+    )
     submit = SubmitField("Publish")
 
     def __init__(self, *args, post_id=None, **kwargs):

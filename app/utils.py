@@ -11,8 +11,8 @@ from requests.exceptions import RequestException
 
 
 SAFE_HUE_CENTERS = [
-    18,   # peach/coral
-    30,   # soft orange
+    18,  # peach/coral
+    30,  # soft orange
     150,  # mint
     175,  # teal
     200,  # cyan
@@ -157,7 +157,7 @@ def color_from_slug(
     lightness_range=0.05,
     saturation_center=0.55,
     saturation_range=0.10,
-    grayscale_ratio=0.05
+    grayscale_ratio=0.05,
 ):
     h = md5(slug.encode("utf-8")).digest()
     gray_gate = h[0] / 255.0
@@ -174,12 +174,12 @@ def color_from_slug(
         S = clamp(
             saturation_center + ((h[2] / 255.0) - 0.5) * (2 * saturation_range),
             saturation_center - saturation_range,
-            saturation_center + saturation_range
+            saturation_center + saturation_range,
         )
         L = clamp(
             lightness_center + ((h[3] / 255.0) - 0.5) * (2 * lightness_range),
             lightness_center - lightness_range,
-            lightness_center + lightness_range
+            lightness_center + lightness_range,
         )
     r, g, b = hls_to_rgb(H, L, S)
     R, G, B = int(round(r * 255)), int(round(g * 255)), int(round(b * 255))
