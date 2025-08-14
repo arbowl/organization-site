@@ -72,13 +72,14 @@ def index() -> str:
     ]
     news = get_rss_highlights()
     events = scrape_events()[:5]
+    for post in posts[:16]:
+        post["tags"] = sorted(post["post"].tags, key=lambda t: t.name.lower())
     return render_template(
         "index.html",
         posts=posts[:16],
         bulletins=bulletins[:3],
         news=news,
         events=events,
-        Tag=Tag,
     )
 
 
@@ -119,6 +120,8 @@ def all_posts() -> str:
     recent_comments = (
         Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
     )
+    for post in entries:
+        post["tags"] = sorted(post["post"].tags, key=lambda t: t.name.lower())
     tag_counts = (
         db.session.query(Tag)
         .order_by(Tag.name)
@@ -138,7 +141,6 @@ def all_posts() -> str:
         entries=entries,
         pagination=pagination,
         tag_slugs=tag_slugs,
-        tag=Tag,
         recent_comments=recent_comments,
         trending_tags=trending_tags,
     )
@@ -153,64 +155,76 @@ def populate_replies(comment: Comment) -> None:
 
 
 @blog_bp.route("/post/<slug>", methods=["GET", "POST"])
-def view_post(slug: str):
-    post = (
-        Post.query.options(joinedload(Post.author))
-        .filter_by(slug=slug)
-        .first_or_404()
-    )
+def view_post(slug: str) -> str:
+    post = Post.query.filter_by(slug=slug).first_or_404()
     form = CommentForm(post_id=post.id)
-    if request.method == "POST" and form.validate_on_submit():
-        content = (form.content.data or "").strip()
-        if not content:
-            flash("Comment cannot be empty.", "error")
-            return redirect(url_for("blog.view_post", slug=slug))
-        new_comment = Comment(post_id=post.id, content=content)
-        if current_user.is_authenticated:
-            new_comment.author_id = current_user.id
-            new_comment.guest_name = None
-        else:
-            guest_name_field = getattr(form, "guest_name", None)
-            guest_name = (guest_name_field.data if guest_name_field else "").strip()
-            if not guest_name:
-                flash("Please enter your name to comment as a guest.", "error")
-                return redirect(url_for("blog.view_post", slug=slug))
-            new_comment.guest_name = guest_name
-        db.session.add(new_comment)
+    if form.validate_on_submit():
+        author_id = current_user.id if current_user.is_authenticated else None
+        guest_name = form.guest_name.data.strip() if not author_id else None
+        comment = Comment(
+            content=form.content.data,
+            author_id=author_id,
+            guest_name=guest_name,
+            post_id=form.post_id.data,
+            parent_id=form.parent_id.data or None,
+        )
+        db.session.add(comment)
         db.session.commit()
-        flash("Thanks for contributing.", "success")
-        return redirect(url_for("blog.view_post", slug=slug) + f"#c{new_comment.id}")
+        if current_user.is_authenticated:
+            db.session.add(CommentLike(user=current_user, comment=comment))
+            db.session.commit()
+        pending_notifs = []
+        recipient = None
+        verb = None
+        if comment.parent_id:
+            recipient = getattr(comment.parent, "author", None)
+            verb = "replied to your comment"
+        else:
+            recipient = post.author
+            verb = "commented on your post"
+            subs = PostSubscription.query.filter_by(post_id=post.id).all()
+            for subscriber in subs:
+                if (not current_user.is_authenticated) or (subscriber.subscriber_id != current_user.id):
+                    pending_notifs.append(Notification(
+                        recipient_id=subscriber.subscriber_id,
+                        actor_id=author_id,
+                        guest_name=guest_name,
+                        verb="commented on a post you subscribed to",
+                        target_type="comment",
+                        target_id=comment.id,
+                    ))
+        if recipient is not None:
+            is_self = (
+                (current_user.is_authenticated and recipient.id == current_user.id)
+                or (not current_user.is_authenticated and recipient is None)
+            )
+            if not is_self:
+                pending_notifs.append(Notification(
+                    recipient_id=recipient.id,
+                    actor_id=author_id,
+                    guest_name=guest_name,
+                    verb=verb,
+                    target_type="comment",
+                    target_id=comment.id,
+                ))
+        if pending_notifs:
+            for n in pending_notifs:
+                db.session.add(n)
+            db.session.flush()
+            for n in pending_notifs:
+                attach_email_to_notification(n)
+            db.session.commit()
+
+        return redirect(url_for("blog.view_post", slug=slug) + f"#c{comment.id}")
+
     comments = (
-        Comment.query
-        .filter(Comment.post_id == post.id, Comment.parent_id.is_(None))
-        .order_by(Comment.timestamp.asc())
+        Comment.query.filter_by(post_id=post.id, parent_id=None)
+        .order_by(Comment.timestamp.desc())
         .all()
     )
     for c in comments:
         populate_replies(c)
-    recent_comments = (
-        Comment.query
-        .order_by(Comment.timestamp.desc())
-        .limit(5)
-        .all()
-    )
-    trending_tags = (
-        db.session.query(Tag, func.count(post_tags.c.post_id).label("cnt"))
-        .join(post_tags, Tag.id == post_tags.c.tag_id)
-        .group_by(Tag.id)
-        .order_by(func.count(post_tags.c.post_id).desc())
-        .limit(15)
-        .all()
-    )
-    return render_template(
-        "post_detail.html",
-        post=post,
-        form=form,
-        comments=comments,
-        recent_comments=recent_comments,
-        trending_tags=trending_tags,
-        Tag=Tag,
-    )
+    return render_template("post_detail.html", post=post, form=form, comments=comments)
 
 
 @blog_bp.route("/like/post/<int:post_id>", methods=["POST"])
@@ -278,6 +292,7 @@ def toggle_comment_like(comment_id):
 def create_post():
     if not current_user.is_contributor():
         abort(403)
+    tag_queries = (Tag.query.order_by(Tag.name).all() if request.method == 'GET' else [])
     form = PostForm()
     if form.validate_on_submit():
         post: Post = Post(
@@ -293,7 +308,7 @@ def create_post():
         except ValidationError as e:
             form.tags.errors.append(str(e))
             flash(str(e), "error")
-            return render_template("post_form.html", form=form, tag=Tag, action="Create"), 400
+            return render_template("post_form.html", form=form, tag_queries=tag_queries, action="Create"), 400
         db.session.commit()
         auto_like = PostLike(user=current_user, post=post)
         db.session.add(auto_like)
@@ -313,7 +328,7 @@ def create_post():
         db.session.commit()
         flash("Post created!", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
-    return render_template("post_form.html", form=form, tag=Tag, action="Create")
+    return render_template("post_form.html", form=form, tag_queries=tag_queries, action="Create")
 
 
 @blog_bp.route("/edit/<int:post_id>", methods=["GET", "POST"])
@@ -322,6 +337,7 @@ def edit_post(post_id: int):
     post: Post = Post.query.get_or_404(post_id)
     if post.author != current_user:
         abort(403)
+    tag_queries = (Tag.query.order_by(Tag.name).all() if request.method == 'GET' else [])
     form: PostForm = PostForm(obj=post, post_id=post.id)
     if form.validate_on_submit():
         post.title = form.title.data
@@ -333,14 +349,14 @@ def edit_post(post_id: int):
         except ValidationError as e:
             form.tags.errors.append(str(e))
             flash(str(e), "error")
-            return render_template("post_form.html", form=form, tag=Tag, action="Edit"), 400
+            return render_template("post_form.html", form=form, tag_queries=tag_queries, action="Edit"), 400
         post.tags = new_tags
         db.session.commit()
         flash("Post updated.", "success")
         return redirect(url_for("blog.view_post", slug=post.slug))
     if request.method == "GET":
         form.tags.data = ", ".join([t.name for t in post.tags.order_by(Tag.name).all()])
-    return render_template("post_form.html", form=form, action="Edit", tag=Tag)
+    return render_template("post_form.html", form=form, tag_queries=tag_queries, action="Edit")
 
 
 @blog_bp.route("/delete/<int:post_id>", methods=["POST"])
@@ -355,7 +371,7 @@ def delete_post(post_id):
     db.session.delete(post)
     db.session.commit()
     flash("Post deleted.", "info")
-    return redirect(url_for("blog.all_posts", Tag=Tag))
+    return redirect(url_for("blog.all_posts"))
 
 
 @blog_bp.route("/user/<username>")
@@ -395,6 +411,8 @@ def user_posts(username):
             .paginate(page=page_comments, per_page=10, error_out=False)
         )
         comments_entries = comments_pagination.items
+    for post in posts_entries:
+        post["tags"] = sorted(post["post"].tags, key=lambda t: t.name.lower())
     return render_template(
         "user_posts.html",
         user=user,
@@ -403,7 +421,6 @@ def user_posts(username):
         posts_pagination=posts_pagination,
         comments_entries=comments_entries,
         comments_pagination=comments_pagination,
-        Tag=Tag,
     )
 
 
@@ -474,7 +491,6 @@ def search():
         form=form,
         posts=posts,
         pagination=pagination,
-        Tag=Tag,
         recent_comments=recent_comments,
         trending_tags=trending_tags,
     )
@@ -567,7 +583,7 @@ def report():
     reason = request.form.get("reason", "").strip()[:200]
     if not (post_id or comment_id) or not reason:
         flash("Please select something to report, and give a reason." "error")
-        return redirect(request.referrer or url_for("blog.all_posts", Tag=Tag))
+        return redirect(request.referrer or url_for("blog.all_posts"))
     if comment_id:
         comment = Comment.query.get_or_404(comment_id)
         return_page = lambda: redirect(
@@ -722,4 +738,4 @@ def get_or_create_tag(name: str) -> Tag:
 
 @blog_bp.route("/tag/<slug>")
 def tag_view(slug):
-    return redirect(url_for("blog.all_posts", tag=Tag(), tags=slug))
+    return redirect(url_for("blog.all_posts", tags=slug))

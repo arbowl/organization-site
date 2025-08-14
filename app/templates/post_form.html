@@ -52,8 +52,8 @@
                     <span class="text-red-500 text-xs italic mt-1 block">{{ error }}</span>
                 {% endfor %}
                 <datalist id="tag-suggestions">
-                    {% for t in (tag.query.order_by(tag.name).all() if request.method == 'GET' else []) %}
-                    <option value="{{ t.name }}">
+                    {% for t in tag_queries %}
+                        <option value="{{ t.name }}">
                     {% endfor %}
                 </datalist>
              </div>

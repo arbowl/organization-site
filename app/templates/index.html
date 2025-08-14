@@ -69,7 +69,7 @@
                             <div class="post-content">{{ post_item.post.content[:200] | md | striptags }}{% if post_item.post.content|length > 200 %}...{% endif %}</div>
                             {% if post_item.post.tags.count() %}
                                 <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-400"><em class="mr-4">Tags: </em>
-                                    {% for tag in post_item.post.tags.order_by(Tag.name).all() %}
+                                    {% for tag in post_item["tags"] %}
                                         <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
                                            class="tag inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded"
                                            style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
