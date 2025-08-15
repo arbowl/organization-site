@@ -9,18 +9,20 @@
             </h1>
         </div>
         <p class="text-xl text-gray-600 mt-1"><i>Verify ⸱ Vilify ⸱ Vivify</i></p>
-            {% if not current_user.is_authenticated %}
-                <a href="{{ url_for('auth.register') }}"
-                class="inline-block mt-4 px-6 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
-                <i>Join the discussion today!</i>
-                </a>
-            {% else %}
-                <a href="{{ url_for('blog.create_post') }}"
-                class="inline-block mt-4 px-6 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
-                <i>Start a new discussion!</i>
-                </a>
-            {% endif %}
+        {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.register') }}"
+            class="inline-block mt-4 px-6 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 md:hidden">
+            <i>Join the discussion today!</i>
+            </a>
+        {% else %}
+            <a href="{{ url_for('blog.create_post') }}"
+            class="inline-block mt-4 px-6 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 md:hidden">
+            <i>Start a new discussion!</i>
+            </a>
+        {% endif %}
+        <p class="text-gray-500 italic mt-4">Massachusetts-centric commentary, activism, and calls to action.</p>
     </div>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="mb-4">
@@ -37,9 +39,10 @@
             </div>
         {% endif %}
     {% endwith %}
-    <div class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-3 gap-6">
-        <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-300
-                md:col-span-2 md:row-span-3">
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- User Submissions (left column, full height) -->
+        <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-300 md:col-span-2">
             <h3 class="flex justify-between items-center text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
                 User Submissions
                 <a href="{{ url_for('blog.all_posts') }}"
@@ -52,32 +55,30 @@
                     {% for post_item in posts %}
                         {% if post_item.post.author.role != "admin" %}
                             <li class="border-b pb-4 last:border-b-0 last:pb-0">
-                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1">
-                                <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1 sm:mb-0 pr-2">
-                                    <a href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}">{{ post_item.post.title }}</a>
-                                </h4>
-                                <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
-                                    <span class="inline-flex items-center px-3 py-1
-                                                    bg-blue-100 text-blue-800 rounded-md text-sm">➕ {{ post_item.likes }}</span>
-                                    <span class="inline-flex items-center px-3 py-1
-                                                    bg-blue-100 text-blue-800 rounded-md text-sm">💬 {{ post_item.comments }}</span>
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1">
+                                    <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1 sm:mb-0 pr-2">
+                                        <a href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}">{{ post_item.post.title }}</a>
+                                    </h4>
+                                    <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
+                                        <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">➕ {{ post_item.likes }}</span>
+                                        <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">💬 {{ post_item.comments }}</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <small class="text-gray-500 text-sm block mb-2">
-                                By <span class="font-semibold"><span class="badge">{{ post_item.post.author.role_icon }}</span><a href="{{ url_for('blog.user_posts', username=post_item.post.author.username) }}">{{ post_item.post.author.username }}</a></span> on {{ post_item.post.display_date | safe }}
-                            </small>
-                            <div class="post-content">{{ post_item.post.content[:200] | md | striptags }}{% if post_item.post.content|length > 200 %}...{% endif %}</div>
-                            {% if post_item.post.tags.count() %}
-                                <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-400"><em class="mr-4">Tags: </em>
-                                    {% for tag in post_item["tags"] %}
-                                        <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
-                                           class="tag inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded"
-                                           style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
-                                        {{ tag.name }}
-                                    </a>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                                <small class="text-gray-500 text-sm block mb-2">
+                                    By <span class="font-semibold"><span class="badge">{{ post_item.post.author.role_icon }}</span><a href="{{ url_for('blog.user_posts', username=post_item.post.author.username) }}">{{ post_item.post.author.username }}</a></span> on {{ post_item.post.display_date | safe }}
+                                </small>
+                                <div class="post-content">{{ post_item.post.content[:200] | md | striptags }}{% if post_item.post.content|length > 200 %}...{% endif %}</div>
+                                {% if post_item.post.tags.count() %}
+                                    <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-400"><em class="mr-4">Tags: </em>
+                                        {% for tag in post_item["tags"] %}
+                                            <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+                                               class="tag inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded"
+                                               style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
+                                            {{ tag.name }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </li>
                         {% endif %}
                     {% endfor %}
@@ -92,78 +93,93 @@
                 <p class="text-gray-600 italic">No blog posts yet. Check back soon!</p>
             {% endif %}
         </section>
-        <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-gray-400
-                md:col-span-1 md:row-span-1">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Site Bulletins</h3>
-            {% if bulletins %}
-                <ul class="space-y-4">
-                    {% for bulletin in bulletins %}
-                        <li class="border-b pb-4 last:border-b-0 last:pb-0">
-                            <div class="flex flex-wrap justify-between items-center gap-y-2">
-                                <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1 sm:mb-0 pr-2">
-                                    <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}">{{ bulletin.post.title }}</a>
-                                </h4>
-                                <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
-                                    <span class="inline-flex items-center px-3 py-1
-                                                    bg-blue-100 text-blue-800 rounded-md text-sm">➕ {{ bulletin.likes }}</span>
-                                    <span class="inline-flex items-center px-3 py-1
-                                                    bg-blue-100 text-blue-800 rounded-md text-sm">💬 {{ bulletin.comments }}</span>
+
+        <!-- Sidebar Column (right side) -->
+        <div class="md:space-y-6 md:col-span-1">
+            <!-- Join button on Desktop -->
+            {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.register') }}"
+                class="block w-full px-6 py-3 text-center bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 hidden md:block">
+                    <i>Join the discussion today!</i>
+                </a>
+            {% else %}
+                <a href="{{ url_for('blog.create_post') }}"
+                class="block w-full px-6 py-3 text-center bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 hidden md:block">
+                    <i>Start a new discussion!</i>
+                </a>
+            {% endif %}
+
+            <!-- Site Bulletins -->
+            <section class="bg-white mb-6 p-6 rounded-lg shadow-md border-t-4 border-gray-400">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Site Bulletins</h3>
+                {% if bulletins %}
+                    <ul class="space-y-4">
+                        {% for bulletin in bulletins %}
+                            <li class="border-b pb-4 last:border-b-0 last:pb-0">
+                                <div class="flex flex-wrap justify-between items-center gap-y-2">
+                                    <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1 sm:mb-0 pr-2">
+                                        <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}">{{ bulletin.post.title }}</a>
+                                    </h4>
+                                    <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
+                                        <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">➕ {{ bulletin.likes }}</span>
+                                        <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">💬 {{ bulletin.comments }}</span>
+                                    </div>
                                 </div>
+                                <small class="text-gray-500 text-sm block mb-2">
+                                    By <span class="font-semibold">{{ bulletin.post.author.role_icon }}<a href="{{ url_for('blog.user_posts', username=bulletin.post.author.username) }}">{{ bulletin.post.author.username }}</a></span> on {{ bulletin.post.display_date | safe }}
+                                </small>
+                                <div class="post-content">{{ bulletin.post.content[:200] | md | striptags }}{% if bulletin.post.content|length > 200 %}...{% endif %}</div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-gray-600 italic">No bulletins yet. Check back soon!</p>
+                {% endif %}
+            </section>
+
+            <!-- Events -->
+            <section class="bg-white mb-6 p-6 rounded-lg shadow-md border-t-4 border-gray-400">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Upcoming Boston Events</h3>
+                {% if events %}
+                    <ul class="space-y-4">
+                        {% for event in events %}
+                            <li class="border-b pb-3 last:border-b-0 last:pb-0">
+                                <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
+                                    <a href="{{ event.link }}" target="_blank" rel="noopener noreferrer">{{ event.title }}</a>
+                                </h4>
+                                <p class="text-gray-700 text-sm">
+                                    <span class="font-semibold">Time:</span> {{ event.time }}<br>
+                                    <span class="font-semibold">Location:</span> {{ event.location }}
+                                </p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-gray-600 italic">No upcoming events found or unable to load. Please check back later.</p>
+                {% endif %}
+            </section>
+
+            <!-- News -->
+            <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-gray-400">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">News Highlights</h3>
+                {% if news %}
+                    <div class="space-y-6">
+                        {% for feed in news %}
+                            <div class="border-b pb-4 last:border-b-0 last:pb-0">
+                                <h4 class="text-xl font-medium text-blue-700 mb-2">{{ feed.source }}</h4>
+                                <ul class="list-disc list-inside space-y-2">
+                                    {% for item in feed.content %}
+                                        <li><a href="{{ item.link }}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline">{{ item.title }}</a></li>
+                                    {% endfor %}
+                                </ul>
                             </div>
-                            <small class="text-gray-500 text-sm block mb-2">
-                                By <span class="font-semibold">{{ bulletin.post.author.role_icon }}<a href="{{ url_for('blog.user_posts', username=bulletin.post.author.username) }}">{{ bulletin.post.author.username }}</a></span> on {{ bulletin.post.display_date | safe }}
-                            </small>
-                            <div class="post-content">{{ bulletin.post.content[:200] | md | striptags }}{% if bulletin.post.content|length > 200 %}...{% endif %}</div>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-gray-600 italic">No bulletins yet. Check back soon!</p>
-            {% endif %}
-        </section>
-        <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-gray-400
-                md:col-span-1 md:row-span-1">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Upcoming Boston Events</h3>
-            {% if events %}
-                <ul class="space-y-4">
-                    {% for event in events %}
-                        <li class="border-b pb-3 last:border-b-0 last:pb-0">
-                            <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
-                                <a href="{{ event.link }}" target="_blank" rel="noopener noreferrer">{{ event.title }}</a>
-                            </h4>
-                            <p class="text-gray-700 text-sm">
-                                <span class="font-semibold">Time:</span> {{ event.time }}<br>
-                                <span class="font-semibold">Location:</span> {{ event.location }}
-                            </p>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-gray-600 italic">No upcoming events found or unable to load. Please check back later.</p>
-            {% endif %}
-        </section>
-        <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-gray-400
-                md:col-span-1 md:row-span-1">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">News Highlights</h3>
-            {% if news %}
-                <div class="space-y-6">
-                    {% for feed in news %}
-                        <div class="border-b pb-4 last:border-b-0 last:pb-0">
-                            <h4 class="text-xl font-medium text-blue-700 mb-2">{{ feed.source }}</h4>
-                            <ul class="list-disc list-inside space-y-2">
-                                {% for item in feed.content %}
-                                    <li><a href="{{ item.link }}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline">{{ item.title }}</a></li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-gray-600 italic">Unable to load news feeds right now. Please try again later.</p>
-            {% endif %}
-        </section>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-600 italic">Unable to load news feeds right now. Please try again later.</p>
+                {% endif %}
+            </section>
+        </div>
     </div>
-    <br>
-    <br>
-    <br>
+    <br><br><br>
 {% endblock %}
