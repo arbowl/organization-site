@@ -11,15 +11,17 @@ from requests.exceptions import RequestException
 
 
 SAFE_HUE_CENTERS = [
-    18,  # peach/coral
-    30,  # soft orange
+    0,    # red
+    18,   # peach/coral
+    30,   # orange
     150,  # mint
     175,  # teal
     200,  # cyan
-    222,  # sky/blue
+    222,  # sky blue
     245,  # indigo
     272,  # violet
     315,  # pink
+    350,  # magenta-red
 ]
 ALLOWED_TAGS = [
     "a",
@@ -154,7 +156,7 @@ def clamp(v, lo, hi):
 def color_from_slug(
     slug: str,
     lightness_center=0.58,
-    lightness_range=0.05,
+    lightness_range=0.06,
     saturation_center=0.55,
     saturation_range=0.10,
     grayscale_ratio=0.05,
@@ -164,7 +166,7 @@ def color_from_slug(
     if gray_gate < grayscale_ratio:
         L_jitter = ((h[1] / 255.0) - 0.5) * 0.06
         S_jitter = ((h[2] / 255.0) - 0.5) * 0.06
-        L = clamp(0.78 + L_jitter, 0.74, 0.82)
+        L = clamp(0.776 + L_jitter, 0.70, 0.776)
         S = clamp(0.04 + S_jitter, 0.02, 0.08)
         H = 0.0
     else:
@@ -184,3 +186,4 @@ def color_from_slug(
     r, g, b = hls_to_rgb(H, L, S)
     R, G, B = int(round(r * 255)), int(round(g * 255)), int(round(b * 255))
     return f"#{R:02x}{G:02x}{B:02x}"
+

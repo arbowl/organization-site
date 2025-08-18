@@ -180,7 +180,7 @@
               <span class="text-gray-500">on</span>
               <a class="font-medium text-blue-700 hover:text-blue-900"
                  href="{{ url_for('blog.view_post', slug=c.post.slug) }}#c{{ c.id }}">{{ c.post.title }}</a>
-              <div class="text-gray-600">{{ c.content[:120] | md | striptags }}{% if c.content|length > 120 %}...{% endif %}</div>
+              <div class="text-gray-600">{{ c.content | md | striptags | truncate(120, True, '...') }}</div>
             </li>
           {% endfor %}
         </ul>
