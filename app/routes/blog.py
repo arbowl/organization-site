@@ -325,6 +325,7 @@ def create_post():
             slug=slugify(form.title.data),
             content=form.content.data,
             author=current_user,
+            timestamp=timestamp(),
         )
         db.session.add(post)
         try:
