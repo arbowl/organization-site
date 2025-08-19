@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}References – {{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-5xl px-4 mt-8">
+  <h1 class="text-3xl font-bold mb-2">References for: <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.view_post', slug=post.slug) }}">{{ post.title }}</a></h1>
+  <p class="text-gray-600 mb-6">Roots = posts this one cites. Branches = posts that cite this one.</p>
+
+  <div class="flex gap-3 mb-6">
+    <a href="{{ url_for('blog.post_references', slug=post.slug, type='both') }}"
+       class="px-3 py-1 rounded-md border {{ 'bg-blue-600 text-white' if kind=='both' else 'bg-white text-blue-700 border-blue-300' }}">
+      Both ({{ roots_count + branches_count }})
+    </a>
+    <a href="{{ url_for('blog.post_references', slug=post.slug, type='roots') }}"
+       class="px-3 py-1 rounded-md border {{ 'bg-blue-600 text-white' if kind=='roots' else 'bg-white text-blue-700 border-blue-300' }}">
+      🌱 Roots ({{ roots_count }})
+    </a>
+    <a href="{{ url_for('blog.post_references', slug=post.slug, type='branches') }}"
+       class="px-3 py-1 rounded-md border {{ 'bg-blue-600 text-white' if kind=='branches' else 'bg-white text-blue-700 border-blue-300' }}">
+      🌿 Branches ({{ branches_count }})
+    </a>
+  </div>
+
+  {% if kind in ['both','roots'] %}
+  <section class="bg-white shadow rounded-lg p-5 border-t-4 border-blue-300 mb-8">
+    <h2 class="text-2xl font-semibold mb-4">🌱 Roots ({{ roots_count }})</h2>
+    {% if roots_pagination and roots_pagination.items %}
+      <ul class="space-y-2">
+        {% for p in roots_pagination.items %}
+          <li class="mb-3">
+            <a class="block text-blue-700 hover:text-blue-900 font-medium"
+                href="{{ url_for('blog.view_post', slug=p.slug) }}">{{ p.title }}</a>
+            <div class="text-xs text-gray-500">
+                by <a class="hover:underline" href="{{ url_for('blog.user_posts', username=p.author.username) }}">{{ p.author.username }}</a>
+                · {{ p.timestamp.strftime('%Y-%m-%d') }}
+            </div>
+            </li>
+        {% endfor %}
+      </ul>
+      {% if roots_pagination.pages > 1 %}
+        <div class="flex justify-between items-center mt-4 text-sm">
+          {% if roots_pagination.has_prev %}
+            <a class="text-blue-700 hover:underline"
+               href="{{ url_for('blog.post_references', slug=post.slug, type='roots', page_roots=roots_pagination.prev_num, per_page=per_page) }}">← Previous</a>
+          {% else %}<span></span>{% endif %}
+          <span class="text-gray-500">Page {{ roots_pagination.page }} / {{ roots_pagination.pages }}</span>
+          {% if roots_pagination.has_next %}
+            <a class="text-blue-700 hover:underline"
+               href="{{ url_for('blog.post_references', slug=post.slug, type='roots', page_roots=roots_pagination.next_num, per_page=per_page) }}">Next →</a>
+          {% else %}<span></span>{% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      <p class="text-gray-600">No roots.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if kind in ['both','branches'] %}
+  <section class="bg-white shadow rounded-lg p-5 border-t-4 border-blue-300">
+    <h2 class="text-2xl font-semibold mb-4">🌿 Branches ({{ branches_count }})</h2>
+    {% if branches_pagination and branches_pagination.items %}
+      <ul class="space-y-2">
+        {% for p in branches_pagination.items %}
+        <li class="mb-3">
+            <a class="block text-blue-700 hover:text-blue-900 font-medium"
+                href="{{ url_for('blog.view_post', slug=p.slug) }}">{{ p.title }}</a>
+            <div class="text-xs text-gray-500">
+                by <a class="hover:underline" href="{{ url_for('blog.user_posts', username=p.author.username) }}">{{ p.author.username }}</a>
+                · {{ p.timestamp.strftime('%Y-%m-%d') }}
+            </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if branches_pagination.pages > 1 %}
+        <div class="flex justify-between items-center mt-4 text-sm">
+          {% if branches_pagination.has_prev %}
+            <a class="text-blue-700 hover:underline"
+               href="{{ url_for('blog.post_references', slug=post.slug, type='branches', page_branches=branches_pagination.prev_num, per_page=per_page) }}">← Previous</a>
+          {% else %}<span></span>{% endif %}
+          <span class="text-gray-500">Page {{ branches_pagination.page }} / {{ branches_pagination.pages }}</span>
+          {% if branches_pagination.has_next %}
+            <a class="text-blue-700 hover:underline"
+               href="{{ url_for('blog.post_references', slug=post.slug, type='branches', page_branches=branches_pagination.next_num, per_page=per_page) }}">Next →</a>
+          {% else %}<span></span>{% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      <p class="text-gray-600">No branches.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+</div>
+
+<p class="text-center mt-10">
+  <a href="{{ url_for('blog.view_post', slug=post.slug) }}" class="text-blue-700 hover:text-blue-900">← Back to post</a>
+</p>
+{% endblock %}

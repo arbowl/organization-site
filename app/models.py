@@ -7,13 +7,15 @@ from functools import partial
 
 from flask import url_for
 from flask_login import UserMixin
-from sqlalchemy import UniqueConstraint
+from markdown import markdown
+from sqlalchemy import event
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import foreign
 from sqlalchemy.sql import and_
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import db
+from app.utils import extract_internal_slugs
 
 timestamp = partial(datetime.now, timezone.utc)
 post_tags = db.Table(
@@ -117,6 +119,23 @@ class Post(db.Model):
         if self.updated_at:
             date += f" ⸱ <i>(edited {self.updated_at.strftime('%Y-%m-%d')})</i>"
         return date
+
+
+class PostLink(db.Model):
+    __tablename__ = "post_links"
+    id = db.Column(db.Integer, primary_key=True)
+    src_post_id = db.Column(
+        db.Integer, db.ForeignKey("posts.id"), index=True, nullable=False
+    )
+    dst_post_id = db.Column(
+        db.Integer, db.ForeignKey("posts.id"), index=True, nullable=False
+    )
+    created_at = db.Column(db.DateTime, default=timestamp(), nullable=False)
+    referenced_by_count = db.Column(db.Integer, default=0, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("src_post_id", "dst_post_id", name="uq_postlink_src_dst"),
+    )
 
 
 class Comment(db.Model):
@@ -288,3 +307,51 @@ class Tag(db.Model):
 
     def __str__(self):
         return f""
+
+
+def _render_md(md_text: str) -> str:
+    """
+    Optional: render Markdown → HTML to improve link detection.
+    If you already have markdown installed, use it. Otherwise return md_text.
+    """
+    try:
+        return markdown(md_text or "", extensions=["extra", "sane_lists"])
+    except Exception:
+        return md_text or ""
+
+
+def rebuild_post_edges(session, post):
+    """Idempotently rebuild outgoing edges for a post based on its content."""
+    session.query(PostLink).filter_by(src_post_id=post.id).delete()
+    allowed_netlocs = None
+    slugs = extract_internal_slugs(
+        post.content,
+        render_markdown_to_html=_render_md,
+        allowed_netlocs=allowed_netlocs,
+    )
+    if not slugs:
+        return
+    targets = (
+        session.query(Post.id, Post.slug)
+        .filter(Post.slug.in_(slugs), Post.id != post.id)
+        .all()
+    )
+    if not targets:
+        return
+
+    session.bulk_save_objects(
+        [PostLink(src_post_id=post.id, dst_post_id=pid) for (pid, _slug) in targets]
+    )
+    session.flush()
+
+
+@event.listens_for(Post, "after_insert")
+def _post_after_insert(mapper, connection, target):
+    sess = db.session.object_session(target) or db.session
+    rebuild_post_edges(sess, target)
+
+
+@event.listens_for(Post, "after_update")
+def _post_after_update(mapper, connection, target):
+    sess = db.session.object_session(target) or db.session
+    rebuild_post_edges(sess, target)

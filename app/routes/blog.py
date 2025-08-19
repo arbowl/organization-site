@@ -12,7 +12,6 @@ from flask_login import login_required, current_user
 from flask_mail import Message
 from slugify import slugify
 from sqlalchemy import or_, func
-from sqlalchemy.orm import joinedload
 from wtforms.validators import ValidationError
 
 from app import app, db, limiter
@@ -27,7 +26,7 @@ from app.models import (
     UserSubscription,
     PostSubscription,
     Tag,
-    post_tags,
+    PostLink,
 )
 from app.forms import PostForm, CommentForm, SearchForm, CommentEditForm
 from app.utils import get_rss_highlights, scrape_events, color_from_slug
@@ -242,6 +241,24 @@ def view_post(slug: str) -> str:
         trending_tags.sort(key=lambda x: x[1], reverse=True)
         trending_tags = trending_tags[:15]
     recent_comments = Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
+    # Roots: posts THIS post references (outgoing edges)
+    roots = (
+        db.session.query(Post)
+        .join(PostLink, PostLink.dst_post_id == Post.id)
+        .filter(PostLink.src_post_id == post.id)
+        .order_by(Post.timestamp.desc())
+        .limit(5)
+        .all()
+    )
+    # Branches: posts that reference THIS post (incoming edges)
+    branches = (
+        db.session.query(Post)
+        .join(PostLink, PostLink.src_post_id == Post.id)
+        .filter(PostLink.dst_post_id == post.id)
+        .order_by(Post.timestamp.desc())
+        .limit(5)
+        .all()
+    )
     return render_template(
         "post_detail.html",
         post=post,
@@ -249,6 +266,8 @@ def view_post(slug: str) -> str:
         form=form,
         comments=comments,
         recent_comments=recent_comments,
+        roots=roots,
+        branches=branches,
     )
 
 
@@ -778,3 +797,46 @@ def get_or_create_tag(name: str) -> Tag:
 @blog_bp.route("/tag/<slug>")
 def tag_view(slug):
     return redirect(url_for("blog.all_posts", tags=slug))
+
+
+@blog_bp.route("/post/<slug>/references")
+def post_references(slug: str):
+    post = Post.query.filter_by(slug=slug).first_or_404()
+    kind = request.args.get("type", "both").lower()
+    page_roots = request.args.get("page_roots", 1, type=int)
+    page_branches = request.args.get("page_branches", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+    roots_q = (
+        db.session.query(Post)
+        .join(PostLink, PostLink.dst_post_id == Post.id)
+        .filter(PostLink.src_post_id == post.id)
+        .order_by(Post.timestamp.desc())
+    )
+    branches_q = (
+        db.session.query(Post)
+        .join(PostLink, PostLink.src_post_id == Post.id)
+        .filter(PostLink.dst_post_id == post.id)
+        .order_by(Post.timestamp.desc())
+    )
+    roots_pagination = (
+        roots_q.paginate(page=page_roots, per_page=per_page, error_out=False)
+        if kind in ("roots", "both")
+        else None
+    )
+    branches_pagination = (
+        branches_q.paginate(page=page_branches, per_page=per_page, error_out=False)
+        if kind in ("branches", "both")
+        else None
+    )
+    roots_count = roots_q.count()
+    branches_count = branches_q.count()
+    return render_template(
+        "post_references.html",
+        post=post,
+        kind=kind,
+        roots_pagination=roots_pagination,
+        branches_pagination=branches_pagination,
+        roots_count=roots_count,
+        branches_count=branches_count,
+        per_page=per_page,
+    )
