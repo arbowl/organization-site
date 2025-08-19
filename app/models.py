@@ -342,7 +342,6 @@ def rebuild_post_edges(session, post):
     session.bulk_save_objects(
         [PostLink(src_post_id=post.id, dst_post_id=pid) for (pid, _slug) in targets]
     )
-    session.flush()
 
 
 @event.listens_for(Post, "after_insert")
