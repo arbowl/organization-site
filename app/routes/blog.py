@@ -69,15 +69,12 @@ def index() -> str:
         for p in posts
         if p["post"].author.role == "admin"
     ]
-    news = get_rss_highlights()
-    events = scrape_events()[:5]
-    for post in posts[:16]:
-        post["tags"] = sorted(post["post"].tags, key=lambda t: t.name.lower())
+    events = scrape_events()[:12]
+    attach_sorted_tags(posts, 16)
     return render_template(
         "index.html",
         posts=posts[:16],
         bulletins=bulletins[:3],
-        news=news,
         events=events,
     )
 
@@ -840,3 +837,8 @@ def post_references(slug: str):
         branches_count=branches_count,
         per_page=per_page,
     )
+
+
+def attach_sorted_tags(entries, limit):
+    for entry in entries[:limit]:
+        entry["tags"] = sorted(entry["post"].tags, key=lambda t: t.name.lower())
