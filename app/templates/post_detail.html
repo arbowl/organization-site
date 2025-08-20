@@ -91,7 +91,7 @@
                 <li>
                   <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800">{{ si.label }}</span>
                   <span class="italic text-gray-700">“{{ si.quote_text }}”</span>
-                  <div class="text-gray-800">{{ si.summary }}</div>
+                  <div class="text-gray-800 font-bold">→ {{ si.summary }}</div>
                   {% if si.body %}<div class="text-gray-700 mt-1">{{ si.body | md }}</div>{% endif %}
                   {% if si.status != 'open' %}
                     <span class="ml-2 text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700">Status: {{ si.status }}</span>
