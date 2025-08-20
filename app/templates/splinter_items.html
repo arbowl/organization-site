@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}New Splinter – {{ splinter.title }}{% endblock %}
+
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-4">
+            {% for category, message in messages %}
+                <div class="p-3 mb-2 rounded-md
+                    {% if category == 'success' %}bg-green-100 text-green-800 border border-green-200
+                    {% elif category == 'error' %}bg-red-100 text-red-800 border border-red-200
+                    {% elif category == 'info' %}bg-blue-100 text-blue-800 border border-blue-200
+                    {% else %}bg-gray-100 text-gray-800 border border-gray-200{% endif %}
+                ">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+<div class="mx-auto max-w-7xl px-4 mt-8 mb-6">
+  <div class="mb-4">
+    <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.edit_splinter', slug=splinter.slug) }}">← Back to splinter</a>
+  </div>
+
+  <div class="mt-6 mb-6 p-4 border-l-4 border-red-400 bg-red-50 rounded">
+    <h1 class="text-lg font-bold text-red-800 mb-1">Next: Add Rebuttal Items</h1>
+    <p class="text-sm text-gray-700">
+      You’ve created a Splinter post — now highlight specific parts of the original post that you want to respond to.
+      Select a quote, then write your counterpoint or clarification below. You can add multiple items.
+    </p>
+  </div>
+</div>
+
+<div class="flex flex-col lg:flex-row gap-6">
+
+  <!-- LEFT: Target Post (read-only) -->
+  <section class="lg:w-3/5 bg-white shadow rounded-lg p-5 border-t-4 border-red-300">
+    <h2 class="text-xl font-semibold mb-3">Select text in the target post</h2>
+    <p class="text-sm text-gray-600 mb-3">Highlight a passage, then return here to write your rebuttal.</p>
+
+    <div id="target-pane"
+        class="prose max-w-none rounded p-4 bg-gray-50"
+        onmouseup="captureSelection()">
+      {{ target.content | md | safe }}
+    </div>
+  </section>
+
+  <!-- RIGHT: Composer, Preview, and Items -->
+  <section class="lg:w-2/5 bg-white shadow rounded-lg p-5 border-t-4 border-blue-300 flex flex-col">
+    <h2 class="text-xl font-semibold mb-3">Compose rebuttal item</h2>
+
+    <!-- Hidden field -->
+    <input type="hidden" id="quote_text" value="">
+
+    <!-- Form -->
+    <div class="space-y-4">
+      <div>
+        <label for="label" class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+        <select id="label" class="w-full p-2 border rounded">
+          <option value="fact">Fact</option>
+          <option value="logic">Logic</option>
+          <option value="source">Source</option>
+          <option value="context">Context</option>
+          <option value="framing">Framing</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="summary" class="block text-sm font-medium text-gray-700 mb-1">One-line rebuttal (<= 280 chars)</label>
+        <input id="summary" maxlength="280" class="w-full p-2 border rounded" placeholder="e.g., The cited survey excluded key demographics">
+      </div>
+
+      <div>
+        <label for="body" class="block text-sm font-medium text-gray-700 mb-1">Details (optional)</label>
+        <textarea id="body" rows="5" class="w-full p-2 border rounded" placeholder="Add context, sources, or reasoning"></textarea>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="addItem()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          Add rebuttal from selection
+        </button>
+        <span id="save-status" class="text-sm text-gray-500"></span>
+      </div>
+    </div>
+
+    <!-- Selection Preview (below form) -->
+    <div id="selection-preview" class="mt-6 hidden">
+      <div class="text-xs text-gray-500 mb-1">Selected quote:</div>
+      <blockquote class="italic bg-white border-l-4 border-gray-300 pl-3 py-2 text-gray-800" id="selection-text"></blockquote>
+    </div>
+
+    <!-- Existing items -->
+    {% if splinter.splinter_items %}
+      <hr class="my-6">
+      <h3 class="text-lg font-semibold mb-2">Current items ({{ splinter.splinter_items|length }})</h3>
+      <ul class="space-y-3">
+      {% for si in splinter.splinter_items %}
+        <li class="border rounded p-3">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800">{{ si.label }}</span>
+            {% if si.status and si.status != 'open' %}
+              <span class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">Status: {{ si.status }}</span>
+            {% endif %}
+            <span class="text-xs text-gray-500 ml-auto">{{ si.created_at.strftime('%Y-%m-%d') if si.created_at else '' }}</span>
+            <!-- Delete form button -->
+            <form method="post" action="{{ url_for('blog.delete_splinter_item', item_id=si.id) }}" onsubmit="return confirm('Delete this rebuttal?')" class="inline-block ml-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="text-red-600 text-xs hover:underline">Delete</button>
+            </form>
+          </div>
+          <blockquote class="italic text-gray-800">“{{ si.quote_text }}”</blockquote>
+          {% if si.summary %}<div class="text-gray-900">{{ si.summary }}</div>{% endif %}
+          {% if si.body %}<div class="text-gray-700 mt-1">{{ si.body | md }}</div>{% endif %}
+        </li>
+      {% endfor %}
+      </ul>
+      <!-- Done button -->
+      <div class="mt-6 text-right">
+        <a href="{{ url_for('blog.view_post', slug=splinter.slug) }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Publish</a>
+      </div>
+    {% endif %}
+  </section>
+</div>
+</div>
+<br><br><br>
+
+<script>
+function captureSelection() {
+  const sel = window.getSelection();
+  const text = sel ? sel.toString().trim() : "";
+  const quoteField = document.getElementById('quote_text');
+  const preview = document.getElementById('selection-preview');
+  const previewText = document.getElementById('selection-text');
+
+  if (text) {
+    quoteField.value = text.slice(0, 2000);
+    previewText.textContent = text.length > 500 ? text.slice(0, 500) + '…' : text;
+    preview.classList.remove('hidden');
+  } else {
+    quoteField.value = "";
+    preview.classList.add('hidden');
+    previewText.textContent = "";
+  }
+}
+
+async function addItem() {
+  const quote_text = document.getElementById('quote_text').value.trim();
+  const label = document.getElementById('label').value;
+  const summary = document.getElementById('summary').value.trim();
+  const body = document.getElementById('body').value;
+
+  if (!quote_text) {
+    alert("Select text in the target post first.");
+    return;
+  }
+  if (!summary) {
+    alert("Add a brief summary.");
+    return;
+  }
+
+  const payload = { items: [{ quote_text, label, summary, body }] };
+  const statusEl = document.getElementById('save-status');
+  statusEl.textContent = "Saving…";
+
+  const resp = await fetch(window.location.pathname, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": "{{ csrf_token() }}"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (resp.ok) {
+    statusEl.textContent = "Saved.";
+    window.location.reload();
+  } else {
+    statusEl.textContent = "Error.";
+    const t = await resp.text();
+    console.error(t);
+    alert("Failed to save the rebuttal item.");
+  }
+}
+</script>
+{% endblock %}

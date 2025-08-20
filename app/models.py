@@ -93,6 +93,33 @@ class User(UserMixin, db.Model):
         return f"<User {self.username}>"
 
 
+class SplinterItem(db.Model):
+    __tablename__ = "splinter_items"
+    id = db.Column(db.Integer, primary_key=True)
+    splinter_post_id = db.Column(
+        db.Integer,
+        db.ForeignKey("posts.id", name="fk_splinter_items_splinter_post_id_posts", ondelete="CASCADE"),
+        index=True,
+        nullable=False
+    )
+    target_post_id = db.Column(
+        db.Integer,
+        db.ForeignKey("posts.id", name="fk_splinter_items_target_post_id_posts"),
+        index=True,
+        nullable=False
+    )
+    quote_text = db.Column(db.Text, nullable=False)
+    quote_html = db.Column(db.Text, nullable=True) 
+    selector_json = db.Column(db.JSON, nullable=True)
+    label = db.Column(db.String(32), nullable=False, default="claim")
+    summary = db.Column(db.String(280), nullable=False)
+    body = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(16), nullable=False, default="open")
+    created_at = db.Column(db.DateTime, default=timestamp(), nullable=False)
+    updated_at = db.Column(db.DateTime, onupdate=timestamp())
+    target_post = db.relationship("Post", foreign_keys=[target_post_id])
+
+
 class Post(db.Model):
     __tablename__ = "posts"
 
@@ -103,6 +130,21 @@ class Post(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=timestamp())
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     updated_at = db.Column(db.DateTime, index=True, nullable=True)
+    is_splinter = db.Column(db.Boolean, nullable=False, default=False)
+    splinter_items = db.relationship(
+        "SplinterItem",
+        foreign_keys="[SplinterItem.splinter_post_id]",
+        backref="splinter_post",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    target_post_id = db.Column(
+        db.Integer,
+        db.ForeignKey("posts.id", name="fk_posts_target_post_id_posts"),
+        index=True,
+        nullable=True
+    )
+    target_post = db.relationship("Post", remote_side=[id], backref="incoming_splinters")
     comments = db.relationship(
         "Comment", backref="post", lazy="dynamic", cascade="all, delete-orphan"
     )
@@ -125,10 +167,16 @@ class PostLink(db.Model):
     __tablename__ = "post_links"
     id = db.Column(db.Integer, primary_key=True)
     src_post_id = db.Column(
-        db.Integer, db.ForeignKey("posts.id"), index=True, nullable=False
+        db.Integer,
+        db.ForeignKey("posts.id", name="fk_post_links_src_posts"),
+        index=True,
+        nullable=False
     )
     dst_post_id = db.Column(
-        db.Integer, db.ForeignKey("posts.id"), index=True, nullable=False
+        db.Integer,
+        db.ForeignKey("posts.id", name="fk_post_links_dst_posts"),
+        index=True,
+        nullable=False
     )
     created_at = db.Column(db.DateTime, default=timestamp(), nullable=False)
     referenced_by_count = db.Column(db.Integer, default=0, nullable=False)
@@ -304,9 +352,6 @@ class Tag(db.Model):
     posts = db.relationship(
         "Post", secondary=post_tags, back_populates="tags", lazy="dynamic"
     )
-
-    def __str__(self):
-        return f""
 
 
 def _render_md(md_text: str) -> str:

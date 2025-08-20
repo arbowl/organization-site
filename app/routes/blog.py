@@ -27,9 +27,10 @@ from app.models import (
     PostSubscription,
     Tag,
     PostLink,
+    SplinterItem,
 )
 from app.forms import PostForm, CommentForm, SearchForm, CommentEditForm
-from app.utils import get_rss_highlights, scrape_events, color_from_slug
+from app.utils import scrape_events, color_from_slug
 
 blog_bp: Blueprint = Blueprint("blog", __name__)
 timestamp = partial(datetime.now, timezone.utc)
@@ -256,6 +257,13 @@ def view_post(slug: str) -> str:
         .limit(5)
         .all()
     )
+    splinters = (
+        db.session.query(Post)
+        .filter(Post.is_splinter == True, Post.target_post_id == post.id)
+        .order_by(Post.timestamp.desc())
+        .limit(2)
+        .all()
+    )
     return render_template(
         "post_detail.html",
         post=post,
@@ -265,6 +273,7 @@ def view_post(slug: str) -> str:
         recent_comments=recent_comments,
         roots=roots,
         branches=branches,
+        splinters=splinters,
     )
 
 
@@ -741,6 +750,169 @@ def edit_comment(comment_id):
     return render_template("edit_comment.html", form=form, comment=comment)
 
 
+@blog_bp.route("/post/<slug>/splinter/new", methods=["GET", "POST"])
+@login_required
+def new_splinter(slug):
+    target = Post.query.filter_by(slug=slug).first_or_404()
+    form = PostForm()
+    if form.validate_on_submit():
+        spl = Post(
+            title=form.title.data,
+            slug=slugify(form.title.data),
+            content=form.content.data,
+            author=current_user,
+            timestamp=timestamp(),
+            is_splinter=True,
+            target_post_id=target.id,
+        )
+        db.session.add(spl)
+        with db.session.no_autoflush:
+            for name in form.clean_tags():
+                spl.tags.append(get_or_create_tag(name))
+        db.session.commit()
+        db.session.add(PostLike(user=current_user, post=spl))
+        db.session.commit()
+        flash("Splinter created. Now add your rebuttal items below.", "info")
+        return redirect(url_for("blog.edit_splinter_items", splinter_slug=spl.slug))
+    return render_template("post_form.html", form=form, tag_queries=Tag.query.order_by(Tag.name).all(), action="Splinter")
+
+
+@blog_bp.route("/splinter/<splinter_slug>/items", methods=["GET","POST"])
+@login_required
+def edit_splinter_items(splinter_slug):
+    spl = Post.query.filter_by(slug=splinter_slug, is_splinter=True).first_or_404()
+    if spl.author_id != current_user.id and not current_user.is_moderator():
+        abort(403)
+    if request.method == "POST":
+        items = request.json or {}
+        items_list = items.get("items", [])
+        for it in items_list:
+            si = SplinterItem(
+                splinter_post_id=spl.id,
+                target_post_id=spl.target_post_id,
+                quote_text=(it.get("quote_text") or "")[:2000],
+                quote_html=it.get("quote_html"),
+                selector_json=it.get("selector_json"),
+                label=(it.get("label") or "claim")[:32],
+                summary=(it.get("summary") or "")[:280],
+                body=it.get("body"),
+            )
+            db.session.add(si)
+        db.session.commit()
+        return {"ok": True}
+    target = spl.target_post
+    return render_template("splinter_items.html", splinter=spl, target=target)
+
+
+@blog_bp.route("/edit/splinter/<slug>", methods=["GET", "POST"])
+@login_required
+def edit_splinter(slug):
+    splinter = Post.query.filter_by(slug=slug, is_splinter=True).first_or_404()
+    if splinter.author != current_user:
+        abort(403)
+    tag_queries = Tag.query.order_by(Tag.name).all() if request.method == "GET" else []
+    form = PostForm(obj=splinter, post_id=splinter.id)
+    if form.validate_on_submit():
+        splinter.title = form.title.data
+        splinter.content = form.content.data
+        splinter.updated_at = timestamp()
+        splinter.slug = slugify(form.title.data)
+        try:
+            new_tags = [get_or_create_tag(n) for n in form.clean_tags()]
+        except ValidationError as e:
+            form.tags.errors.append(str(e))
+            flash(str(e), "error")
+            return (
+                render_template(
+                    "post_form.html", form=form, tag_queries=tag_queries, action="Edit"
+                ),
+                400,
+            )
+        splinter.tags = new_tags
+        db.session.commit()
+        flash("Splinter post updated.", "success")
+        return redirect(url_for("blog.edit_splinter_items", splinter_slug=splinter.slug))
+    if request.method == "GET":
+        form.tags.data = ", ".join([t.name for t in splinter.tags.order_by(Tag.name).all()])
+    return render_template(
+        "post_form.html",
+        form=form,
+        tag_queries=tag_queries,
+        action="Splinter",
+    )
+
+
+@blog_bp.route("/splinter/item/<int:item_id>/delete", methods=["POST"])
+@login_required
+def delete_splinter_item(item_id):
+    item = SplinterItem.query.get_or_404(item_id)
+    if item.splinter_post.author_id != current_user.id and not current_user.is_moderator():
+        abort(403)
+    db.session.delete(item)
+    db.session.commit()
+    flash("Rebuttal item deleted.", "success")
+    return redirect(url_for("blog.edit_splinter_items", splinter_slug=item.splinter_post.slug))
+
+
+@blog_bp.route("/tag/<slug>")
+def tag_view(slug):
+    return redirect(url_for("blog.all_posts", tags=slug))
+
+
+@blog_bp.route("/post/<slug>/references")
+def post_references(slug: str):
+    post = Post.query.filter_by(slug=slug).first_or_404()
+    kind = request.args.get("type", "both").lower()
+    page_roots = request.args.get("page_roots", 1, type=int)
+    page_branches = request.args.get("page_branches", 1, type=int)
+    page_splinters = request.args.get("page_splinters", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+    roots_q = (
+        db.session.query(Post)
+        .join(PostLink, PostLink.dst_post_id == Post.id)
+        .filter(PostLink.src_post_id == post.id)
+        .order_by(Post.timestamp.desc())
+    )
+    branches_q = (
+        db.session.query(Post)
+        .join(PostLink, PostLink.src_post_id == Post.id)
+        .filter(PostLink.dst_post_id == post.id)
+        .order_by(Post.timestamp.desc())
+    )
+    splinters_q = (
+        db.session.query(Post)
+        .filter(Post.is_splinter == True, Post.target_post_id == post.id)
+        .order_by(Post.timestamp.desc())
+    )
+    roots_pagination = (
+        roots_q.paginate(page=page_roots, per_page=per_page, error_out=False)
+        if kind in ("roots", "both")
+        else None
+    )
+    branches_pagination = (
+        branches_q.paginate(page=page_branches, per_page=per_page, error_out=False)
+        if kind in ("branches", "both")
+        else None
+    )
+    splinters_pagination = (
+        splinters_q.paginate(page=page_splinters, per_page=per_page, error_out=False)
+        if kind in ("splinters", "both")
+        else None
+    )
+    return render_template(
+        "post_references.html",
+        post=post,
+        kind=kind,
+        roots_pagination=roots_pagination,
+        branches_pagination=branches_pagination,
+        splinters_pagination=splinters_pagination,
+        roots_count=roots_q.count(),
+        branches_count=branches_q.count(),
+        splinters_count=splinters_q.count(),
+        per_page=per_page,
+    )
+
+
 def attach_email_to_notification(notif: Notification) -> None:
     db.session.flush()
     if notif.target_type != "comment":
@@ -789,54 +961,6 @@ def get_or_create_tag(name: str) -> Tag:
     tag = Tag(name=name, slug=slug, color_hex=color_from_slug(slug))
     db.session.add(tag)
     return tag
-
-
-@blog_bp.route("/tag/<slug>")
-def tag_view(slug):
-    return redirect(url_for("blog.all_posts", tags=slug))
-
-
-@blog_bp.route("/post/<slug>/references")
-def post_references(slug: str):
-    post = Post.query.filter_by(slug=slug).first_or_404()
-    kind = request.args.get("type", "both").lower()
-    page_roots = request.args.get("page_roots", 1, type=int)
-    page_branches = request.args.get("page_branches", 1, type=int)
-    per_page = request.args.get("per_page", 20, type=int)
-    roots_q = (
-        db.session.query(Post)
-        .join(PostLink, PostLink.dst_post_id == Post.id)
-        .filter(PostLink.src_post_id == post.id)
-        .order_by(Post.timestamp.desc())
-    )
-    branches_q = (
-        db.session.query(Post)
-        .join(PostLink, PostLink.src_post_id == Post.id)
-        .filter(PostLink.dst_post_id == post.id)
-        .order_by(Post.timestamp.desc())
-    )
-    roots_pagination = (
-        roots_q.paginate(page=page_roots, per_page=per_page, error_out=False)
-        if kind in ("roots", "both")
-        else None
-    )
-    branches_pagination = (
-        branches_q.paginate(page=page_branches, per_page=per_page, error_out=False)
-        if kind in ("branches", "both")
-        else None
-    )
-    roots_count = roots_q.count()
-    branches_count = branches_q.count()
-    return render_template(
-        "post_references.html",
-        post=post,
-        kind=kind,
-        roots_pagination=roots_pagination,
-        branches_pagination=branches_pagination,
-        roots_count=roots_count,
-        branches_count=branches_count,
-        per_page=per_page,
-    )
 
 
 def attach_sorted_tags(entries, limit):

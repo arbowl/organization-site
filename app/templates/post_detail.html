@@ -67,6 +67,29 @@
         on <span class="text-gray-700">{{ post.display_date | safe }}</span>
       </p>
 
+      {% if post.is_splinter and post.target_post %}
+        <div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-4 border-l-4 border-red-400 mb-6">
+          <div class="text-sm text-gray-700">
+            Splinter of <a class="text-blue-700 hover:underline" href="{{ url_for('blog.view_post', slug=post.target_post.slug) }}">{{ post.target_post.title }}</a>
+          </div>
+          {% if post.splinter_items %}
+            <ul class="mt-2 space-y-2">
+              {% for si in post.splinter_items %}
+                <li>
+                  <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800">{{ si.label }}</span>
+                  <span class="italic text-gray-700">“{{ si.quote_text }}”</span>
+                  <div class="text-gray-800">{{ si.summary }}</div>
+                  {% if si.body %}<div class="text-gray-700 mt-1">{{ si.body | md }}</div>{% endif %}
+                  {% if si.status != 'open' %}
+                    <span class="ml-2 text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700">Status: {{ si.status }}</span>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+        {% endif %}
+
       <div class="post-content mb-6">
         {{ post.content | md }}
       </div>
@@ -94,6 +117,12 @@
               </form>
             {% endif %}
           {% endif %}
+          <form method="post" action="{{ url_for('blog.new_splinter', slug=post.slug) }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-100 text-blue-800 rounded-md hover:bg-red-200 font-normal">
+              <span class="text-base">🪵 <span class="hidden sm:inline ml-1">Splinter</span></span>
+            </button>
+          </form>
           {% if post.author_id != current_user.id %}
             <a href="{{ url_for('blog.report', post_id=post.id) }}"
               class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200">
@@ -101,10 +130,17 @@
             </a>
           {% endif %}
           {% if current_user.id == post.author_id %}
-            <a href="{{ url_for('blog.edit_post', post_id=post.id) }}"
-              class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700">
-              ✏️ <span class="hidden sm:inline ml-1">Edit</span>
-            </a>
+            {% if post.is_splinter %}
+              <a href="{{ url_for('blog.edit_splinter', slug=post.slug) }}"
+                class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700">
+                ✏️ Edit Splinter
+              </a>
+            {% else %}
+              <a href="{{ url_for('blog.edit_post', post_id=post.id) }}"
+                class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700">
+                ✏️ Edit
+              </a>
+            {% endif %}
           {% endif %}
           {% if current_user.id == post.author_id or current_user.is_moderator() or current_user.is_admin() %}
             <form method="post" action="{{ url_for('blog.delete_post', post_id=post.id) }}" class="inline"
@@ -181,6 +217,38 @@
           {% endif %}
 
         </section>
+      {% endif %}
+
+      {% if splinters %}
+      <section class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6 mt-8 border-t-4 border-red-300">
+        <h3 class="text-2xl font-bold mb-3">🪵 Splinters</h3>
+        <ul class="space-y-3 mb-2">
+          {% for s in splinters %}
+            <li class="mb-3">
+              <a class="block text-blue-700 hover:text-blue-900 font-medium" href="{{ url_for('blog.view_post', slug=s.slug) }}">{{ s.title }}</a>
+              <div class="text-xs text-gray-500">by <a class="hover:underline" href="{{ url_for('blog.user_posts', username=s.author.username) }}">{{ s.author.username }}</a> · {{ s.timestamp.strftime('%Y-%m-%d') }}</div>
+              {% if s.splinter_items %}
+                <ul class="mt-2 border-l pl-3 space-y-2">
+                  {% for si in s.splinter_items[:3] %}
+                    <li class="text-sm">
+                      <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800">{{ si.label }}</span>
+                      <span class="italic text-gray-700">“{{ si.quote_text[:120] }}{% if si.quote_text|length > 120 %}…{% endif %}”</span>
+                      <span class="text-gray-600">— {{ si.summary }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+                {% if s.splinter_items|length > 3 %}
+                  <a class="text-xs text-blue-600 hover:underline" href="{{ url_for('blog.view_post', slug=s.slug) }}">…see full rebuttal</a>
+                {% endif %}
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+        {% if splinters|length >= 2 %}
+          <a href="{{ url_for('blog.post_references', slug=post.slug, type='splinters') }}"
+            class="text-blue-600 hover:underline text-sm mt-2">Show all splinters →</a>
+        {% endif %}
+      </section>
       {% endif %}
 
     </article>

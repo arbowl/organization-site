@@ -4,12 +4,12 @@
 {% block content %}
 <div class="mx-auto max-w-5xl px-4 mt-8">
   <h1 class="text-3xl font-bold mb-2">References for: <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.view_post', slug=post.slug) }}">{{ post.title }}</a></h1>
-  <p class="text-gray-600 mb-6">Roots = posts this one cites. Branches = posts that cite this one.</p>
+  <p class="text-gray-600 mb-6">Roots = posts this one cites. <br>Branches = posts that cite this one. <br>Splinters = rebuttals to this post.</p>
 
   <div class="flex gap-3 mb-6">
     <a href="{{ url_for('blog.post_references', slug=post.slug, type='both') }}"
        class="px-3 py-1 rounded-md border {{ 'bg-blue-600 text-white' if kind=='both' else 'bg-white text-blue-700 border-blue-300' }}">
-      Both ({{ roots_count + branches_count }})
+      All ({{ roots_count + branches_count + splinters_count }})
     </a>
     <a href="{{ url_for('blog.post_references', slug=post.slug, type='roots') }}"
        class="px-3 py-1 rounded-md border {{ 'bg-blue-600 text-white' if kind=='roots' else 'bg-white text-blue-700 border-blue-300' }}">
@@ -18,6 +18,10 @@
     <a href="{{ url_for('blog.post_references', slug=post.slug, type='branches') }}"
        class="px-3 py-1 rounded-md border {{ 'bg-blue-600 text-white' if kind=='branches' else 'bg-white text-blue-700 border-blue-300' }}">
       🌿 Branches ({{ branches_count }})
+    </a>
+    <a href="{{ url_for('blog.post_references', slug=post.slug, type='splinters') }}"
+       class="px-3 py-1 rounded-md border {{ 'bg-blue-600 text-white' if kind=='splinters' else 'bg-white text-blue-700 border-blue-300' }}">
+      🪵 Splinters ({{ splinters_count }})
     </a>
   </div>
 
@@ -29,12 +33,12 @@
         {% for p in roots_pagination.items %}
           <li class="mb-3">
             <a class="block text-blue-700 hover:text-blue-900 font-medium"
-                href="{{ url_for('blog.view_post', slug=p.slug) }}">{{ p.title }}</a>
+               href="{{ url_for('blog.view_post', slug=p.slug) }}">{{ p.title }}</a>
             <div class="text-xs text-gray-500">
-                by <a class="hover:underline" href="{{ url_for('blog.user_posts', username=p.author.username) }}">{{ p.author.username }}</a>
-                · {{ p.timestamp.strftime('%Y-%m-%d') }}
+              by <a class="hover:underline" href="{{ url_for('blog.user_posts', username=p.author.username) }}">{{ p.author.username }}</a>
+              · {{ p.timestamp.strftime('%Y-%m-%d') }}
             </div>
-            </li>
+          </li>
         {% endfor %}
       </ul>
       {% if roots_pagination.pages > 1 %}
@@ -64,10 +68,10 @@
         {% for p in branches_pagination.items %}
         <li class="mb-3">
             <a class="block text-blue-700 hover:text-blue-900 font-medium"
-                href="{{ url_for('blog.view_post', slug=p.slug) }}">{{ p.title }}</a>
+               href="{{ url_for('blog.view_post', slug=p.slug) }}">{{ p.title }}</a>
             <div class="text-xs text-gray-500">
-                by <a class="hover:underline" href="{{ url_for('blog.user_posts', username=p.author.username) }}">{{ p.author.username }}</a>
-                · {{ p.timestamp.strftime('%Y-%m-%d') }}
+              by <a class="hover:underline" href="{{ url_for('blog.user_posts', username=p.author.username) }}">{{ p.author.username }}</a>
+              · {{ p.timestamp.strftime('%Y-%m-%d') }}
             </div>
         </li>
         {% endfor %}
@@ -90,9 +94,56 @@
     {% endif %}
   </section>
   {% endif %}
+
+  {% if kind in ['both','splinters'] %}
+  <section class="bg-white shadow rounded-lg p-5 border-t-4 border-red-300 mt-8">
+    <h2 class="text-2xl font-semibold mb-4">🪵 Splinters ({{ splinters_count }})</h2>
+    {% if splinters_pagination and splinters_pagination.items %}
+      <ul class="space-y-2">
+        {% for s in splinters_pagination.items %}
+        <li class="mb-3">
+          <a class="block text-blue-700 hover:text-blue-900 font-medium"
+             href="{{ url_for('blog.view_post', slug=s.slug) }}">{{ s.title }}</a>
+          <div class="text-xs text-gray-500">
+            by <a class="hover:underline" href="{{ url_for('blog.user_posts', username=s.author.username) }}">{{ s.author.username }}</a>
+            · {{ s.timestamp.strftime('%Y-%m-%d') }}
+          </div>
+          {% if s.splinter_items %}
+          <ul class="mt-2 border-l pl-3 space-y-2">
+            {% for si in s.splinter_items[:2] %}
+              <li class="text-sm">
+                <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800">{{ si.label }}</span>
+                <span class="italic text-gray-700">“{{ si.quote_text[:120] }}{% if si.quote_text|length > 120 %}…{% endif %}”</span>
+                <span class="text-gray-600">— {{ si.summary }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% if splinters_pagination.pages > 1 %}
+      <div class="flex justify-between items-center mt-4 text-sm">
+        {% if splinters_pagination.has_prev %}
+          <a class="text-blue-700 hover:underline"
+             href="{{ url_for('blog.post_references', slug=post.slug, type='splinters', page_splinters=splinters_pagination.prev_num, per_page=per_page) }}">← Previous</a>
+        {% else %}<span></span>{% endif %}
+        <span class="text-gray-500">Page {{ splinters_pagination.page }} / {{ splinters_pagination.pages }}</span>
+        {% if splinters_pagination.has_next %}
+          <a class="text-blue-700 hover:underline"
+             href="{{ url_for('blog.post_references', slug=post.slug, type='splinters', page_splinters=splinters_pagination.next_num, per_page=per_page) }}">Next →</a>
+        {% else %}<span></span>{% endif %}
+      </div>
+      {% endif %}
+    {% else %}
+      <p class="text-gray-600">No splinters yet.</p>
+    {% endif %}
+  </section>
+  {% endif %}
 </div>
 
 <p class="text-center mt-10">
   <a href="{{ url_for('blog.view_post', slug=post.slug) }}" class="text-blue-700 hover:text-blue-900">← Back to post</a>
 </p>
+<br><br><br>
 {% endblock %}

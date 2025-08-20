@@ -20,6 +20,18 @@
                 </div>
             {% endif %}
         {% endwith %}
+        
+        {% if action == "Splinter" %}
+            <div class="mt-6 mb-6 p-4 border-l-4 border-red-400 bg-red-50 rounded">
+            <h2 class="text-lg font-bold text-red-800 mb-1">First: Describe the purpose of your Splinter</h2>
+            <p class="text-sm text-gray-700">
+                A Splinter is a rebuttal or counterpoint to another post.
+                This first step sets up your rebuttal post — give it a title and short intro.
+                You'll add specific rebuttal items (linked to the original post) right after this.
+            </p>
+            </div>
+        {% endif %}
+
 
         <form method="post" action="" novalidate class="space-y-6 mb-8">
             {{ form.hidden_tag() }}
