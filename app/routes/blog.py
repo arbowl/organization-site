@@ -767,8 +767,18 @@ def new_splinter(slug):
         )
         db.session.add(spl)
         with db.session.no_autoflush:
-            for name in form.clean_tags():
-                spl.tags.append(get_or_create_tag(name))
+            try:
+                for name in form.clean_tags():
+                    spl.tags.append(get_or_create_tag(name))
+            except ValidationError as e:
+                form.tags.errors.append(str(e))
+                flash(str(e), "error")
+                return (
+                    render_template(
+                        "post_form.html", form=form, tag_queries=Tag.query.order_by(Tag.name).all(), action="Splinter"
+                    ),
+                    400,
+                )
         db.session.commit()
         db.session.add(PostLike(user=current_user, post=spl))
         db.session.commit()

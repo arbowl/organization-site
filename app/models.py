@@ -133,7 +133,7 @@ class Post(db.Model):
     is_splinter = db.Column(db.Boolean, nullable=False, default=False)
     splinter_items = db.relationship(
         "SplinterItem",
-        foreign_keys="[SplinterItem.splinter_post_id]",
+        primaryjoin="Post.id == foreign(SplinterItem.splinter_post_id)",
         backref="splinter_post",
         cascade="all, delete-orphan",
         passive_deletes=True,
