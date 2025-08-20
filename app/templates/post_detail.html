@@ -40,19 +40,17 @@
         {% endif %}
       {% endwith %}
 
+      {% if post.is_splinter %}
+        <span
+          title="A direct reply post that challenges, reframes, or builds on another post"
+          class="text-base mb-2 px-2 py-0.5 bg-red-100 text-red-700 font-bold rounded-full uppercase">
+          Splinter
+        </span>
+      {% endif %}
       <div class="flex flex-wrap justify-between items-start mb-3">
-        <div class="mb-3">
-          <h1 class="text-4xl font-extrabold text-gray-900 inline-flex items-baseline gap-2 flex-wrap">
-            {% if post.is_splinter %}
-              <span
-                title="A direct reply post that challenges, reframes, or builds on another post"
-                class="text-base px-2 py-0.5 bg-red-100 text-red-700 font-semibold rounded-full uppercase tracking-wide">
-                Splinter
-              </span>
-            {% endif %}
-            {{ post.title }}
-          </h1>
-        </div>
+        <h1 class="text-4xl font-extrabold text-gray-900">
+          {{ post.title }}
+        </h1>
         <div class="flex items-center space-x-2 mt-1 sm:mt-3 flex-shrink-0 mb-2">
           <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">
             <form method="post" action="{{ url_for('blog.toggle_post_like', post_id=post.id) }}" class="inline">
