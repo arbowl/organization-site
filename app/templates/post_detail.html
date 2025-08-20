@@ -41,7 +41,15 @@
       {% endwith %}
 
       <div class="flex flex-wrap justify-between items-start mb-3">
-        <h1 class="text-4xl font-extrabold text-gray-900 mb-1">{{ post.title }}</h1>
+        <div class="flex items-center flex-wrap gap-2 mb-3">
+            {% if post.is_splinter %}
+                <span title="A direct reply post that challenges, reframes, or builds on another post"
+                      class="text-lg px-2 py-0.5 bg-red-100 text-red-700 font-semibold rounded-full uppercase tracking-wide">
+                    Splinter
+                </span>
+            {% endif %}
+            <h1 class="text-4xl font-extrabold text-gray-900">{{ post.title }}</h1>
+        </div>
         <div class="flex items-center space-x-2 mt-1 sm:mt-3 flex-shrink-0 mb-2">
           <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">
             <form method="post" action="{{ url_for('blog.toggle_post_like', post_id=post.id) }}" class="inline">
@@ -67,6 +75,10 @@
         on <span class="text-gray-700">{{ post.display_date | safe }}</span>
       </p>
 
+      <div class="post-content mb-6">
+        {{ post.content | md }}
+      </div>
+
       {% if post.is_splinter and post.target_post %}
         <div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-4 border-l-4 border-red-400 mb-6">
           <div class="text-sm text-gray-700">
@@ -88,11 +100,7 @@
             </ul>
           {% endif %}
         </div>
-        {% endif %}
-
-      <div class="post-content mb-6">
-        {{ post.content | md }}
-      </div>
+      {% endif %}
 
       <div class="post-actions flex flex-wrap items-center gap-x-4 gap-y-4 mt-6">
         <button id="share-button"
@@ -133,12 +141,12 @@
             {% if post.is_splinter %}
               <a href="{{ url_for('blog.edit_splinter', slug=post.slug) }}"
                 class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700">
-                ✏️ Edit Splinter
+                <span class="text-base">✏️ <span class="hidden sm:inline ml-1">Edit</span></span>
               </a>
             {% else %}
               <a href="{{ url_for('blog.edit_post', post_id=post.id) }}"
                 class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700">
-                ✏️ Edit
+                <span class="text-base">✏️ <span class="hidden sm:inline ml-1">Edit</span></span>
               </a>
             {% endif %}
           {% endif %}
