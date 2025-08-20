@@ -24,7 +24,7 @@
   </div>
 
   <div class="mt-6 mb-6 p-4 border-l-4 border-red-400 bg-red-50 rounded">
-    <h1 class="text-lg font-bold text-red-800 mb-1">Next: Add Rebuttal Items</h1>
+    <h1 class="text-lg font-bold text-red-800 mb-1">Step 2 of 2: Add Rebuttal Items</h1>
     <p class="text-sm text-gray-700">
       You’ve created a Splinter post — now highlight specific parts of the original post that you want to respond to.
       Select a quote, then write your counterpoint or clarification below. You can add multiple items.
@@ -39,9 +39,7 @@
     <h2 class="text-xl font-semibold mb-3">Select text in the target post</h2>
     <p class="text-sm text-gray-600 mb-3">Highlight a passage, then return here to write your rebuttal.</p>
 
-    <div id="target-pane"
-        class="prose max-w-none rounded p-4 bg-gray-50"
-        onmouseup="captureSelection()">
+    <div id="target-pane">
       {{ target.content | md | safe }}
     </div>
   </section>
@@ -126,24 +124,25 @@
 <br><br><br>
 
 <script>
-function captureSelection() {
+document.addEventListener("selectionchange", () => {
   const sel = window.getSelection();
-  const text = sel ? sel.toString().trim() : "";
-  const quoteField = document.getElementById('quote_text');
-  const preview = document.getElementById('selection-preview');
-  const previewText = document.getElementById('selection-text');
+  if (!sel || sel.rangeCount === 0) return;
 
-  if (text) {
+  const text = sel.toString().trim();
+  const quoteField = document.getElementById("quote_text");
+  const preview = document.getElementById("selection-preview");
+  const previewText = document.getElementById("selection-text");
+
+  if (text.length > 0) {
     quoteField.value = text.slice(0, 2000);
-    previewText.textContent = text.length > 500 ? text.slice(0, 500) + '…' : text;
-    preview.classList.remove('hidden');
+    previewText.textContent = text.length > 500 ? text.slice(0, 500) + "…" : text;
+    preview.classList.remove("hidden");
   } else {
     quoteField.value = "";
-    preview.classList.add('hidden');
+    preview.classList.add("hidden");
     previewText.textContent = "";
   }
-}
-
+});
 async function addItem() {
   const quote_text = document.getElementById('quote_text').value.trim();
   const label = document.getElementById('label').value;
