@@ -751,6 +751,10 @@ def edit_comment(comment_id):
 
 
 @blog_bp.route("/post/<slug>/splinter/new", methods=["GET", "POST"])
+@limiter.limit(
+    "5 per hour",
+    key_func=lambda: current_user.id if current_user.is_authenticated else "anon",
+)
 @login_required
 def new_splinter(slug):
     target = Post.query.filter_by(slug=slug).first_or_404()
@@ -775,7 +779,10 @@ def new_splinter(slug):
                 flash(str(e), "error")
                 return (
                     render_template(
-                        "post_form.html", form=form, tag_queries=Tag.query.order_by(Tag.name).all(), action="Splinter"
+                        "post_form.html",
+                        form=form,
+                        tag_queries=Tag.query.order_by(Tag.name).all(),
+                        action="Splinter",
                     ),
                     400,
                 )
@@ -784,10 +791,15 @@ def new_splinter(slug):
         db.session.commit()
         flash("Splinter created. Now add your rebuttal items below.", "info")
         return redirect(url_for("blog.edit_splinter_items", splinter_slug=spl.slug))
-    return render_template("post_form.html", form=form, tag_queries=Tag.query.order_by(Tag.name).all(), action="Splinter")
+    return render_template(
+        "post_form.html",
+        form=form,
+        tag_queries=Tag.query.order_by(Tag.name).all(),
+        action="Splinter",
+    )
 
 
-@blog_bp.route("/splinter/<splinter_slug>/items", methods=["GET","POST"])
+@blog_bp.route("/splinter/<splinter_slug>/items", methods=["GET", "POST"])
 @login_required
 def edit_splinter_items(splinter_slug):
     spl = Post.query.filter_by(slug=splinter_slug, is_splinter=True).first_or_404()
@@ -841,9 +853,13 @@ def edit_splinter(slug):
         splinter.tags = new_tags
         db.session.commit()
         flash("Splinter post updated.", "success")
-        return redirect(url_for("blog.edit_splinter_items", splinter_slug=splinter.slug))
+        return redirect(
+            url_for("blog.edit_splinter_items", splinter_slug=splinter.slug)
+        )
     if request.method == "GET":
-        form.tags.data = ", ".join([t.name for t in splinter.tags.order_by(Tag.name).all()])
+        form.tags.data = ", ".join(
+            [t.name for t in splinter.tags.order_by(Tag.name).all()]
+        )
     return render_template(
         "post_form.html",
         form=form,
@@ -856,12 +872,17 @@ def edit_splinter(slug):
 @login_required
 def delete_splinter_item(item_id):
     item = SplinterItem.query.get_or_404(item_id)
-    if item.splinter_post.author_id != current_user.id and not current_user.is_moderator():
+    if (
+        item.splinter_post.author_id != current_user.id
+        and not current_user.is_moderator()
+    ):
         abort(403)
     db.session.delete(item)
     db.session.commit()
     flash("Rebuttal item deleted.", "success")
-    return redirect(url_for("blog.edit_splinter_items", splinter_slug=item.splinter_post.slug))
+    return redirect(
+        url_for("blog.edit_splinter_items", splinter_slug=item.splinter_post.slug)
+    )
 
 
 @blog_bp.route("/tag/<slug>")

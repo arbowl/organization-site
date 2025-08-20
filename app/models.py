@@ -98,18 +98,22 @@ class SplinterItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     splinter_post_id = db.Column(
         db.Integer,
-        db.ForeignKey("posts.id", name="fk_splinter_items_splinter_post_id_posts", ondelete="CASCADE"),
+        db.ForeignKey(
+            "posts.id",
+            name="fk_splinter_items_splinter_post_id_posts",
+            ondelete="CASCADE",
+        ),
         index=True,
-        nullable=False
+        nullable=False,
     )
     target_post_id = db.Column(
         db.Integer,
         db.ForeignKey("posts.id", name="fk_splinter_items_target_post_id_posts"),
         index=True,
-        nullable=False
+        nullable=False,
     )
     quote_text = db.Column(db.Text, nullable=False)
-    quote_html = db.Column(db.Text, nullable=True) 
+    quote_html = db.Column(db.Text, nullable=True)
     selector_json = db.Column(db.JSON, nullable=True)
     label = db.Column(db.String(32), nullable=False, default="claim")
     summary = db.Column(db.String(280), nullable=False)
@@ -142,9 +146,11 @@ class Post(db.Model):
         db.Integer,
         db.ForeignKey("posts.id", name="fk_posts_target_post_id_posts"),
         index=True,
-        nullable=True
+        nullable=True,
     )
-    target_post = db.relationship("Post", remote_side=[id], backref="incoming_splinters")
+    target_post = db.relationship(
+        "Post", remote_side=[id], backref="incoming_splinters"
+    )
     comments = db.relationship(
         "Comment", backref="post", lazy="dynamic", cascade="all, delete-orphan"
     )
@@ -170,13 +176,13 @@ class PostLink(db.Model):
         db.Integer,
         db.ForeignKey("posts.id", name="fk_post_links_src_posts"),
         index=True,
-        nullable=False
+        nullable=False,
     )
     dst_post_id = db.Column(
         db.Integer,
         db.ForeignKey("posts.id", name="fk_post_links_dst_posts"),
         index=True,
-        nullable=False
+        nullable=False,
     )
     created_at = db.Column(db.DateTime, default=timestamp(), nullable=False)
     referenced_by_count = db.Column(db.Integer, default=0, nullable=False)
