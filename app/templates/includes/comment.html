@@ -1,5 +1,5 @@
 {% set MAX_DEPTH = 2 %}
-<li id="c{{ comment.id }}" class="mb-6 p-4 bg-white rounded-lg shadow-md border-t-2 border-teal-200">
+<li id="c{{ comment.id }}" class="mb-6 p-4 bg-white rounded-lg border-l-2 border-t-2 border-teal-200 hover:shadow-md">
   <div class="flex flex-wrap justify-between items-center mb-2"> {# Added flex-wrap here #}
     <p class="text-sm text-gray-800 pr-2 flex-grow"> {# Added pr-2 and flex-grow here #}
       {% if comment.author %}
@@ -123,7 +123,7 @@
   {# Nested replies recursion #}
   {% if depth < MAX_DEPTH %}
     {% if comment.ordered_replies %}
-      <ul class="ml-1 mt-4 pl-4 space-y-4">
+      <ul class="mt-4 pl-2 space-y-2">
         {% for reply in comment.ordered_replies %}
           {% set comment = reply %}
           {% set depth = depth + 1 %}
