@@ -54,21 +54,7 @@
           <a href="{{ url_for('blog.notifications') }}"
              class="relative inline-flex items-center justify-center
                     p-1 hover:bg-gray-100 rounded">
-            <span class="text-xl">✉️</span>
-          <!-- Desktop greeting -->
-          <span class="text-gray-700 hidden md:inline"></span>
-          <a href="{{ url_for('blog.user_posts', username=current_user.username) }}"
-             class="bg-blue-200 px-3 py-2 rounded-md
-                    hover:bg-blue-300 ml-auto transition hidden md:inline">
-            {{ current_user.username }}
-          </a>
-          <!-- Mobile profile icon -->
-          <a href="{{ url_for('blog.user_posts', username=current_user.username) }}"
-             class="text-gray-700 md:hidden text-xl p-1">
-            👤
-          </a>
-
-
+            <span class="text-xl">✉️
             {% if unread_count %}
               <span class="absolute top-0 right-0
                             transform translate-x-1/3 -translate-y-1/3
@@ -79,6 +65,16 @@
                 {{ unread_count }}
               </span>
             {% endif %}
+            </span>
+          <a href="{{ url_for('blog.user_posts', username=current_user.username) }}"
+             class="bg-blue-200 px-3 py-2 rounded-md
+                    hover:bg-blue-300 ml-auto transition hidden md:inline">
+            {{ current_user.username }}
+          </a>
+          <!-- Mobile profile icon -->
+          <a href="{{ url_for('blog.user_posts', username=current_user.username) }}"
+             class="text-gray-700 md:hidden text-xl p-1">
+            👤
           </a>
 
           <!-- Logout -->
