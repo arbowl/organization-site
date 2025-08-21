@@ -23,7 +23,7 @@
   <div class="order-1 lg:order-1 lg:col-span-8 lg:col-start-1">
 
     <!-- Article -->
-    <article class="max-w-3xl lg:max-w-none mx-auto p-6 bg-white shadow-lg rounded-lg border-t-4 border-r-2 border-blue-300">
+    <article class="lg:max-w-none mx-auto p-6 bg-white shadow-lg rounded-lg border-t-4 border-r-2 border-blue-300">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <div class="mb-4">
@@ -264,7 +264,7 @@
     <br id="comment-form">
     <!-- Comments -->
     <section id="comments"
-             class="max-w-3xl lg:max-w-none mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 border-t-4 border-r-2 border-blue-300">
+             class="lg:max-w-none mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 border-t-4 border-r-2 border-blue-300">
       <h3 class="text-2xl font-bold text-gray-800 mb-4">Leave a comment</h3>
       <form method="post" class="space-y-4 mb-8" novalidate>
         {{ form.hidden_tag() }}
