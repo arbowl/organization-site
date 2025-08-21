@@ -58,8 +58,20 @@
                     </a>
                   </h4>
                   <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
-                    <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">➕ {{ e.likes }}</span>
-                    <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">💬 {{ e.comments }}</span>
+                        <!-- Like button -->
+                        <form method="post" action="{{ url_for('blog.toggle_post_like', post_id=e.post.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transitio nrelative z-10">
+                                <span class="text-sm mr-2">➕</span>
+                                <span class="font-semibold">{{ e.post.likes.count() }}</span>
+                            </button>
+                        </form>
+                        <!-- Comment link -->
+                        <a href="{{ url_for('blog.view_post', slug=e.post.slug) }}#comment-form"
+                        class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10">
+                            <span class="text-sm mr-2">💬</span>
+                            <span class="font-semibold">{{ e.post.comments.count() }}</span>
+                        </a>
                   </div>
                 </div>
                 <small class="text-gray-500 text-sm">
