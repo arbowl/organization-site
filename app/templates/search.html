@@ -28,16 +28,17 @@
       {# 1) Start discussion (mobile-first, visible only below lg) #}
       <section id="start-discussion" class="order-1 lg:order-1 lg:col-span-4 lg:col-start-9 lg:row-start-1">
         <div class="max-w-2xl lg:max-w-none mx-auto">
+
           <div class="flex items-center justify-center lg:hidden">
             {% if current_user.is_authenticated and current_user.is_contributor() %}
               <a href="{{ url_for('blog.create_post') }}"
-                 class="block text-gray-800 bg-gray-200 hover:bg-gray-300 rounded-xl p-4 text-center shadow-sm w-full mb-4">
+                 class="block bg-blue-500 hover:bg-blue-600 text-white text-lg font-semibold rounded-xl p-4 text-center shadow-md w-full mb-4">
                 📝 Start a discussion
               </a>
             {% else %}
-              <div class="text-sm text-gray-600 bg-gray-50 border border-dashed border-gray-200 rounded-xl p-4 w-full text-center lg:hidden">
+              <a href="{{ url_for('auth.login') }}" class="mb-4 text-sm italic text-gray-600 bg-gray-200 hover:bg-gray-300 border border-dashed border-gray-200 rounded-xl p-4 w-full text-center lg:hidden">
                 Sign in as a contributor to start a discussion.
-              </div>
+              </a>
             {% endif %}
           </div>
         </div>
@@ -152,23 +153,22 @@
       {# 3) Right rail remainder: duplicates your all_posts structure #}
       <aside id="right-rail-rest" class="order-4 lg:order-2 lg:col-span-4 lg:col-start-9 lg:row-start-1 space-y-8 mt-8 lg:mt-0">
 
-        {# Desktop-only Start Discussion card in the rail #}
-        <section id="start-discussion" class="hidden lg:block order-1 sm:order-1 sm:col-span-4 sm:col-start-9 sm:row-start-1">
-          <div class="w-full">
-            <div class="flex items-center justify-center">
-              {% if current_user.is_authenticated and current_user.is_contributor() %}
-                <a href="{{ url_for('blog.create_post') }}"
-                   class="block text-gray-800 bg-gray-200 hover:bg-gray-300 rounded-xl p-4 text-center shadow-sm w-full">
-                  📝 Start a discussion
-                </a>
-              {% else %}
-                <div class="text-sm text-gray-600 bg-gray-50 border border-dashed border-gray-200 rounded-xl p-4 w-full text-center">
-                  Sign in as a contributor to start a discussion.
-                </div>
-              {% endif %}
-            </div>
+      <section id="start-discussion" class="hidden lg:block order-1 sm:order-1 sm:col-span-4 sm:col-start-9 sm:row-start-1">
+        <div class="w-full">
+          <div class="flex items-center justify-center">
+            {% if current_user.is_authenticated and current_user.is_contributor() %}
+              <a href="{{ url_for('blog.create_post') }}"
+                class="block bg-blue-500 hover:bg-blue-600 text-white text-lg font-semibold rounded-xl p-4 text-center shadow-sm w-full">
+                📝 Start a discussion
+              </a>
+            {% else %}
+              <a href="{{ url_for('auth.login') }}" class="text-sm italic text-gray-600 bg-gray-200 hover:bg-gray-300 border border-dashed border-gray-200 rounded-xl p-4 w-full text-center">
+                Sign in as a contributor to start a discussion.
+              </a>
+            {% endif %}
           </div>
-        </section>
+        </div>
+      </section>
 
         <section id="rules">
           <div>
