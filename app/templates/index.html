@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Home - Dismantl{% endblock %}
 {% block content %}
-    <div class="text-center mb-10">
+    <div class="text-center mb-2">
         <div>
             <img src="{{ url_for('static', filename='favicon.ico') }}" alt="Dismantl logo" class="h-10 dismantl-d" loading="lazy">
             <h1 class="text-4xl font-extrabold text-gray-900 mb-4 ismantl" style="display: inline;">
@@ -21,6 +21,33 @@
             </a>
         {% endif %}
         <p class="text-gray-500 italic mt-4">Massachusetts-centric commentary, activism, and calls to action.</p>
+    </div>
+
+    {% set all_tags = [] %}
+    {% for post_item in posts %}
+        {% for tag in post_item["tags"] %}
+            {{ all_tags.append(tag) | default("", True) }}
+        {% endfor %}
+    {% endfor %}
+    <div class="relative overflow-hidden whitespace-nowrap py-2 border-y border-gray-200 mb-2">
+        <div class="marquee-track inline-block">
+            {% for tag in all_tags %}
+                <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+                class="italic tag mx-4 inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded mr-4"
+                style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
+                    {{ tag.name }}
+                </a>
+            {% endfor %}
+            {% for tag in all_tags %}
+                <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+                class="italic tag mx-4 inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded mr-4"
+                style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
+                    {{ tag.name }}
+                </a>
+            {% endfor %}
+        </div>
+        <div class="pointer-events-none absolute top-0 left-0 h-full w-12 bg-gradient-to-r from-offwhite to-transparent z-10"></div>
+        <div class="pointer-events-none absolute top-0 right-0 h-full w-12 bg-gradient-to-l from-offwhite to-transparent z-10"></div>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -64,12 +91,24 @@
                                         <a class="align-middle hover:text-blue-900" href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}">
                                             {{ post_item.post.title }}
                                         </a>
-                                        </h4>
+                                    </h4>
                                     <!-- Right-side counts -->
-                                    <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
-                                        <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">➕ {{ post_item.likes }}</span>
-                                        <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">💬 {{ post_item.comments }}</span>
-                                    </div>
+                                        <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
+                                            <!-- Like button -->
+                                            <form method="post" action="{{ url_for('blog.toggle_post_like', post_id=post_item.post.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transitio nrelative z-10">
+                                                    <span class="text-sm mr-2">➕</span>
+                                                    <span class="font-semibold">{{ post_item.likes }}</span>
+                                                </button>
+                                            </form>
+                                            <!-- Comment link -->
+                                            <a href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}#comment-form"
+                                            class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10">
+                                                <span class="text-sm mr-2">💬</span>
+                                                <span class="font-semibold">{{ post_item.comments }}</span>
+                                            </a>
+                                        </div>
                                     </div>
                                 <small class="text-gray-500 text-sm block mb-2">
                                     By <span class="font-medium"><span class="badge">{{ post_item.post.author.role_icon }}</span><a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=post_item.post.author.username) }}">{{ post_item.post.author.username }}</a></span> on {{ post_item.post.display_date | safe }}
