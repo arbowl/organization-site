@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Edit comment = {{ comment.post.title }}{% endblock %}
 {% block content %}
-    <div class="max-w-2xl mx-auto mt-12 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border-t-4 border-blue-300">
+    <div class="max-w-2xl mx-auto mt-12 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border-t-4 border-r-2 border-blue-300">
         <h2 class="text-2xl font-bold mb-4 text-gray-900">Edit your comment</h2>
         
         <form method="post" class="reply-form space-y-4" id="reply-{{ comment.id }}">

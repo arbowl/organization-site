@@ -33,11 +33,15 @@
             <meta name="twitter:image:alt" content="Dismantl logo">
         {% endblock %}
     </head>
-    <body class="flex flex-col min-h-screen">
+        <body class="flex flex-col min-h-screen m-0">
         {% include '_header.html' %}
-        <main class="bg-offwhite container mx-auto mt-8 p-4 shadow-lg rounded-lg">
+
+        <main
+            class="w-full bg-offwhite mt-8 px-0 rounded-none shadow-none
+                md:max-w-screen-lg md:mx-auto md:px-4 md:rounded-lg md:shadow-lg">
             {% block content %}{% endblock %}
         </main>
+
         {% include '_footer.html' %}
-    </body>
+        </body>
 </html>
