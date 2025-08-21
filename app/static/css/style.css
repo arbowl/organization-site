@@ -21,7 +21,7 @@ h1, h2, h3, h4 {
 .marquee-track {
   display: inline-block;
   white-space: nowrap;
-  animation: marquee-loop 35s linear infinite;
+  animation: marquee-loop 50s linear infinite;
 }
 
 .marquee-track:hover {

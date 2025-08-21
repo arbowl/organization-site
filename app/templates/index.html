@@ -26,7 +26,9 @@
     {% set all_tags = [] %}
     {% for post_item in posts %}
         {% for tag in post_item["tags"] %}
-            {{ all_tags.append(tag) | default("", True) }}
+            {% if tag not in all_tags %}
+                {{ all_tags.append(tag) | default("", True) }}
+            {% endif %}
         {% endfor %}
     {% endfor %}
     <div class="relative overflow-hidden whitespace-nowrap py-2 border-y border-gray-200 mb-2">
