@@ -261,11 +261,14 @@ blockquote {
   padding: 1.5rem;
   margin: 1.5rem 0;
   font-style: italic;
-  color: #4a5568;
-  background-color: #f7fafc;
-  border-left: 0.25rem solid #179bed;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  color: #1f2937;
+  background-color: #f3f5f7;
+  border-left: 4px solid #3b83f6b2;
+  border-radius: 0.75rem;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  line-height: 1.75;
 }
 
 blockquote footer {

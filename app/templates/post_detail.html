@@ -23,7 +23,7 @@
   <div class="order-1 lg:order-1 lg:col-span-8 lg:col-start-1">
 
     <!-- Article -->
-    <article class="lg:max-w-none mx-auto p-6 bg-white shadow-lg rounded-lg border-t-4 border-r-2 border-blue-300">
+    <article class="lg:max-w-none mx-auto p-6 bg-white shadow-lg rounded-lg border-t-4 border-l-2 border-blue-300">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <div class="mb-4">
@@ -177,7 +177,7 @@
       {% endif %}
 
       {% if roots or branches %}
-        <section class="max-w-3xl lg:max-w-none mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 border-t-4 border-r-2 border-blue-300">
+        <section class="max-w-3xl lg:max-w-none mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 border-t-4 border-r-2 border-green-400">
 
           {% if roots %}
             <div class="mb-6">
