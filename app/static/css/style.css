@@ -13,6 +13,26 @@ h1, h2, h3, h4 {
   font-family: 'Rubik', sans-serif;
 }
 
+@keyframes marquee-loop {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee-loop 35s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+.from-offwhite {
+  --gradient-from-color: #f9fafb;
+  --gradient-color-stops: var(--gradient-from-color),var(--gradient-to-color, rgba(255, 255, 255, 0));
+}
+
 .dismantl-d {
   display: inline;
   padding-bottom: 12px;
