@@ -578,14 +578,17 @@ def notifications():
         q = q.filter(Notification.read_at != None)
     elif tab == "replies":
         q = q.filter(
-            Notification.verb.in_(["replied to your comment", "commented on your post"])
+            Notification.verb.in_([
+                "replied to your comment",
+                "commented on your post",
+            ])
         )
     elif tab == "likes":
         q = q.filter(Notification.verb.in_(["liked your comment", "liked your post"]))
     pagination = q.order_by(Notification.timestamp.desc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
-    notifs = pagination.items
+    notifs: list[Notification] = pagination.items
     valid_notifs = []
     for n in notifs:
         if n.target_type == "post" and not n.post:
@@ -599,7 +602,13 @@ def notifications():
         Notification.query.filter(
             Notification.recipient_id == current_user.id,
             Notification.verb.in_(
-                ["liked your post", "liked your comment", "posted a new article"]
+                [
+                    "liked your post",
+                    "liked your comment",
+                    "posted a new article",
+                    "posted a new splinter",
+                    "splintered your post",
+                ]
             ),
             Notification.read_at.is_(None),
         ).update({"read_at": timestamp()})
@@ -789,6 +798,30 @@ def new_splinter(slug):
         db.session.commit()
         db.session.add(PostLike(user=current_user, post=spl))
         db.session.commit()
+        if target.author.id != current_user.id:
+            notif = Notification(
+                recipient_id=target.author.id,
+                actor_id=current_user.id,
+                verb="splintered your post",
+                target_type="post",
+                target_id=spl.id,
+            )
+            db.session.add(notif)
+            attach_email_to_notification(notif)
+            db.session.commit()
+        subs: list[UserSubscription] = UserSubscription.query.filter_by(user_id=current_user.id).all()
+        for subscriber in subs:
+            if subscriber.subscriber_id != current_user.id:
+                notif = Notification(
+                    recipient_id=subscriber.subscriber_id,
+                    actor_id=current_user.id,
+                    verb="posted a new splinter",
+                    target_type="post",
+                    target_id=spl.id,
+                )
+                db.session.add(notif)
+                attach_email_to_notification(notif)
+            db.session.commit()
         flash("Splinter created. Now add your rebuttal items below.", "info")
         return redirect(url_for("blog.edit_splinter_items", splinter_slug=spl.slug))
     return render_template(
