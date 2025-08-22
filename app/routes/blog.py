@@ -348,7 +348,7 @@ def toggle_comment_like(comment_id):
 @login_required
 def create_post():
     if not current_user.is_contributor():
-        abort(403)
+        return render_template("contributing.html")
     tag_queries = Tag.query.order_by(Tag.name).all() if request.method == "GET" else []
     form = PostForm()
     if form.validate_on_submit():

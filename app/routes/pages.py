@@ -59,3 +59,8 @@ def contact():
     if form.validate_on_submit():
         return send_mail(form)
     return render_template("contact.html", form=form)
+
+
+@pages_bp.route("/contributing")
+def contributing():
+    return render_template("contributing.html")
