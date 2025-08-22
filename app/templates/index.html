@@ -3,10 +3,7 @@
 {% block content %}
     <div class="text-center mb-2">
         <div>
-            <img src="{{ url_for('static', filename='favicon.ico') }}" alt="Dismantl logo" class="h-10 dismantl-d" loading="lazy">
-            <h1 class="text-4xl font-extrabold text-gray-900 mb-4 ismantl" style="display: inline;">
-                ismantl
-            </h1>
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Dismantl logo" class="mt-4 h-10 dismantl-d" loading="lazy">
         </div>
         <p class="text-xl text-gray-600 mt-1"><i>Verify ⸱ Vilify ⸱ Vivify</i></p>
         {% if not current_user.is_authenticated %}
