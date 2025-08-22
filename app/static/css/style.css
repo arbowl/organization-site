@@ -24,9 +24,10 @@ h1, h2, h3, h4 {
   animation: marquee-loop 50s linear infinite;
 }
 
-.marquee-track:hover {
-  animation-play-state: paused;
+.marquee-track .tag:hover {
+  text-decoration: none;
 }
+
 
 .from-offwhite {
   --gradient-from-color: #f9fafb;

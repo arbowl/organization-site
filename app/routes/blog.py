@@ -806,14 +806,17 @@ def edit_comment(comment_id):
 
 @blog_bp.route("/post/<slug>/splinter/new", methods=["GET", "POST"])
 @limiter.limit(
-    "5 per hour",
+    "10 per hour",
     key_func=lambda: current_user.id if current_user.is_authenticated else "anon",
 )
 @login_required
 def new_splinter(slug):
+    if not current_user.is_contributor():
+        return render_template("contributing.html")
     target = Post.query.filter_by(slug=slug).first_or_404()
     form = PostForm()
     if form.validate_on_submit():
+        is_draft = bool(form.save_draft.data)
         spl = Post(
             title=form.title.data,
             slug=slugify(form.title.data),
@@ -822,6 +825,7 @@ def new_splinter(slug):
             timestamp=timestamp(),
             is_splinter=True,
             target_post_id=target.id,
+            is_draft=is_draft,
         )
         db.session.add(spl)
         with db.session.no_autoflush:
@@ -841,11 +845,17 @@ def new_splinter(slug):
                     400,
                 )
         db.session.commit()
-        db.session.add(PostLike(user=current_user, post=spl))
-        db.session.commit()
-        if target.author.id != current_user.id:
+        if is_draft:
+            flash("Splinter draft saved.", "info")
+            return redirect(url_for("blog.list_drafts"))
+        existing_like = PostLike.query.filter_by(
+            user_id=current_user.id, post_id=spl.id
+        ).first()
+        if not existing_like:
+            db.session.add(PostLike(user=current_user, post=spl))
+        if target.author_id != current_user.id:
             notif = Notification(
-                recipient_id=target.author.id,
+                recipient_id=target.author_id,
                 actor_id=current_user.id,
                 verb="splintered your post",
                 target_type="post",
@@ -853,8 +863,7 @@ def new_splinter(slug):
             )
             db.session.add(notif)
             attach_email_to_notification(notif)
-            db.session.commit()
-        subs: list[UserSubscription] = UserSubscription.query.filter_by(user_id=current_user.id).all()
+        subs = UserSubscription.query.filter_by(user_id=current_user.id).all()
         for subscriber in subs:
             if subscriber.subscriber_id != current_user.id:
                 notif = Notification(
@@ -866,7 +875,7 @@ def new_splinter(slug):
                 )
                 db.session.add(notif)
                 attach_email_to_notification(notif)
-            db.session.commit()
+        db.session.commit()
         flash("Splinter created. Now add your rebuttal items below.", "info")
         return redirect(url_for("blog.edit_splinter_items", splinter_slug=spl.slug))
     return render_template(
@@ -875,7 +884,6 @@ def new_splinter(slug):
         tag_queries=Tag.query.order_by(Tag.name).all(),
         action="Splinter",
     )
-
 
 @blog_bp.route("/splinter/<splinter_slug>/items", methods=["GET", "POST"])
 @login_required
@@ -913,10 +921,15 @@ def edit_splinter(slug):
     tag_queries = Tag.query.order_by(Tag.name).all() if request.method == "GET" else []
     form = PostForm(obj=splinter, post_id=splinter.id)
     if form.validate_on_submit():
+        was_draft = bool(splinter.is_draft)
+        will_be_draft = bool(form.save_draft.data)
+        will_publish_now = was_draft and not will_be_draft
         splinter.title = form.title.data
         splinter.content = form.content.data
-        splinter.updated_at = timestamp()
         splinter.slug = slugify(form.title.data)
+        splinter.is_draft = will_be_draft
+        if not will_publish_now:
+            splinter.updated_at = timestamp()
         try:
             new_tags = [get_or_create_tag(n) for n in form.clean_tags()]
         except ValidationError as e:
@@ -930,10 +943,48 @@ def edit_splinter(slug):
             )
         splinter.tags = new_tags
         db.session.commit()
-        flash("Splinter post updated.", "success")
-        return redirect(
-            url_for("blog.edit_splinter_items", splinter_slug=splinter.slug)
-        )
+        if will_publish_now:
+            existing_like = PostLike.query.filter_by(
+                user_id=current_user.id, post_id=splinter.id
+            ).first()
+            if not existing_like:
+                db.session.add(PostLike(user=current_user, post=splinter))
+            target = splinter.target_post
+            if target and target.author_id != current_user.id:
+                notif = Notification(
+                    recipient_id=target.author_id,
+                    actor_id=current_user.id,
+                    verb="splintered your post",
+                    target_type="post",
+                    target_id=splinter.id,
+                )
+                db.session.add(notif)
+                attach_email_to_notification(notif)
+            subs = UserSubscription.query.filter_by(user_id=current_user.id).all()
+            for subscriber in subs:
+                if subscriber.subscriber_id != current_user.id:
+                    notif = Notification(
+                        recipient_id=subscriber.subscriber_id,
+                        actor_id=current_user.id,
+                        verb="posted a new splinter",
+                        target_type="post",
+                        target_id=splinter.id,
+                    )
+                    db.session.add(notif)
+                    attach_email_to_notification(notif)
+            db.session.commit()
+            flash("Splinter published! Now add your rebuttal items below.", "success")
+            return redirect(
+                url_for("blog.edit_splinter_items", splinter_slug=splinter.slug)
+            )
+        if splinter.is_draft:
+            flash("Splinter draft updated.", "info")
+            return redirect(url_for("blog.list_drafts"))
+        else:
+            flash("Splinter post updated.", "success")
+            return redirect(
+                url_for("blog.edit_splinter_items", splinter_slug=splinter.slug)
+            )
     if request.method == "GET":
         form.tags.data = ", ".join(
             [t.name for t in splinter.tags.order_by(Tag.name).all()]

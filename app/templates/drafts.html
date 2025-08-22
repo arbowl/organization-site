@@ -52,10 +52,17 @@
               {% endif %}
             </div>
             <div class="flex flex-col items-end gap-2 shrink-0">
-              <a href="{{ url_for('blog.edit_post', post_id=d.id) }}"
-                 class="bg-blue-500 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
-                Edit
-              </a>
+                {% if d.is_splinter %}
+                  <a href="{{ url_for('blog.edit_splinter', slug=d.slug) }}"
+                    class="bg-purple-500 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded">
+                    Edit Splinter
+                  </a>
+                {% else %}
+                  <a href="{{ url_for('blog.edit_post', post_id=d.id) }}"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
+                    Edit
+                  </a>
+                {% endif %}
               <form method="post"
                 action="{{ url_for('blog.delete_post', post_id=d.id) }}"
                 onsubmit="return confirm('Delete this draft? This cannot be undone.');">
