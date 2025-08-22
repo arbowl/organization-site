@@ -59,6 +59,7 @@ def index() -> str:
         .outerjoin(comment_count_subq, Post.id == comment_count_subq.c.post_id)
         .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
         .order_by(Post.timestamp.desc())
+        .filter(Post.is_draft == False)
         .all()
     )
     posts = [
@@ -147,6 +148,8 @@ def populate_replies(comment: Comment) -> None:
 @blog_bp.route("/post/<slug>", methods=["GET", "POST"])
 def view_post(slug: str) -> str:
     post = Post.query.filter_by(slug=slug).first_or_404()
+    if post.is_draft and (not current_user.is_authenticated or post.author != current_user):
+        abort(404)
     form = CommentForm(post_id=post.id)
     if form.validate_on_submit():
         author_id = current_user.id if current_user.is_authenticated else None
@@ -245,6 +248,7 @@ def view_post(slug: str) -> str:
         .join(PostLink, PostLink.dst_post_id == Post.id)
         .filter(PostLink.src_post_id == post.id)
         .order_by(Post.timestamp.desc())
+        .filter(Post.is_draft == False)
         .limit(5)
         .all()
     )
@@ -254,6 +258,7 @@ def view_post(slug: str) -> str:
         .join(PostLink, PostLink.src_post_id == Post.id)
         .filter(PostLink.dst_post_id == post.id)
         .order_by(Post.timestamp.desc())
+        .filter(Post.is_draft == False)
         .limit(5)
         .all()
     )
@@ -261,6 +266,7 @@ def view_post(slug: str) -> str:
         db.session.query(Post)
         .filter(Post.is_splinter == True, Post.target_post_id == post.id)
         .order_by(Post.timestamp.desc())
+        .filter(Post.is_draft == False)
         .limit(2)
         .all()
     )
@@ -335,7 +341,7 @@ def toggle_comment_like(comment_id):
 
 @blog_bp.route("/create", methods=["GET", "POST"])
 @limiter.limit(
-    "5 per hour",
+    "10 per hour",
     key_func=lambda: current_user.id if current_user.is_authenticated else "anon",
 )
 @login_required
@@ -345,12 +351,14 @@ def create_post():
     tag_queries = Tag.query.order_by(Tag.name).all() if request.method == "GET" else []
     form = PostForm()
     if form.validate_on_submit():
+        is_draft = form.save_draft.data
         post: Post = Post(
             title=form.title.data,
             slug=slugify(form.title.data),
             content=form.content.data,
             author=current_user,
             timestamp=timestamp(),
+            is_draft=is_draft,
         )
         db.session.add(post)
         try:
@@ -368,6 +376,9 @@ def create_post():
                 ),
                 400,
             )
+        if is_draft:
+            flash("Draft saved.", "info")
+            return redirect(url_for("blog.list_drafts"))
         db.session.commit()
         auto_like = PostLike(user=current_user, post=post)
         db.session.add(auto_like)
@@ -401,6 +412,7 @@ def edit_post(post_id: int):
     tag_queries = Tag.query.order_by(Tag.name).all() if request.method == "GET" else []
     form: PostForm = PostForm(obj=post, post_id=post.id)
     if form.validate_on_submit():
+        post.is_draft = form.save_draft.data
         post.title = form.title.data
         post.content = form.content.data
         post.updated_at = timestamp()
@@ -418,8 +430,12 @@ def edit_post(post_id: int):
             )
         post.tags = new_tags
         db.session.commit()
-        flash("Post updated.", "success")
-        return redirect(url_for("blog.view_post", slug=post.slug))
+        if post.is_draft:
+            flash("Draft updated.", "info")
+            return redirect(url_for("blog.list_drafts"))
+        else:
+            flash("Post updated.", "success")
+            return redirect(url_for("blog.view_post", slug=post.slug))
     if request.method == "GET":
         form.tags.data = ", ".join([t.name for t in post.tags.order_by(Tag.name).all()])
     return render_template(
@@ -527,7 +543,7 @@ def search():
         per_page = 10
         query = Post.query.filter(
             or_(Post.title.ilike(q), Post.content.ilike(q))
-        ).order_by(Post.timestamp.desc())
+        ).filter(Post.is_draft == False).order_by(Post.timestamp.desc())
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         posts = pagination.items
     recent_comments = Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
@@ -935,17 +951,20 @@ def post_references(slug: str):
         db.session.query(Post)
         .join(PostLink, PostLink.dst_post_id == Post.id)
         .filter(PostLink.src_post_id == post.id)
+        .filter(Post.is_draft == False)
         .order_by(Post.timestamp.desc())
     )
     branches_q = (
         db.session.query(Post)
         .join(PostLink, PostLink.src_post_id == Post.id)
         .filter(PostLink.dst_post_id == post.id)
+        .filter(Post.is_draft == False)
         .order_by(Post.timestamp.desc())
     )
     splinters_q = (
         db.session.query(Post)
         .filter(Post.is_splinter == True, Post.target_post_id == post.id)
+        .filter(Post.is_draft == False)
         .order_by(Post.timestamp.desc())
     )
     roots_pagination = (
@@ -975,6 +994,13 @@ def post_references(slug: str):
         splinters_count=splinters_q.count(),
         per_page=per_page,
     )
+
+
+@blog_bp.route("/drafts")
+@login_required
+def list_drafts():
+    drafts = Post.query.filter_by(author_id=current_user.id, is_draft=True).order_by(Post.timestamp.desc()).all()
+    return render_template("drafts.html", drafts=drafts)
 
 
 def attach_email_to_notification(notif: Notification) -> None:
