@@ -104,6 +104,7 @@ def all_posts() -> str:
         )
         .outerjoin(comment_count_subq, Post.id == comment_count_subq.c.post_id)
         .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
+        .filter(Post.is_draft == False)
     )
     if tag_slugs:
         for s in tag_slugs:
@@ -477,6 +478,7 @@ def user_posts(username):
                 func.count(Comment.id).label("comment_count"),
                 func.count(PostLike.id).label("like_count"),
             )
+            .filter(Post.is_draft == False)
             .outerjoin(Comment, Comment.post_id == Post.id)
             .outerjoin(PostLike, PostLike.post_id == Post.id)
             .filter(Post.author_id == user.id)
@@ -1056,3 +1058,4 @@ def get_or_create_tag(name: str) -> Tag:
 def attach_sorted_tags(entries, limit):
     for entry in entries[:limit]:
         entry["tags"] = sorted(entry["post"].tags, key=lambda t: t.name.lower())
+
