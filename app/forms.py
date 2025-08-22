@@ -56,6 +56,7 @@ class PostForm(FlaskForm):
     tags = StringField(
         "Tags (comma-separated)", validators=[Optional(), Length(max=200)]
     )
+    save_draft = SubmitField("Save Draft")
     submit = SubmitField("Done")
 
     def __init__(self, *args, post_id=None, **kwargs):

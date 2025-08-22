@@ -134,6 +134,7 @@ class Post(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=timestamp())
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     updated_at = db.Column(db.DateTime, index=True, nullable=True)
+    is_draft = db.Column(db.Boolean, nullable=False, default=False)
     is_splinter = db.Column(db.Boolean, nullable=False, default=False)
     splinter_items = db.relationship(
         "SplinterItem",
