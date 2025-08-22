@@ -352,8 +352,8 @@ def create_post():
     tag_queries = Tag.query.order_by(Tag.name).all() if request.method == "GET" else []
     form = PostForm()
     if form.validate_on_submit():
-        is_draft = form.save_draft.data
-        post: Post = Post(
+        is_draft = bool(form.save_draft.data)
+        post = Post(
             title=form.title.data,
             slug=slugify(form.title.data),
             content=form.content.data,
@@ -377,12 +377,15 @@ def create_post():
                 ),
                 400,
             )
+        db.session.commit()
         if is_draft:
             flash("Draft saved.", "info")
             return redirect(url_for("blog.list_drafts"))
-        db.session.commit()
-        auto_like = PostLike(user=current_user, post=post)
-        db.session.add(auto_like)
+        existing_like = PostLike.query.filter_by(
+            user_id=current_user.id, post_id=post.id
+        ).first()
+        if not existing_like:
+            db.session.add(PostLike(user=current_user, post=post))
         db.session.commit()
         subs = UserSubscription.query.filter_by(user_id=current_user.id).all()
         for subscriber in subs:
@@ -403,7 +406,6 @@ def create_post():
         "post_form.html", form=form, tag_queries=tag_queries, action="Create"
     )
 
-
 @blog_bp.route("/edit/<int:post_id>", methods=["GET", "POST"])
 @login_required
 def edit_post(post_id: int):
@@ -413,11 +415,15 @@ def edit_post(post_id: int):
     tag_queries = Tag.query.order_by(Tag.name).all() if request.method == "GET" else []
     form: PostForm = PostForm(obj=post, post_id=post.id)
     if form.validate_on_submit():
-        post.is_draft = form.save_draft.data
+        was_draft = bool(post.is_draft)
+        will_be_draft = bool(form.save_draft.data)
+        will_publish_now = was_draft and not will_be_draft
         post.title = form.title.data
         post.content = form.content.data
-        post.updated_at = timestamp()
         post.slug = slugify(post.title)
+        post.is_draft = will_be_draft
+        if not will_publish_now:
+            post.updated_at = timestamp()
         try:
             new_tags = [get_or_create_tag(n) for n in form.clean_tags()]
         except ValidationError as e:
@@ -431,6 +437,27 @@ def edit_post(post_id: int):
             )
         post.tags = new_tags
         db.session.commit()
+        if will_publish_now:
+            existing_like = PostLike.query.filter_by(
+                user_id=current_user.id, post_id=post.id
+            ).first()
+            if not existing_like:
+                db.session.add(PostLike(user=current_user, post=post))
+            subs = UserSubscription.query.filter_by(user_id=current_user.id).all()
+            for subscriber in subs:
+                if subscriber.subscriber_id != current_user.id:
+                    notif = Notification(
+                        recipient_id=subscriber.subscriber_id,
+                        actor_id=current_user.id,
+                        verb="posted a new article",
+                        target_type="post",
+                        target_id=post.id,
+                    )
+                    db.session.add(notif)
+                    attach_email_to_notification(notif)
+            db.session.commit()
+            flash("Post published!", "success")
+            return redirect(url_for("blog.view_post", slug=post.slug))
         if post.is_draft:
             flash("Draft updated.", "info")
             return redirect(url_for("blog.list_drafts"))
