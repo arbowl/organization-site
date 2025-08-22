@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Posts by {{ user.username }} - Dismantl{% endblock %}
+{% block title %}Posts by {{ user.username }} | Dismantl{% endblock %}
 
 {% block content %}
 <div class="text-center mb-8">
@@ -104,7 +104,7 @@
                   <!-- Like button -->
                   <form method="post" action="{{ url_for('blog.toggle_post_like', post_id=entry.post.id) }}">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button type="submit" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transitio nrelative z-10">
+                      <button type="submit" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10">
                           <span class="text-sm mr-2">➕</span>
                           <span class="font-semibold">{{ entry.post.likes.count() }}</span>
                       </button>

@@ -1,23 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Home - Dismantl{% endblock %}
+{% block title %}Massachusetts Commentary & Activism | Dismantl{% endblock %}
 {% block content %}
     <div class="text-center mb-2">
         <div>
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Dismantl logo" class="mt-4 h-10 dismantl-d" loading="lazy">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Dismantl logo" class="mt-4 h-10 dismantl-d" width="146" height="40" fetchpriority="high">
         </div>
-        <p class="text-xl text-gray-600 mt-1"><i>Verify ⸱ Vilify ⸱ Vivify</i></p>
+        <p class="text-xl text-gray-600 mt-1"><em>Verify ⸱ Vilify ⸱ Vivify</em></p>
         {% if not current_user.is_authenticated %}
             <a href="{{ url_for('auth.register') }}"
             class="inline-block mt-4 px-6 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 md:hidden">
-            <i>Join the discussion today!</i>
+            <em>Join the discussion today!</em>
             </a>
         {% else %}
             <a href="{{ url_for('blog.create_post') }}"
             class="inline-block mt-4 px-6 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 md:hidden">
-            <i>Start a new discussion!</i>
+            <em>Start a new discussion!</em>
             </a>
         {% endif %}
-        <p class="text-gray-500 italic mt-4">Massachusetts-centric commentary, activism, and calls to action.</p>
+        <h1 class="text-gray-500 italic mt-4">Massachusetts-centric commentary, activism, and calls to action.</h1>
     </div>
 
     {% set all_tags = [] %}
@@ -31,18 +31,18 @@
     <div class="relative overflow-hidden whitespace-nowrap py-2 border-y border-gray-200 mb-2">
         <div class="marquee-track inline-block">
             {% for tag in all_tags %}
-                <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+                <p
                 class="italic tag mx-4 inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded mr-4"
                 style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
                     {{ tag.name }}
-                </a>
+                </p>
             {% endfor %}
             {% for tag in all_tags %}
-                <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+                <p
                 class="italic tag mx-4 inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded mr-4"
                 style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
                     {{ tag.name }}
-                </a>
+                </p>
             {% endfor %}
         </div>
         <div class="pointer-events-none absolute top-0 left-0 h-full w-12 bg-gradient-to-r from-offwhite to-transparent z-10"></div>
@@ -69,13 +69,13 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- User Submissions (left column, full height) -->
         <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200 md:col-span-2">
-            <h3 class="flex justify-between items-center text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
+            <h2 class="flex justify-between items-center text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
                 User Submissions
                 <a href="{{ url_for('blog.all_posts') }}"
                     class="text-sm px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition">
                     See all
                 </a>
-            </h3>
+            </h2>
             {% if posts %}
                 <ul class="space-y-6">
                     {% for post_item in posts %}
@@ -83,20 +83,20 @@
                             <li class="pb-4 last:border-b-0 last:pb-0 bg-white rounded-lg shadow-md border-l-2 border-t-4 border-blue-300 hover:border-blue-400 hover:shadow-lg transition-all duration-200 px-4 py-4">
                                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1">
                                     <!-- Title + badge together -->
-                                    <h4 class="m-0 pr-2 text-xl font-medium text-blue-700">
+                                    <h3 class="m-0 pr-2 text-xl font-medium text-blue-700">
                                         {% if post_item.post.is_splinter %}
                                             <span class="align-middle text-xs px-2 py-0.5 bg-red-100 text-red-700 font-semibold rounded-full uppercase tracking-wide">Splinter</span>
                                         {% endif %}
                                         <a class="align-middle hover:text-blue-900" href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}">
                                             {{ post_item.post.title }}
                                         </a>
-                                    </h4>
+                                    </h3>
                                     <!-- Right-side counts -->
                                         <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
                                             <!-- Like button -->
                                             <form method="post" action="{{ url_for('blog.toggle_post_like', post_id=post_item.post.id) }}">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transitio nrelative z-10">
+                                                <button type="submit" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10" aria-label="Like this post">
                                                     <span class="text-sm mr-2">➕</span>
                                                     <span class="font-semibold">{{ post_item.likes }}</span>
                                                 </button>
@@ -145,29 +145,41 @@
             {% if not current_user.is_authenticated %}
                 <a href="{{ url_for('auth.register') }}"
                 class="block w-full px-6 py-3 text-center bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 hidden md:block">
-                    <i>Join the discussion today!</i>
+                    <em>Join the discussion today!</em>
                 </a>
             {% else %}
                 <a href="{{ url_for('blog.create_post') }}"
                 class="block w-full px-6 py-3 text-center bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 hidden md:block">
-                    <i>Start a new discussion!</i>
+                    <em>Start a new discussion!</em>
                 </a>
             {% endif %}
 
             <!-- Site Bulletins -->
             <section class="bg-white mb-6 p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200">
-                <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Site Bulletins</h3>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Site Bulletins</h2>
                 {% if bulletins %}
                     <ul class="space-y-4">
                         {% for bulletin in bulletins %}
                             <li class="border-b pb-4 last:border-b-0 last:pb-0 bg-white rounded-lg shadow-sm border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all duration-200 px-4 py-4">
                                 <div class="flex flex-wrap justify-between items-center gap-y-2">
-                                    <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1 sm:mb-0 pr-2">
+                                    <h3 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1 sm:mb-0 pr-2">
                                         <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}">{{ bulletin.post.title }}</a>
-                                    </h4>
+                                    </h3>
                                     <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
-                                        <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">➕ {{ bulletin.likes }}</span>
-                                        <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">💬 {{ bulletin.comments }}</span>
+                                        <!-- Like button -->
+                                        <form method="post" action="{{ url_for('blog.toggle_post_like', post_id=bulletin.post.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10" aria-label="Like this post">
+                                                <span class="text-sm mr-2">➕</span>
+                                                <span class="font-semibold">{{ bulletin.likes }}</span>
+                                            </button>
+                                        </form>
+                                        <!-- Comment link -->
+                                        <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}#comment-form"
+                                        class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10">
+                                            <span class="text-sm mr-2">💬</span>
+                                            <span class="font-semibold">{{ bulletin.comments }}</span>
+                                        </a>
                                     </div>
                                 </div>
                                 <small class="text-gray-500 text-sm block mb-2">
@@ -184,14 +196,14 @@
 
             <!-- Events -->
             <section class="bg-white mb-6 p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200">
-                <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Upcoming Boston Events</h3>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Upcoming Boston Events</h2>
                 {% if events %}
                     <ul class="space-y-4">
                         {% for event in events %}
                             <li class="border-b pb-3 last:border-b-0 last:pb-0">
-                                <h4 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
+                                <h3 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1">
                                     <a href="{{ event.link }}" target="_blank" rel="noopener noreferrer">{{ event.title }}</a>
-                                </h4>
+                                </h3>
                                 <p class="text-gray-700 text-sm">
                                     <span class="font-semibold">Time:</span> {{ event.time }}<br>
                                     <span class="font-semibold">Location:</span> {{ event.location }}
