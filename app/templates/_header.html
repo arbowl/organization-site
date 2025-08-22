@@ -22,10 +22,6 @@
                         px-3 py-1 focus:outline-none
                         focus:ring-2 focus:ring-blue-400">
         </form>
-        <a href="{{ url_for('blog.index') }}"
-           class="text-gray-700 bg-gray-200 hover:text-blue-300 hover:bg-gray-300 px-3 py-2 rounded-md">
-          🏠
-        </a>
         <a href="{{ url_for('blog.all_posts') }}"
            class="text-gray-700 bg-gray-200 hover:text-blue-300 hover:bg-gray-300 px-3 py-2 rounded-md">
           📚
@@ -34,6 +30,10 @@
           <a href="{{ url_for('blog.create_post') }}"
             class="text-gray-700 bg-gray-200 hover:text-blue-100 hover:bg-gray-300 px-3 py-2 rounded-md">
             📝
+          </a>
+          <a href="{{ url_for('blog.list_drafts') }}"
+            class="text-gray-700 bg-gray-200 hover:text-blue-100 hover:bg-gray-300 px-3 py-2 rounded-md">
+            🗂️
           </a>
         {% endif %}
         <a href="{{ url_for('pages.contact') }}"
@@ -126,6 +126,10 @@
           <a href="{{ url_for('blog.create_post') }}"
            class="block px-3 py-2 rounded-md hover:bg-gray-100">
             Write
+          </a>
+          <a href="{{ url_for('blog.list_drafts') }}"
+           class="block px-3 py-2 rounded-md hover:bg-gray-100">
+            Drafts
           </a>
         {% endif %}
           <a href="{{ url_for('pages.contact') }}"
