@@ -422,7 +422,11 @@ def edit_post(post_id: int):
         post.content = form.content.data
         post.slug = slugify(post.title)
         post.is_draft = will_be_draft
-        if not will_publish_now:
+        if will_publish_now and post.published_at is None:
+            post.published_at = timestamp()
+        elif will_publish_now and post.published_at is not None:
+            post.updated_at = timestamp()
+        elif (not was_draft) and (not will_be_draft):
             post.updated_at = timestamp()
         try:
             new_tags = [get_or_create_tag(n) for n in form.clean_tags()]
