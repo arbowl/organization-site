@@ -93,6 +93,14 @@
                     {% endfor %}
                   </div>
                 {% endif %}
+                <div class="mt-3">
+                    <article-spectrum
+                        class="compact"
+                        roots="{{ e.post.root_count }}"
+                        branches="{{ e.post.branch_count }}"
+                        data-title="{{ e.post.root_count }} roots · {{ e.post.branch_count }} branches">
+                    </article-spectrum>
+                </div>
               </li>
             {% endfor %}
           </ul>

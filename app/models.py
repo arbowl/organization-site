@@ -8,7 +8,7 @@ from functools import partial
 from flask import url_for
 from flask_login import UserMixin
 from markdown import markdown
-from sqlalchemy import event
+from sqlalchemy import event, func
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import foreign
 from sqlalchemy.sql import and_
@@ -169,6 +169,25 @@ class Post(db.Model):
         if self.updated_at:
             date += f" ⸱ <i>(edited {self.updated_at.strftime('%Y-%m-%d')})</i>"
         return date
+
+    @property
+    def root_count(self) -> int:
+        roots = (
+            db.session.query(func.count(PostLink.id))
+            .filter(PostLink.src_post_id == self.id)
+            .scalar()
+        )
+        return roots or 0
+
+    @property
+    def branch_count(self) -> int:
+        branches = (
+            db.session.query(func.count(PostLink.id))
+            .filter(PostLink.dst_post_id == self.id)
+            .scalar()
+        )
+        print(branches)
+        return branches or 0
 
 
 class PostLink(db.Model):
