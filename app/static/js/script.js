@@ -169,8 +169,8 @@ class ArticleSpectrum extends HTMLElement {
     computePosition() {
         // Delta-driven mapping: a difference of 5 fully saturates the slider to either end
         const d = this.roots - this.branches; // positive => Applicable, negative => Foundational
-        const clamped = Math.max(-5, Math.min(5, d));
-        return 50 + (clamped / 5) * 50; // 0..100
+        const clamped = Math.max(-3, Math.min(3, d));
+        return 50 + (clamped / 3) * 50; // 0..100
     }
 
 
