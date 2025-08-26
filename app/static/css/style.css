@@ -258,6 +258,30 @@ h1, h2, h3, h4 {
   font-weight: 700;
 }
 
+.post-content a.inlink {
+  background: rgba(0,0,0,0.05);
+  padding: 0 0.2em;
+  border-radius: 0.5em;
+  text-decoration: dotted underline;
+}
+
+.post-content a.inlink:hover {
+  padding: 0 0.2em;
+}
+
+.post-content a.inlink::before {
+  content: "🌱";
+  font-size: 0.8em;
+  margin-right: 0.15em;
+  opacity: 0.7;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.post-content a.inlink:hover::before {
+  opacity: 0.8;
+}
+
 blockquote {
   padding: 1.5rem;
   margin: 1.5rem 0;
