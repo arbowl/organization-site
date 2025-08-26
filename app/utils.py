@@ -56,7 +56,7 @@ ALLOWED_TAGS = [
     "td",
 ]
 ALLOWED_ATTRS = {
-    "a": ["href", "title"],
+    "a": ["href", "title", "class", "data-slug"],
     "img": ["src", "alt", "title", "width", "height"],
     "blockquote": ["class", "data-lang"],
     "pre": ["class", "data-lang"],
@@ -79,6 +79,19 @@ MD_LINK_TARGET_RE = re_compile(r"""\[[^\]]+\]\((?P<href>[^)\s]+)(?:\s+"[^"]*")?\
 def md(text: str) -> Markup:
     """Render Markdown to HTML, sanitize, and mark safe for Jinja."""
     html = markdown(text, extensions=["fenced_code", "tables", "smarty"])
+    try:
+        soup = BeautifulSoup(html, "html.parser")
+        for a in soup.find_all("a", href=True):
+            slug = _href_to_slug(a["href"])
+            if slug:
+                existing = a.get("class", [])
+                if "inlink" not in existing:
+                    a["class"] = [*existing, "inlink"]
+                a["data-slug"] = slug
+        html = str(soup)
+    except Exception:
+        pass
+
     cleaned = clean(html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, strip=True)
     return Markup(cleaned)
 

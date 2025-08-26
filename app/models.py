@@ -186,7 +186,6 @@ class Post(db.Model):
             .filter(PostLink.dst_post_id == self.id)
             .scalar()
         )
-        print(branches)
         return branches or 0
 
 
