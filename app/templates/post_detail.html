@@ -1,10 +1,40 @@
 {% extends "base.html" %}
+{% set desc = (post.content|striptags)|truncate(180, True)|replace('"', "'") %}
+
+{% set first_img = post.content|first_img_abs %}
+{% if first_img %}
+  {% set share_img = first_img %}
+{% else %}
+  {% set share_img = url_for('static', filename='og-image.png', _external=True) %}
+{% endif %}
+
 {% block title %}{{ post.title }} | Dismantl{% endblock %}
+
 {% block meta_description %}
-<meta name="description" content="{{ post.content[:150]|striptags }}">
+  <meta name="description" content="{{ desc }}">
+{% endblock %}
+
+{# Override nested OG/Twitter text blocks from base.html #}
+{% block og_title %}{{ post.title }} | Dismantl{% endblock %}
+{% block og_description %}{{ desc }}{% endblock %}
+{% block twitter_title %}{{ post.title }} | Dismantl{% endblock %}
+{% block twitter_description %}{{ desc }}{% endblock %}
+{% block social_meta %}
+  <meta property="og:title" content="{{ post.title }} | Dismantl">
+  <meta property="og:description" content="{{ desc }}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:image" content="{{ share_img }}">
+  <meta property="og:image:alt" content="{{ post.title }}">
+  <meta property="og:site_name" content="Dismantl">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ post.title }} | Dismantl">
+  <meta name="twitter:description" content="{{ desc }}">
+  <meta name="twitter:image" content="{{ share_img }}">
+  <meta name="twitter:image:alt" content="{{ post.title }}">
 {% endblock %}
 {% block content %}
-
 <script type="application/ld+json">
 {
     "@context": "https://schema.org/",
