@@ -3,7 +3,9 @@
 from datetime import datetime, timezone
 from os import getenv
 from typing import Optional
+from urllib.parse import urljoin
 
+from bs4 import BeautifulSoup
 from flask import (
     Flask,
     redirect,
@@ -81,6 +83,31 @@ def sitemap():
     response = make_response(sitemap_xml)
     response.headers["Content-Type"] = "application/xml"
     return response
+
+
+def first_img_abs(html: str | None) -> str | None:
+    """
+    Return the absolute URL of the first <img src="..."> in the HTML.
+    - Skips data: URIs.
+    - Resolves relative URLs against request.url_root.
+    - Returns None if no usable image.
+    """
+    if not html:
+        return None
+    soup = BeautifulSoup(html, "html.parser")
+    img = soup.find("img", src=True)
+    if not img:
+        return None
+    src = (img.get("src") or "").strip()
+    if not src or src.startswith("data:"):
+        return None
+    try:
+        from flask import request
+        base = request.url_root
+    except Exception:
+        base = ""
+
+    return urljoin(base, src)
 
 
 class MyAdminView(AdminIndexView):
@@ -207,6 +234,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
             "timezone": "America/New_York",
         }
     ]
+    app.jinja_env.filters["first_img_abs"] = first_img_abs
     scheduler.init_app(app)
     scheduler.start()
     mail = Mail(app)
