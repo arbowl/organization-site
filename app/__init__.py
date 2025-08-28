@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 from os import getenv
+from re import compile as re_compile, IGNORECASE, MULTILINE
 from typing import Optional
 from urllib.parse import urljoin
 
@@ -38,6 +39,16 @@ limiter.init_app(app)
 migrate = Migrate()
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
+_MD_INLINE_IMG = re_compile(
+    r'!\[[^\]]*\]\(\s*<?([^)\s>]+)[^)]*?>?\s*\)', IGNORECASE
+)
+_MD_REF_IMG = re_compile(
+    r'!\[[^\]]*\]\[([^\]]+)\]', IGNORECASE
+)
+_MD_REF_DEF = re_compile(
+    r'^\s*\[([^\]]+)\]:\s*<?([^\s>]+)>?(?:\s+["\'(].*?[)"\'])?\s*$',
+    IGNORECASE | MULTILINE
+)
 
 
 @app.errorhandler(429)
@@ -85,29 +96,56 @@ def sitemap():
     return response
 
 
-def first_img_abs(html: str | None) -> str | None:
+def first_img_abs(text: str | None) -> str | None:
     """
-    Return the absolute URL of the first <img src="..."> in the HTML.
-    - Skips data: URIs.
-    - Resolves relative URLs against request.url_root.
-    - Returns None if no usable image.
+    Return the absolute URL of the first image found in HTML or Markdown.
+
+    Rules:
+    - Prefer the first <img src="..."> if present.
+    - Otherwise search Markdown: inline ![alt](url "title") or reference-style ![alt][id] with [id]: url lines.
+    - Skip data: URIs.
+    - Resolve relative URLs against flask.request.url_root (if available).
+    - Return None if nothing usable.
     """
-    if not html:
+    if not text:
         return None
-    soup = BeautifulSoup(html, "html.parser")
-    img = soup.find("img", src=True)
-    if not img:
-        return None
-    src = (img.get("src") or "").strip()
-    if not src or src.startswith("data:"):
+    try:
+        soup = BeautifulSoup(text, "html.parser")
+        img = soup.find("img", src=True)
+        if img:
+            src = (img.get("src") or "").strip()
+            if src and not src.lower().startswith("data:"):
+                try:
+                    from flask import request
+                    base = request.url_root
+                except Exception:
+                    base = ""
+                return urljoin(base, src)
+    except Exception:
+        pass
+    ref_map: dict[str, str] = {}
+    for m in _MD_REF_DEF.finditer(text):
+        key = m.group(1).strip().lower()
+        url = m.group(2).strip()
+        if url and not url.lower().startswith("data:"):
+            ref_map[key] = url
+    m = _MD_INLINE_IMG.search(text)
+    candidate = None
+    if m:
+        candidate = m.group(1).strip()
+    if not candidate:
+        m = _MD_REF_IMG.search(text)
+        if m:
+            ref_id = (m.group(1) or "").strip().lower()
+            candidate = ref_map.get(ref_id)
+    if not candidate or candidate.lower().startswith("data:"):
         return None
     try:
         from flask import request
         base = request.url_root
     except Exception:
         base = ""
-
-    return urljoin(base, src)
+    return urljoin(base, candidate)
 
 
 class MyAdminView(AdminIndexView):

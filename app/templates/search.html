@@ -95,8 +95,15 @@
                   By <span class="font-medium">{{ post.author.role_icon }}<a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=post.author.username) }}">{{ post.author.username }}</a></span>
                   on {{ post.display_date | safe }}
                 </small>
+                {% set first_img = post.content | first_img_abs %}
+                {% if first_img %}
+                <div class="preview-hero mx-1 mt-4 mb-3 rounded-t-md"
+                    style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
+                </div>
+                {% endif %}
                 <div class="post-content mt-2">
                   {{ post.content | md | striptags | truncate(200, True, '...') }}
+                   <a class="align-middle text-blue-800 hover:text-blue-900 italic text-sm" href="{{ url_for('blog.view_post', slug=post.slug) }}">{{ "(Read more)" if post.content|length > 200  else "" }}</a>
                 </div>
 
                 {% if post.tags.count() %}

@@ -5,7 +5,7 @@ html {
 }
 
 body {
-  background-color: #e3efff;
+  background-color: #D9EAF5;
   font-family: 'Inter', sans-serif !important;
 }
 
@@ -259,7 +259,7 @@ h1, h2, h3, h4 {
 }
 
 .post-content a.inlink {
-  background: rgba(0,0,0,0.05);
+  background: rgba(144,222,244,0.2);
   padding: 0 0.2em;
   border-radius: 0.5em;
   text-decoration: dotted underline;
@@ -369,3 +369,40 @@ blockquote footer {
 .spectrum.compact .counts { display:none; }
 .spectrum.compact .thumb { width:14px; height:14px; }
 .spectrum.compact .badge { display:none; }
+
+.preview-hero,
+.article-hero {
+  position: relative;
+  background-image: var(--hero-url);
+  background-repeat: no-repeat;
+  background-position: 50% 0%;
+  background-size: auto 500%;
+  overflow: hidden;
+}
+
+.preview-hero::before,
+.article-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: inherit;
+  background-position: inherit;
+  background-size: inherit;
+  filter: blur(14px);
+  transform: scale(0.5);
+  z-index: 0;
+}
+
+.preview-hero::after,
+.article-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0) 0%,
+    #ffffff 95%
+  );
+  z-index: 1;
+}
