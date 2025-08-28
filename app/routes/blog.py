@@ -317,7 +317,7 @@ def toggle_post_like(post_id):
 )
 @login_required
 def toggle_comment_like(comment_id):
-    comment = Comment.query.get_or_404(comment_id)
+    comment: Comment = Comment.query.get_or_404(comment_id)
     like = CommentLike.query.filter_by(
         user_id=current_user.id, comment_id=comment_id
     ).first()
@@ -325,7 +325,7 @@ def toggle_comment_like(comment_id):
         db.session.delete(like)
     else:
         db.session.add(CommentLike(user=current_user, comment=comment))
-        if comment.author_id != current_user.id:
+        if comment.author_id != current_user.id and comment.author is not None:
             notif = Notification(
                 recipient_id=comment.author_id,
                 actor_id=current_user.id,
