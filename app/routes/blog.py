@@ -1087,6 +1087,18 @@ def list_drafts():
     return render_template("drafts.html", drafts=drafts)
 
 
+@blog_bp.route("/draft/<slug>/preview")
+def preview_draft(slug):
+    """Preview a draft post."""
+    post = Post.query.filter_by(slug=slug, is_draft=True).first_or_404()
+    if post.author != current_user:
+        abort(403)
+    return render_template(
+        "preview.html",
+        post=post,
+    )
+
+
 def attach_email_to_notification(notif: Notification) -> None:
     db.session.flush()
     if notif.target_type != "comment":

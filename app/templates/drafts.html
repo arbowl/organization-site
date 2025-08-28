@@ -70,6 +70,7 @@
                     Edit
                   </a>
                 {% endif %}
+                <a href="{{ url_for('blog.preview_draft', slug=d.slug) }}" class="inline-block px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Preview</a>
               <form method="post"
                 action="{{ url_for('blog.delete_post', post_id=d.id) }}"
                 onsubmit="return confirm('Delete this draft? This cannot be undone.');">
