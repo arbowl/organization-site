@@ -45,6 +45,12 @@
                 Created {{ d.timestamp.strftime('%Y-%m-%d') }}
                 {% if d.updated_at %} · Last updated {{ d.updated_at.strftime('%Y-%m-%d') }}{% endif %}
               </p>
+              {% set first_img = d.content | first_img_abs %}
+              {% if first_img %}
+              <div class="preview-hero mx-1 mt-4 mb-3 rounded-t-md"
+                  style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
+              </div>
+              {% endif %}
               <p class="text-gray-700 mt-3 line-clamp-3">{{ d.content | md | striptags | truncate(200, True, '...') }}</p>
               {% if d.tags.count() %}
                 <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-400"><em class="mr-4">Tags: </em>
