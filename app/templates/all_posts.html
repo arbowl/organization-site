@@ -83,9 +83,11 @@
                 </small>
                 {% set first_img = e.post.content | first_img_abs %}
                 {% if first_img %}
-                <div class="preview-hero mx-1 mt-4 mb-3 rounded-t-md"
-                    style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
-                </div>
+                <a href="{{ url_for('blog.view_post', slug=e.post.slug) }}" class="block">
+                    <div class="preview-hero clickable mx-1 mt-4 mb-3 rounded-t-md"
+                        style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
+                    </div>
+                </a>
                 {% endif %}
                 <div class="post-content mt-2">{{ e.post.content | md | striptags | truncate(200, True, '...') }} <a class="align-middle text-blue-800 hover:text-blue-900 italic text-sm" href="{{ url_for('blog.view_post', slug=e.post.slug) }}">{{ "(Read more)" if e.post.content|length > 200  else "" }}</a></div>
                 {% if e.post.tags.count() %}

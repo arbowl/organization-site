@@ -114,9 +114,11 @@
                                 </small>
                                 {% set first_img = post_item.post.content | first_img_abs %}
                                 {% if first_img %}
-                                <div class="preview-hero mx-1 mt-4 mb-3 rounded-t-md"
-                                    style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
-                                </div>
+                                <a href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}" class="block">
+                                    <div class="preview-hero clickable mx-1 mt-4 mb-3 rounded-t-md"
+                                        style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
+                                    </div>
+                                </a>
                                 {% endif %}
                                 <div class="post-content">{{ post_item.post.content | md | striptags | truncate(200, True, '...') }} <a class="align-middle text-blue-800 hover:text-blue-900 italic text-sm" href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}">{{ "(Read more)" if post_item.post.content|length > 200  else "" }}</a></div>
                                 {% if post_item.post.tags.count() %}
@@ -201,9 +203,11 @@
                                 </small>
                                 {% set first_img = bulletin.post.content | first_img_abs %}
                                 {% if first_img %}
-                                <div class="preview-hero mx-1 mt-4 mb-3 rounded-t-md"
-                                    style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
-                                </div>
+                                <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}" class="block">
+                                    <div class="preview-hero clickable mx-1 mt-4 mb-3 rounded-t-md"
+                                        style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
+                                    </div>
+                                </a>
                                 {% endif %}
                                 <div class="post-content">{{ bulletin.post.content | md | striptags | truncate(200, True, '...') }} <a class="align-middle text-blue-800 hover:text-blue-900 italic text-sm" href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}">{{ "(Read more)" if bulletin.post.content|length > 200  else "" }}</a></div>
                             </li>

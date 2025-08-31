@@ -378,6 +378,7 @@ blockquote footer {
   background-position: 50% 0%;
   background-size: auto 500%;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .preview-hero::before,
@@ -391,6 +392,7 @@ blockquote footer {
   filter: blur(8px);
   transform: scale(1.2);
   z-index: 0;
+  transition: all 0.3s ease;
 }
 
 .preview-hero::after,
@@ -406,4 +408,26 @@ blockquote footer {
     #ffffff 100%
   );
   z-index: 1;
+  transition: all 0.3s ease;
+}
+
+/* Hover effects for clickable preview images */
+.preview-hero.clickable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.preview-hero.clickable:hover::before {
+  filter: blur(4px);
+}
+
+/* Ensure links inherit styling */
+a .preview-hero.clickable {
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover .preview-hero.clickable {
+  text-decoration: none;
+  color: inherit;
 }

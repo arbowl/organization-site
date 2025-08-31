@@ -120,9 +120,11 @@
             <small class="text-gray-500 text-sm mb-2 block">on {{ entry.post.display_date | safe }}</small>
             {% set first_img = entry.post.content | first_img_abs %}
             {% if first_img %}
-            <div class="preview-hero mx-1 mt-4 mb-3 rounded-t-md"
-                style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
-            </div>
+            <a href="{{ url_for('blog.view_post', slug=entry.post.slug) }}" class="block">
+                <div class="preview-hero clickable mx-1 mt-4 mb-3 rounded-t-md"
+                    style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
+                </div>
+            </a>
             {% endif %}
             <div class="post-content">{{ entry.post.content | md | striptags | truncate(200, True, '...') }} <a class="align-middle text-blue-800 hover:text-blue-900 italic text-sm" href="{{ url_for('blog.view_post', slug=entry.post.slug) }}">{{ "(Read more)" if entry.post.content|length > 200  else "" }}</a></div>
             {% if entry.post.tags.count() %}
