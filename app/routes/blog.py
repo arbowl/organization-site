@@ -73,12 +73,123 @@ def index() -> str:
     ]
     events = scrape_events()[:12]
     attach_sorted_tags(posts, 16)
+    
+    # Get active discussion threads for the front page
+    discussion_threads = get_active_discussion_threads()
+    
     return render_template(
         "index.html",
         posts=posts[:16],
         bulletins=bulletins[:3],
         events=events,
+        discussion_threads=discussion_threads,
     )
+
+
+def get_active_discussion_threads():
+    """Find the most engaging discussion threads based on post connections"""
+    try:
+        # Use subqueries to get accurate counts (same pattern as index route)
+        comment_count_subq = (
+            db.session.query(Comment.post_id, func.count(Comment.id).label("comment_count"))
+            .group_by(Comment.post_id)
+            .subquery()
+        )
+        
+        like_count_subq = (
+            db.session.query(PostLike.post_id, func.count(PostLike.id).label("like_count"))
+            .group_by(PostLike.post_id)
+            .subquery()
+        )
+        
+        # Get posts with the most connections and accurate engagement counts
+        thread_candidates = (
+            db.session.query(
+                Post,
+                func.count(PostLink.id).label("connection_count"),
+                func.coalesce(comment_count_subq.c.comment_count, 0).label("comment_count"),
+                func.coalesce(like_count_subq.c.like_count, 0).label("like_count"),
+            )
+            .outerjoin(
+                PostLink,
+                or_(
+                    PostLink.src_post_id == Post.id,
+                    PostLink.dst_post_id == Post.id,
+                ),
+            )
+            .outerjoin(comment_count_subq, Post.id == comment_count_subq.c.post_id)
+            .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
+            .filter(Post.is_draft == False)
+            .group_by(Post.id)
+            .having(func.count(PostLink.id) > 0)  # Only posts with connections
+            .order_by(
+                func.count(PostLink.id).desc(),
+                func.coalesce(comment_count_subq.c.comment_count, 0).desc(),
+                func.coalesce(like_count_subq.c.like_count, 0).desc(),
+            )
+            .limit(3)
+            .all()
+        )
+
+        threads = []
+        for post, connections, comments, likes in thread_candidates:
+            try:
+                # Find related posts in this thread (both roots and branches)
+                related_posts = (
+                    db.session.query(Post)
+                    .join(
+                        PostLink,
+                        or_(
+                            PostLink.src_post_id == Post.id,
+                            PostLink.dst_post_id == Post.id,
+                        ),
+                    )
+                    .filter(
+                        or_(
+                            PostLink.src_post_id == post.id,
+                            PostLink.dst_post_id == post.id,
+                        )
+                    )
+                    .filter(Post.is_draft == False)
+                    .filter(Post.id != post.id)  # Exclude the main post
+                    .order_by(Post.timestamp.desc())
+                    .limit(5)
+                    .all()
+                )
+
+                # Calculate thread depth and engagement
+                thread_depth = len(related_posts)
+                total_engagement = comments + likes
+                
+                # Get the most recent splinter if this post has one
+                splinter = (
+                    db.session.query(Post)
+                    .filter(Post.is_splinter == True, Post.target_post_id == post.id)
+                    .filter(Post.is_draft == False)
+                    .order_by(Post.timestamp.desc())
+                    .first()
+                )
+
+                threads.append({
+                    "main_post": post,
+                    "related_posts": related_posts,
+                    "connection_count": connections,
+                    "total_engagement": total_engagement,
+                    "thread_depth": thread_depth,
+                    "splinter": splinter,
+                    "comment_count": comments,
+                    "like_count": likes,
+                })
+            except Exception as e:
+                # Log error but continue with other threads
+                print(f"Error processing thread for post {post.id}: {e}")
+                continue
+
+        return threads
+    except Exception as e:
+        # If there's an error, return empty list to avoid breaking the page
+        print(f"Error getting discussion threads: {e}")
+        return []
 
 
 @blog_bp.route("/all")

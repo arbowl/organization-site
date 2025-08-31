@@ -9,6 +9,9 @@ from flask_login import logout_user, current_user
 from app import create_app, db
 from app.forms import SearchForm
 from app.models import Notification, Visit
+from dotenv import load_dotenv
+
+load_dotenv()
 
 config_name = getenv("FLASK_CONFIG", "development")
 app = create_app(config_name)

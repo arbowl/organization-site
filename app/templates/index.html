@@ -49,6 +49,102 @@
         <div class="pointer-events-none absolute top-0 right-0 h-full w-12 bg-gradient-to-l from-offwhite to-transparent z-10"></div>
     </div>
 
+    <!-- Active Discussion Threads Section -->
+    {% if discussion_threads %}
+    <section class="bg-bluish p-6 rounded-lg shadow-md border-t-4 border-blue-300 mb-6">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center">
+            Active Discussion Threads
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 discussion-threads-grid">
+            {% for thread in discussion_threads %}
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-400 hover:shadow-md transition-all duration-200 hover:border-blue-500 discussion-thread-card">
+                <!-- Main post header -->
+                <div class="thread-header">
+                    <h3 class="font-semibold text-blue-800 mb-1 line-clamp-2">
+                        <a href="{{ url_for('blog.view_post', slug=thread.main_post.slug) }}" 
+                           class="hover:text-blue-600 transition-colors">
+                            {{ thread.main_post.title }}
+                        </a>
+                    </h3>
+                    <div class="flex items-center justify-between text-sm text-gray-600">
+                        <span class="font-medium">By <span class="badge">{{ thread.main_post.author.role_icon }}</span><a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=thread.main_post.author.username) }}">{{thread.main_post.author.username }}</a></span>
+                        <span>{{ thread.main_post.timestamp.strftime('%b %d') }}</span>
+                    </div>
+                </div>
+                
+                <!-- Thread stats with visual indicators -->
+                <div class="thread-stats">
+                    <div class="flex items-center justify-between text-sm text-gray-500">
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 bg-blue-400 rounded-full mr-1"></span>
+                            <span>{{ thread.connection_count }} connections</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
+                            <span>{{ thread.total_engagement }} responses</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Splinter indicator if exists -->
+                {% if thread.splinter %}
+                <div class="thread-splinter">
+                    <div class="p-2 bg-red-50 border border-red-200 rounded-md">
+                        <div class="flex items-center text-xs text-red-700">
+                            <span class="mr-1">⚡</span>
+                            <span class="font-medium">Active Challenge</span>
+                        </div>
+                        <p class="text-xs text-red-600 mt-1">
+                            {{ thread.splinter.title[:50] }}{% if thread.splinter.title|length > 50 %}...{% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Empty div to maintain grid structure when no splinter -->
+                <div class="thread-splinter-placeholder"></div>
+                {% endif %}
+                
+                <!-- Related posts preview with connection visualization -->
+                <div class="thread-related">
+                    <p class="text-xs font-medium text-gray-700 uppercase tracking-wide mb-2">Connected Posts:</p>
+                    <div class="space-y-2 flex-grow">
+                        {% for related in thread.related_posts[:3] %}
+                        <div class="flex items-center text-xs group">
+                            <div class="flex items-center mr-2 flex-shrink-0">
+                                <span class="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1"></span>
+                                <span class="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1"></span>
+                                <span class="w-1.5 h-1.5 bg-blue-300 rounded-full"></span>
+                            </div>
+                            <a href="{{ url_for('blog.view_post', slug=related.slug) }}" 
+                               class="text-blue-600 hover:text-blue-800 transition-colors truncate group-hover:text-blue-800 min-w-0">
+                                {{ related.title[:35] }}{% if related.title|length > 35 %}...{% endif %}
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if thread.thread_depth > 3 %}
+                    <div class="text-xs text-gray-500 mt-2 pl-4">
+                        <span class="text-blue-400">+{{ thread.thread_depth - 3 }} more posts</span> in this thread
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Call to action - always at bottom -->
+                <div class="thread-action border-t border-gray-100">
+                    <a href="{{ url_for('blog.view_post', slug=thread.main_post.slug) }}" 
+                       class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors group">
+                        <span>Jump into discussion</span>
+                        <span class="ml-1 group-hover:translate-x-0.5 transition-transform">→</span>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="mb-4">
@@ -68,7 +164,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- User Submissions (left column, full height) -->
-        <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200 md:col-span-2">
+        <section class="bg-bluish p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200 md:col-span-2">
             <h2 class="flex justify-between items-center text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
                 User Submissions
                 <a href="{{ url_for('blog.all_posts') }}"
@@ -171,7 +267,7 @@
             {% endif %}
 
             <!-- Site Bulletins -->
-            <section class="bg-white mb-6 p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200">
+            <section class="bg-bluish mb-6 p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Site Bulletins</h2>
                 {% if bulletins %}
                     <ul class="space-y-4">
@@ -219,7 +315,7 @@
             </section>
 
             <!-- Events -->
-            <section class="bg-white mb-6 p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200">
+            <section class="bg-bluish mb-6 p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Upcoming Boston Events</h2>
                 {% if events %}
                     <ul class="space-y-4">

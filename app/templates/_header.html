@@ -11,38 +11,38 @@
       </div>
 
       <!-- Center (desktop): Posts button + centered, max-width search -->
-      <div class="hidden md:flex flex-1 justify-center items-right space-x-4 ml-2 mr-2">
+      <div class="hidden md:flex flex-1 justify-center items-right space-x-2 ml-2 mr-2">
         <form action="{{ url_for('blog.search') }}"
               method="get"
-              class="w-full flex  max-w-md">
+              class="w-full flex max-w-xs">
           <label for="search" class="sr-only">Search</label>
           <input id="search" name="q" type="search"
                 placeholder="Search posts…"
                 class="w-full border border-gray-300 rounded-md
-                        px-3 py-1 focus:outline-none
+                        px-2 py-1 text-sm focus:outline-none
                         focus:ring-2 focus:ring-blue-400">
         </form>
         <a href="{{ url_for('blog.all_posts') }}"
-           class="text-gray-700 bg-gray-200 hover:text-blue-300 hover:bg-gray-300 px-3 py-2 rounded-md">
-          📚
+           class="text-gray-700 bg-gray-300 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+          📚 Archive
         </a>
         {% if current_user.is_authenticated %}
           <a href="{{ url_for('blog.create_post') }}"
-            class="text-gray-700 bg-gray-200 hover:text-blue-100 hover:bg-gray-300 px-3 py-2 rounded-md">
-            📝
+            class="text-gray-700 bg-gray-300 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+            📝 Write
           </a>
           <a href="{{ url_for('blog.list_drafts') }}"
-            class="text-gray-700 bg-gray-200 hover:text-blue-100 hover:bg-gray-300 px-3 py-2 rounded-md">
-            🗂️
+            class="text-gray-700 bg-gray-300 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+            🗂️ Drafts
           </a>
         {% endif %}
         <a href="{{ url_for('pages.contact') }}"
-          class="text-gray-700 bg-gray-200 hover:text-blue-300 hover:bg-gray-300 px-3 py-2 rounded-md">
-          📪
+          class="text-gray-700 bg-gray-300 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+          📪 Contact
         </a>
         <a href="{{ url_for('pages.about') }}"
-          class="text-gray-700 bg-gray-200 hover:text-blue-300 hover:bg-gray-300 px-3 py-2 rounded-md">
-          ❓
+          class="text-gray-700 bg-gray-300 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+          ❓ About
         </a>
 
       </div>
@@ -120,7 +120,7 @@
         </a>
         <a href="{{ url_for('blog.all_posts') }}"
            class="block px-3 py-2 rounded-md hover:bg-gray-100">
-          Posts
+          Archive
         </a>
         {% if current_user.is_authenticated %}
           <a href="{{ url_for('blog.create_post') }}"
