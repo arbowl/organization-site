@@ -56,7 +56,11 @@ h1, h2, h3, h4 {
 }
 
 .bg-bluish {
-  background-color: #ebf8ff;
+  background-color: #f6fbff;
+}
+
+.bg-warmwhite {
+  background-color: #FCFBFA;
 }
 
 .post-content a,
@@ -549,4 +553,79 @@ a:hover .preview-hero.clickable {
   .thread-action {
       margin-top: 0.5rem;
   }
+}
+
+.discussion-thread-card {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 0.75rem;
+  height: 90%;
+}
+
+/* Title area: clamp + fixed height = consistent alignment */
+.thread-title {
+  --title-lines: 2;
+  --title-lh: 1.25;
+  margin: 0;
+  font-weight: 700;
+  color: #1e3a8a;             /* blue-800 */
+  line-height: var(--title-lh);
+
+  display: -webkit-box;
+  -webkit-line-clamp: var(--title-lines);
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* reserve height so cards align even with short titles */
+  min-height: calc(var(--title-lines) * var(--title-lh) * 1em);
+
+  text-wrap: balance;         /* nicer multi-line breaks */
+  overflow-wrap: anywhere;
+}
+
+.thread-title a { 
+  color: inherit; 
+  text-decoration: none; 
+}
+.thread-title a:hover { 
+  color: #2563eb;             /* blue-600 */
+}
+
+/* Meta row: quiet neutrals */
+.thread-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: #64748b;             /* slate-500/600 */
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 8px;
+}
+
+/* Body: absorbs vertical differences */
+.thread-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Related list fade (if content runs long) */
+.thread-related .space-y-2 {
+  overflow: hidden;
+  mask-image: linear-gradient(#000 85%, transparent);
+}
+
+/* Footer pinned by grid row 4 */
+.thread-footer {
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+/* Optional: make header section stand out (safe complement to blue) */
+section.bg-bluish {
+  /* Use a warm off-white to break the blue-on-blue look */
+  background-color: #FFFDF7;  /* soft, readable with dark text */
+  border-top-color: #cfe3ff;  /* keep the blue accent */
 }
