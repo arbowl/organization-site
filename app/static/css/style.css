@@ -29,9 +29,14 @@ h1, h2, h3, h4 {
 }
 
 .from-offwhite {
-  --gradient-from-color: #f9fafb;
-  --gradient-color-stops: var(--gradient-from-color),var(--gradient-to-color, rgba(255, 255, 255, 0));
+  --tw-gradient-from: #f1f6f9;                                   /* off-white */
+  --tw-gradient-to: transparent;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
+
+/* If you’re not loading Tailwind for these, define both directions */
+.bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
+.bg-gradient-to-l { background-image: linear-gradient(to left,  var(--tw-gradient-stops)); }
 
 .dismantl-d {
   display: inline;
@@ -572,6 +577,7 @@ a:hover .preview-hero.clickable {
   line-height: var(--title-lh);
 
   display: -webkit-box;
+  line-clamp: var(--title-lines);
   -webkit-line-clamp: var(--title-lines);
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -626,6 +632,6 @@ a:hover .preview-hero.clickable {
 /* Optional: make header section stand out (safe complement to blue) */
 section.bg-bluish {
   /* Use a warm off-white to break the blue-on-blue look */
-  background-color: #FFFDF7;  /* soft, readable with dark text */
+  background-color: #ebf8ff;  /* soft, readable with dark text */
   border-top-color: #cfe3ff;  /* keep the blue accent */
 }
