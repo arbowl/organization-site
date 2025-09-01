@@ -17,7 +17,7 @@
       {% else %}
         <strong class="font-semibold text-gray-700">{{ comment.guest_name }}</strong>
       {% endif %}
-      on <span class="text-gray-500">{{ comment.timestamp.strftime('%Y-%m-%d') }} {% if comment.edited_at %}(edited){% endif %}</span>
+      on <span class="text-gray-500">{{ comment.timestamp | format_date }} {% if comment.edited_at %}(edited {{ comment.edited_at | format_date }}){% endif %}</span>
     </p>
 
     <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0"> {# Added mt-1 sm:mt-0 and flex-shrink-0 #}

@@ -278,6 +278,12 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     mail = Mail(app)
     app.mail = mail
     app.jinja_env.filters["md"] = md
+    
+    # Register custom date formatting filters
+    from app.filters import format_date, format_date_time, format_date_short
+    app.jinja_env.filters["format_date"] = format_date
+    app.jinja_env.filters["format_date_time"] = format_date_time
+    app.jinja_env.filters["format_date_short"] = format_date_short
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)

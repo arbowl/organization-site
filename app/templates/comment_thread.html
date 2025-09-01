@@ -5,7 +5,7 @@
     <div class="max-w-4xl mx-auto mt-8">
       <article class="p-4 bg-white rounded-lg border mb-6">
         <p class="text-sm text-gray-500">Continuing discussion on comment by 
-          <strong>{{ root.author.username }}</strong> at {{ root.timestamp.strftime('%Y-%m-%d %H:%M') }}
+          <strong>{{ root.author.username }}</strong> at {{ root.timestamp | format_date_time }}
         </p>
         <div class="mt-2 text-gray-700">
           {{ root.content | md }}

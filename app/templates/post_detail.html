@@ -228,7 +228,7 @@
                       href="{{ url_for('blog.view_post', slug=p.slug) }}">{{ p.title }}</a>
                     <div class="text-xs text-gray-500">
                       By <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=p.author.username) }}">{{ p.author.username }}</a>
-                      on {{ p.timestamp.strftime('%Y-%m-%d') }}
+                      on {{ p.timestamp | format_date }}
                     </div>
                   </li>
                 {% endfor %}
@@ -251,7 +251,7 @@
                       href="{{ url_for('blog.view_post', slug=p.slug) }}">{{ p.title }}</a>
                     <div class="text-xs text-gray-500">
                       By <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=p.author.username) }}">{{ p.author.username }}</a>
-                      on {{ p.timestamp.strftime('%Y-%m-%d') }}
+                      on {{ p.timestamp | format_date }}
                     </div>
                   </li>
                 {% endfor %}
@@ -273,7 +273,7 @@
           {% for s in splinters %}
             <li class="mb-3">
               <a class="block text-blue-700 hover:text-blue-900 font-medium" href="{{ url_for('blog.view_post', slug=s.slug) }}">{{ s.title }}</a>
-              <div class="text-xs text-gray-700">By <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=s.author.username) }}">{{ s.author.username }}</a> · {{ s.timestamp.strftime('%Y-%m-%d') }}</div>
+              <div class="text-xs text-gray-700">By <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=s.author.username) }}">{{ s.author.username }}</a> · {{ s.timestamp | format_date }}</div>
               {% if s.splinter_items %}
                 <ul class="mt-2 border-l pl-3 space-y-2">
                   {% for si in s.splinter_items[:3] %}

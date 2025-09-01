@@ -83,7 +83,7 @@
                           {{thread.main_post.author.username}}
                         </a>
                       </span>
-                      <span class="text-gray-700">{{ thread.main_post.timestamp.strftime('%b %d') }}</span>
+                      <span class="text-gray-700">{{ thread.main_post.timestamp | format_date_short }}</span>
                     </div>
                   
                     <!-- 3) BODY (everything variable goes here) -->
@@ -222,9 +222,9 @@
                                             </a>
                                         </div>
                                     </div>
-                                <small class="text-gray-700 text-sm block mb-2">
-                                    By <span class="font-medium"><span class="badge">{{ post_item.post.author.role_icon }}</span><a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=post_item.post.author.username) }}">{{ post_item.post.author.username }}</a></span> on {{ post_item.post.display_date | safe }}
-                                </small>
+                                                                 <small class="text-gray-700 text-sm block mb-2">
+                                     By <span class="font-medium"><span class="badge">{{ post_item.post.author.role_icon }}</span><a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=post_item.post.author.username) }}">{{ post_item.post.author.username }}</a></span> on {{ post_item.post.timestamp | format_date }}
+                                 </small>
                                 {% set first_img = post_item.post.content | first_img_abs %}
                                 {% if first_img %}
                                 <a href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}" class="block">
@@ -311,9 +311,9 @@
                                         </a>
                                     </div>
                                 </div>
-                                <small class="text-gray-700 text-sm block mb-2">
-                                    By <span class="font-medium">{{ bulletin.post.author.role_icon }}<a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=bulletin.post.author.username) }}">{{ bulletin.post.author.username }}</a></span> on {{ bulletin.post.display_date | safe }}
-                                </small>
+                                                                 <small class="text-gray-700 text-sm block mb-2">
+                                     By <span class="font-medium">{{ bulletin.post.author.role_icon }}<a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=bulletin.post.author.username) }}">{{ bulletin.post.author.username }}</a></span> on {{ bulletin.post.timestamp | format_date }}
+                                 </small>
                                 {% set first_img = bulletin.post.content | first_img_abs %}
                                 {% if first_img %}
                                 <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}" class="block">
