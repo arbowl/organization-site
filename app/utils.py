@@ -177,7 +177,7 @@ def color_from_slug(
     lightness_range=0.06,
     saturation_center=0.55,
     saturation_range=0.10,
-    grayscale_ratio=0.05,
+    grayscale_ratio=0.00,
 ):
     h = md5(slug.encode("utf-8")).digest()
     gray_gate = h[0] / 255.0
