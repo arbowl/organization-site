@@ -49,6 +49,98 @@
         <div class="pointer-events-none absolute top-0 right-0 h-full w-12 bg-gradient-to-l from-offwhite to-transparent z-10"></div>
     </div>
 
+    <!-- Hot Bills Section -->
+    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+    <div class="mb-4">
+        <form method="post" action="{{ url_for('bills.manual_scrape') }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" 
+                    class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-md text-sm hover:bg-green-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400"
+                    onclick="return confirm('This will scrape all bills from the MA Legislature website. Continue?')"
+                    title="Manually scrape bills from malegislature.gov">
+                <span class="text-sm mr-1">🔄</span>
+                <span class="hidden sm:inline">Scrape Bills</span>
+                <span class="sm:hidden">Scrape</span>
+            </button>
+        </form>
+    </div>
+    {% endif %}
+    {% if hot_bills %}
+    <section class="bg-bluish p-6 rounded-lg border border-t-4 border-r-2 mb-6 pb-1 border-blue-200">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
+            <div class="flex items-center">
+                <button id="bills-toggle" class="text-blue-600 hover:text-blue-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md p-1 mr-2">
+                    <svg id="bills-toggle-icon" class="w-6 h-6 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <span>Hot Bills</span>
+            </div>
+        </h2>
+        
+        <div id="bills-content" class="bills-list transition-all duration-300 ease-in-out overflow-hidden">
+            <div class="space-y-2">
+            {% for bill_item in hot_bills %}
+            <div class="bg-warmwhite p-3 rounded-lg border border-l-2 border-blue-300 hover:shadow-sm transition-all duration-200 hover:border-blue-400 hover:bg-blue-50">
+                <!-- Mobile-first responsive layout -->
+                <div class="space-y-3">
+                    <!-- Top row: Bill number, title, and chamber badge -->
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div class="flex items-center space-x-3 min-w-0 flex-1">
+                            <h3 class="text-lg font-semibold text-blue-700 hover:text-blue-900 whitespace-nowrap">
+                                <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('bills.view_bill', bill_slug=bill_item.bill.slug) }}">
+                                    {{ bill_item.bill.bill_number }}
+                                </a>
+                            </h3>
+                            <p class="text-sm text-gray-700 truncate flex-1 sm:max-w-md">{{ bill_item.bill.title | truncate(60, True, '...') }}</p>
+                        </div>
+                        
+                        <!-- Chamber badge -->
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                        {% if bill_item.bill.chamber == 'House' %}bg-blue-100 text-blue-800
+                                        {% elif bill_item.bill.chamber == 'Senate' %}bg-green-100 text-green-800
+                                        {% else %}bg-purple-100 text-purple-800{% endif %} whitespace-nowrap self-start sm:self-center">
+                            {{ bill_item.bill.chamber }}
+                        </span>
+                    </div>
+                    
+                    <!-- Bottom row: Stats and actions -->
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <!-- Stats (left side on mobile, stays left on desktop) -->
+                        <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                            <!-- Comment count -->
+                            <div class="flex items-center">
+                                <span class="w-2 h-2 bg-blue-400 rounded-full mr-1"></span>
+                                <span>{{ bill_item.comments }} comment{{ "s" if bill_item.comments != 1 else "" }}</span>
+                            </div>
+                            
+                            <!-- Status -->
+                            <div class="flex items-center">
+                                <span class="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
+                                <span>{{ bill_item.bill.status or "Active" }}</span>
+                            </div>
+                            
+                            <!-- Date -->
+                            <div class="text-gray-500">
+                                {{ bill_item.bill.created_at | format_date_short }}
+                            </div>
+                        </div>
+                        
+                        <!-- View link (right side) -->
+                        <a href="{{ url_for('bills.view_bill', bill_slug=bill_item.bill.slug) }}"
+                            class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors group whitespace-nowrap self-start sm:self-center">
+                            <span>View</span>
+                            <span class="ml-1 group-hover:translate-x-0.5 transition-transform">→</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <!-- Active Discussion Threads Section -->
     {% if discussion_threads %}
     <section class="bg-bluish p-6 rounded-lg border border-t-4 border-r-2 mb-6 pb-1 border-blue-200">
@@ -356,4 +448,6 @@
     </div>
     <br><br><br>
 {% endblock %}
+
+
 

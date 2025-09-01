@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% set desc = bill.title|truncate(180, True)|replace('"', "'") %}
+
+{% block title %}{{ bill.bill_number }} - {{ bill.title }} | Dismantl{% endblock %}
+
+{% block meta_description %}
+  <meta name="description" content="{{ desc }}">
+{% endblock %}
+
+{# Override nested OG/Twitter text blocks from base.html #}
+{% block og_title %}{{ bill.bill_number }} - {{ bill.title }} | Dismantl{% endblock %}
+{% block og_description %}{{ desc }}{% endblock %}
+{% block twitter_title %}{{ bill.bill_number }} - {{ bill.title }} | Dismantl{% endblock %}
+{% block twitter_description %}{{ desc }}{% endblock %}
+{% block social_meta %}
+  <meta property="og:title" content="{{ bill.bill_number }} - {{ bill.title }} | Dismantl">
+  <meta property="og:description" content="{{ desc }}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:image" content="{{ url_for('static', filename='og-image.png', _external=True) }}">
+  <meta property="og:image:alt" content="{{ bill.bill_number }} - {{ bill.title }}">
+  <meta property="og:site_name" content="Dismantl">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ bill.bill_number }} - {{ bill.title }} | Dismantl">
+  <meta name="twitter:description" content="{{ desc }}">
+  <meta name="twitter:image" content="{{ url_for('static', filename='og-image.png', _external=True) }}">
+  <meta name="twitter:image:alt" content="{{ bill.bill_number }} - {{ bill.title }}">
+{% endblock %}
+
+{% block content %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org/",
+    "@type": "Article",
+    "headline": "{{ bill.bill_number }} - {{ bill.title|e }}",
+    "author": { "@type": "Organization", "name": "Massachusetts Legislature" },
+    "datePublished": "{{ bill.created_at.isoformat() }}",
+    "url": "{{ request.url }}",
+    "image": "{{ url_for('static', filename='og-image.png', _external=True) }}"
+}
+</script>
+
+<div class="mx-auto max-w-7xl px-0 sm:px-4 grid grid-cols-1 lg:grid-cols-12 lg:gap-8 mt-8">
+
+  <!-- LEFT COLUMN: Bill + Comments in one grid item -->
+  <div class="order-1 lg:order-1 lg:col-span-8 lg:col-start-1">
+
+    <!-- Bill Article -->
+    <article class="lg:max-w-none mx-auto p-6 bg-white border rounded-lg border-t-4 border-l-2 border-blue-300">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="mb-4">
+            {% for category, message in messages %}
+              <div class="p-3 mb-2 rounded-md
+                  {% if category == 'success' %}bg-green-100 text-green-800 border border-green-200
+                  {% elif category == 'error' %}bg-red-100 text-red-800 border border-red-200
+                  {% elif category == 'info' %}bg-blue-100 text-blue-800 border border-blue-200
+                  {% else %}bg-gray-100 text-gray-800 border border-gray-200{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div class="flex flex-wrap justify-between items-start mb-3">
+        <h1 class="text-4xl font-extrabold text-gray-900">
+          {{ bill.bill_number }}
+        </h1>
+        <div class="flex items-center space-x-2 mt-1 sm:mt-3 flex-shrink-0 mb-2">
+          <a href="#comment-form" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition">
+            <span class="text-base mr-2">💬</span>
+            <span class="font-semibold">{{ bill.comments.count() }}</span>&nbsp;response{{ "s" if bill.comments.count() != 1 else "" }}
+          </a>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3 mb-3">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                     {% if bill.chamber == 'House' %}bg-blue-100 text-blue-800
+                     {% elif bill.chamber == 'Senate' %}bg-green-100 text-green-800
+                     {% else %}bg-purple-100 text-purple-800{% endif %}">
+          {{ bill.chamber }}
+        </span>
+        {% if bill.status %}
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+            {{ bill.status }}
+          </span>
+        {% endif %}
+      </div>
+
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">{{ bill.title }}</h2>
+
+      <p class="bill-meta text-gray-600 text-sm mb-6">
+        By <strong class="font-medium text-blue-700">Massachusetts Legislature</strong>
+        on <span class="text-gray-700">{{ bill.created_at | format_date }}</span>
+        {% if bill.updated_at %}
+          • Updated <span class="text-gray-700">{{ bill.updated_at | format_date }}</span>
+        {% endif %}
+      </p>
+
+      {% if bill.content %}
+        <div class="bill-content mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Bill Text</h3>
+          <div class="prose max-w-none">
+            <pre class="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded border overflow-x-auto">{{ bill.content }}</pre>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="bill-actions flex flex-wrap items-center gap-x-4 gap-y-4 mt-6">
+        {% if bill.official_url %}
+        <a href="{{ bill.official_url }}" target="_blank" rel="noopener noreferrer"
+          class="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition duration-300 ease-in-out">
+          <span class="text-base">🏛️ <span class="hidden sm:inline ml-1">Official Bill</span></span>
+        </a>
+        {% endif %}
+        <button id="share-button"
+          class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition duration-300 ease-in-out">
+          <span class="text-base">🔗 <span class="hidden sm:inline ml-1">Share</span></span>
+        </button>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('bills.add_comment', bill_slug=bill.slug) }}"
+            class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 font-normal">
+            <span class="text-base">💬 <span class="hidden sm:inline ml-1">Comment</span></span>
+          </a>
+          <a href="{{ url_for('bills.report_bill', bill_slug=bill.slug) }}"
+            class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200">
+            <span class="text-base">🚩 <span class="hidden sm:inline ml-1">Report</span></span>
+          </a>
+        {% endif %}
+      </div>
+
+    </article>
+    <br id="comment-form">
+    <!-- Comments -->
+    <section id="comments"
+             class="lg:max-w-none mx-auto p-6 bg-white border rounded-lg mt-8 border-t-4 border-r-2 border-blue-300">
+      <h3 class="text-2xl font-bold text-gray-800 mb-4">Leave a comment</h3>
+      <form method="post" action="{{ url_for('bills.add_comment', bill_slug=bill.slug) }}" class="space-y-4 mb-8" novalidate>
+        {{ form.hidden_tag() }}
+        {% if not current_user.is_authenticated %}
+          <p class="text-gray-600 mb-8">
+            <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:text-blue-800 font-medium">Log in</a> to join the discussion—or comment as a guest:
+          </p>
+          {{ form.guest_name(rows=1, class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400", placeholder="Name (required)") }}
+        {% endif %}
+        {{ form.content(rows=3, class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400", placeholder="Share your thoughts on this bill...", maxlength=5000) }}
+        
+        <!-- Character counter -->
+        <div class="text-sm text-gray-500 mt-1">
+          <span id="bill-view-char-count" class="font-semibold text-gray-700">0</span> / 
+          <span id="bill-view-max-chars" class="font-semibold text-gray-700">5000</span>
+        </div>
+        
+        {{ form.submit(class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 cursor-pointer") }}
+      </form>
+      <ul class="comments space-y-6">
+        {% for c in comments %}
+          {% set comment = c %}
+          {% set depth = 0 %}
+          {% include 'includes/bill_comment.html' %}
+        {% endfor %}
+      </ul>
+    </section>
+
+  </div>
+
+  <!-- RIGHT COLUMN: Sidebar -->
+  <aside class="order-2 lg:order-1 lg:col-span-4 lg:col-start-9 space-y-8 mt-8 lg:mt-0">
+
+    <section id="rules" class="bg-white rounded-lg">
+      {% include 'includes/rules.html' %}
+    </section>
+
+    <section id="recent-comments" class="bg-white rounded-lg border p-5 border-t-4 border-r-2 border-blue-300">
+      <h3 class="text-2xl font-semibold text-blue-800 mb-4 border-b pb-2">Recent Comments</h3>
+      {% if recent_bill_comments %}
+        <ul class="space-y-4">
+          {% for c in recent_bill_comments %}
+            <li class="text-sm">
+              {% if not c.guest_name %}
+                <a class="font-medium text-blue-700 hover:text-blue-900"
+                   href="{{ url_for('blog.user_posts', username=c.author.username) }}">{{ c.author.username }}</a>
+              {% else %}
+                {{ c.guest_name }}
+              {% endif %}
+              <span class="text-gray-500">on</span>
+              {% if c.bill_id %}
+                <a class="font-medium text-blue-700 hover:text-blue-900"
+                   href="{{ url_for('bills.view_bill', bill_slug=c.bill.slug) }}#c{{ c.id }}">{{ c.bill.bill_number }}</a>
+              {% else %}
+                <a class="font-medium text-blue-700 hover:text-blue-900"
+                   href="{{ url_for('blog.view_post', slug=c.post.slug) }}#c{{ c.id }}">{{ c.post.title }}</a>
+              {% endif %}
+              <div class="text-gray-600">{{ c.content | md | striptags | truncate(120, True, '...') }}</div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-sm text-gray-600">No comments yet.</p>
+      {% endif %}
+    </section>
+
+    <section id="trending-tags" class="bg-white rounded-lg border p-5 border-t-4 border-r-2 border-blue-300">
+      <h3 class="text-2xl font-semibold text-blue-800 mb-4 border-b pb-2">Trending Tags</h3>
+      {% if trending_tags %}
+        <div class="flex flex-wrap gap-2">
+          {% for tag, count in trending_tags %}
+            <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+               class="tag inline-flex items-center px-2.5 py-1 text-xs font-medium rounded"
+               style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
+              {{ tag.name }}<span class="ml-1 opacity-70">({{ count }})</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-sm text-gray-600">No tags yet.</p>
+      {% endif %}
+    </section>
+
+  </aside>
+
+</div>
+
+<br><br><br>
+{% endblock %} 

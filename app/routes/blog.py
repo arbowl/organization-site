@@ -77,12 +77,16 @@ def index() -> str:
     # Get active discussion threads for the front page
     discussion_threads = get_active_discussion_threads()
     
+    # Get hot bills for the front page
+    hot_bills = get_hot_bills()
+    
     return render_template(
         "index.html",
         posts=posts[:16],
         bulletins=bulletins[:3],
         events=events,
         discussion_threads=discussion_threads,
+        hot_bills=hot_bills,
     )
 
 
@@ -190,6 +194,44 @@ def get_active_discussion_threads():
     except Exception as e:
         # If there's an error, return empty list to avoid breaking the page
         print(f"Error getting discussion threads: {e}")
+        return []
+
+
+def get_hot_bills():
+    """Get the most commented bills for the front page"""
+    try:
+        from app.models import Bill, Comment
+        from sqlalchemy import func
+        
+        # Pre-calculate comment counts using subquery (same pattern as posts)
+        comment_count_subq = (
+            db.session.query(Comment.bill_id, func.count(Comment.id).label("comment_count"))
+            .group_by(Comment.bill_id)
+            .subquery()
+        )
+        
+        # Get bills with pre-calculated comment counts
+        bill_data = (
+            db.session.query(
+                Bill,
+                func.coalesce(comment_count_subq.c.comment_count, 0)
+            )
+            .outerjoin(comment_count_subq, Bill.id == comment_count_subq.c.bill_id)
+            .order_by(func.coalesce(comment_count_subq.c.comment_count, 0).desc())
+            .limit(20)
+            .all()
+        )
+        
+        # Return in same format as posts: list of dictionaries
+        hot_bills = [
+            {"bill": bill, "comments": comment_count}
+            for bill, comment_count in bill_data
+        ]
+        
+        return hot_bills
+    except Exception as e:
+        # If there's an error, return empty list to avoid breaking the page
+        print(f"Error getting hot bills: {e}")
         return []
 
 

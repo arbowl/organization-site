@@ -270,6 +270,15 @@ def create_app(config_name: Optional[str] = None) -> Flask:
             "hour": 10,
             "minute": 0,
             "timezone": "America/New_York",
+        },
+        {
+            "id": "bill_scraping",
+            "func": "app.tasks:scrape_ma_bills",
+            "trigger": "cron",
+            "day_of_week": "mon",
+            "hour": 2,
+            "minute": 0,
+            "timezone": "America/New_York",
         }
     ]
     app.jinja_env.filters["first_img_abs"] = first_img_abs
@@ -293,18 +302,32 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     from .routes.social import social_bp
     from .routes.account import account_bp
     from .routes.analytics import analytics_bp
-    from app.models import User, Post, Comment, Report
+    from .routes.bills import bills_bp
+    from app.models import User, Post, Comment, Report, Bill
 
     admin.add_view(UserAdmin(User, db.session))
     admin.add_view(UserAdmin(Post, db.session))
     admin.add_view(UserAdmin(Comment, db.session))
     admin.add_view(ReportAdmin(Report, db.session))
+    
+    # Add Bill admin view
+    class BillAdmin(ModelView):
+        column_list = ["bill_number", "title", "chamber", "status", "created_at", "last_scraped"]
+        column_searchable_list = ["bill_number", "title"]
+        column_filters = ["chamber", "status", "created_at"]
+        form_excluded_columns = ["comments"]
+        
+        def is_accessible(self):
+            return current_user.is_authenticated and current_user.is_authority()
+    
+    admin.add_view(BillAdmin(Bill, db.session))
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(blog_bp)
     app.register_blueprint(pages_bp)
     app.register_blueprint(social_bp)
     app.register_blueprint(account_bp)
     app.register_blueprint(analytics_bp)
+    app.register_blueprint(bills_bp)
     with app.app_context():
         db.create_all()
     CSRFProtect(app)

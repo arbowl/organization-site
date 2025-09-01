@@ -222,7 +222,11 @@
                       {{ c.guest_name }}
                     {% endif %}
                     <span class="text-gray-700">on</span>
-                    <a class="font-medium text-blue-700 hover:text-blue-900" href="{{ url_for('blog.view_post', slug=c.post.slug) }}#c{{ c.id }}">{{ c.post.title }}</a>
+                    {% if c.bill_id %}
+                      <a class="font-medium text-blue-700 hover:text-blue-900" href="{{ url_for('bills.view_bill', bill_slug=c.bill.slug) }}#c{{ c.id }}">{{ c.bill.bill_number }}</a>
+                    {% else %}
+                      <a class="font-medium text-blue-700 hover:text-blue-900" href="{{ url_for('blog.view_post', slug=c.post.slug) }}#c{{ c.id }}">{{ c.post.title }}</a>
+                    {% endif %}
                     <div class="text-gray-600 line-clamp-2">{{ c.content[:120] | md | striptags }}{% if c.content|length > 120 %}...{% endif %}</div>
                   </li>
                 {% endfor %}

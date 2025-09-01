@@ -168,6 +168,60 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Hot Bills collapsible section
+    const billsToggle = document.getElementById('bills-toggle');
+    const billsContent = document.getElementById('bills-content');
+    const billsToggleIcon = document.getElementById('bills-toggle-icon');
+    
+    console.log('Hot Bills elements found:', {
+        toggle: !!billsToggle,
+        content: !!billsContent,
+        icon: !!billsToggleIcon
+    });
+    
+    if (billsToggle && billsContent && billsToggleIcon) {
+        // Check if user has a saved preference, default to collapsed if no preference
+        const isCollapsed = localStorage.getItem('bills-collapsed') !== 'false'; // Default to true (collapsed)
+        
+        // Set initial state
+        if (isCollapsed) {
+            billsContent.style.maxHeight = '0px';
+            billsContent.style.opacity = '0';
+            billsToggleIcon.style.transform = 'rotate(-90deg)';
+        } else {
+            billsContent.style.maxHeight = billsContent.scrollHeight + 'px';
+            billsContent.style.opacity = '1';
+        }
+        
+        // Add click event listener
+        billsToggle.addEventListener('click', () => {
+            console.log('Hot Bills toggle clicked');
+            const isCurrentlyCollapsed = billsContent.style.maxHeight === '0px';
+            console.log('Currently collapsed:', isCurrentlyCollapsed);
+            
+            if (isCurrentlyCollapsed) {
+                // Expand
+                billsContent.style.maxHeight = billsContent.scrollHeight + 'px';
+                billsContent.style.opacity = '1';
+                billsToggleIcon.style.transform = 'rotate(0deg)';
+                localStorage.setItem('bills-collapsed', 'false');
+            } else {
+                // Collapse
+                billsContent.style.maxHeight = '0px';
+                billsContent.style.opacity = '0';
+                billsToggleIcon.style.transform = 'rotate(-90deg)';
+                localStorage.setItem('bills-collapsed', 'true');
+            }
+        });
+        
+        // Handle window resize to recalculate maxHeight
+        window.addEventListener('resize', () => {
+            if (billsContent.style.maxHeight !== '0px') {
+                billsContent.style.maxHeight = billsContent.scrollHeight + 'px';
+            }
+        });
+    }
+
     function showCopiedFeedback(buttonElement) {
         const originalHTML = buttonElement.innerHTML;
         buttonElement.innerHTML = "✅ Copied!";
@@ -196,6 +250,83 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update on typing
         updateCharCount();
         textarea.addEventListener("input", updateCharCount);
+    });
+
+    // Post comment form character counter
+    const postCommentCharCount = document.getElementById('post-comment-char-count');
+    const postCommentMaxChars = document.getElementById('post-comment-max-chars');
+    const postCommentTextarea = document.querySelector('form textarea[name="content"]');
+    
+    if (postCommentCharCount && postCommentMaxChars && postCommentTextarea) {
+        const maxLength = 5000;
+        postCommentMaxChars.textContent = maxLength;
+
+        function updatePostCommentCharCount() {
+            const currentLength = postCommentTextarea.value.length;
+            postCommentCharCount.textContent = currentLength;
+            postCommentCharCount.style.color = currentLength > maxLength ? 'red' : '';
+        }
+
+        updatePostCommentCharCount();
+        postCommentTextarea.addEventListener("input", updatePostCommentCharCount);
+        postCommentTextarea.setAttribute('data-char-counter-initialized', 'true');
+        console.log('Post comment character counter initialized');
+    }
+
+    // Bill view inline comment form character counter
+    const billViewCharCount = document.getElementById('bill-view-char-count');
+    const billViewMaxChars = document.getElementById('bill-view-max-chars');
+    const billViewTextarea = document.querySelector('form textarea[name="content"]');
+    
+    if (billViewCharCount && billViewMaxChars && billViewTextarea) {
+        const maxLength = 5000;
+        billViewMaxChars.textContent = maxLength;
+
+        function updateBillViewCharCount() {
+            const currentLength = billViewTextarea.value.length;
+            billViewCharCount.textContent = currentLength;
+            billViewCharCount.style.color = currentLength > maxLength ? 'red' : '';
+        }
+
+        updateBillViewCharCount();
+        billViewTextarea.addEventListener("input", updateBillViewCharCount);
+        billViewTextarea.setAttribute('data-char-counter-initialized', 'true');
+        console.log('Bill view character counter initialized');
+    }
+
+    // Generic character counter for any other textarea with char-count elements
+    document.querySelectorAll('textarea').forEach(textarea => {
+        // Skip if already processed or if it's the main post content (handled above)
+        if (textarea.hasAttribute('data-char-counter-initialized') || textarea.id === 'post-content') {
+            return;
+        }
+        
+        // Look for character counter elements in the same form
+        const form = textarea.closest('form');
+        if (!form) return;
+        
+        // Look for any char-count element in the form
+        const charCountSpan = form.querySelector('[id*="char-count"]');
+        const maxCharsSpan = form.querySelector('[id*="max-chars"]');
+        
+        if (charCountSpan && maxCharsSpan) {
+            const maxLength = 5000;
+            maxCharsSpan.textContent = maxLength;
+            
+            // Mark as initialized
+            textarea.setAttribute('data-char-counter-initialized', 'true');
+
+            function updateCharCount() {
+                const currentLength = textarea.value.length;
+                charCountSpan.textContent = currentLength;
+                charCountSpan.style.color = currentLength > maxLength ? 'red' : '';
+            }
+
+            updateCharCount();
+            textarea.addEventListener("input", updateCharCount);
+            
+            console.log('Character counter initialized for textarea:', textarea, 'with counter:', charCountSpan);
+        }
     });
 
 });

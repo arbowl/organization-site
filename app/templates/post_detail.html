@@ -312,7 +312,14 @@
           </p>
           {{ form.guest_name(rows=1, class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400", placeholder="Name (required)") }}
         {% endif %}
-        {{ form.content(rows=3, class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400", placeholder="Share your thoughts, ask a question, or provide feedback...") }}
+        {{ form.content(rows=3, class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400", placeholder="Share your thoughts, ask a question, or provide feedback...", maxlength=5000) }}
+        
+        <!-- Character counter -->
+        <div class="text-sm text-gray-500 mt-1">
+          <span id="post-comment-char-count" class="font-semibold text-gray-700">0</span> / 
+          <span id="post-comment-max-chars" class="font-semibold text-gray-700">5000</span>
+        </div>
+        
         {{ form.submit(class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 cursor-pointer") }}
       </form>
       <ul class="comments space-y-6">
@@ -346,8 +353,13 @@
                 {{ c.guest_name }}
               {% endif %}
               <span class="text-gray-500">on</span>
-              <a class="font-medium text-blue-700 hover:text-blue-900"
-                 href="{{ url_for('blog.view_post', slug=c.post.slug) }}#c{{ c.id }}">{{ c.post.title }}</a>
+              {% if c.bill_id %}
+                <a class="font-medium text-blue-700 hover:text-blue-900"
+                   href="{{ url_for('bills.view_bill', bill_slug=c.bill.slug) }}#c{{ c.id }}">{{ c.bill.bill_number }}</a>
+              {% else %}
+                <a class="font-medium text-blue-700 hover:text-blue-900"
+                   href="{{ url_for('blog.view_post', slug=c.post.slug) }}#c{{ c.id }}">{{ c.post.title }}</a>
+              {% endif %}
               <div class="text-gray-600">{{ c.content | md | striptags | truncate(120, True, '...') }}</div>
             </li>
           {% endfor %}

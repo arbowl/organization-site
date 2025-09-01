@@ -217,10 +217,11 @@ class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=timestamp(), index=True)
-    author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id", name="fk_comments_author_id_users"), nullable=True)
     guest_name = db.Column(db.String(80), nullable=True)
-    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
-    parent_id = db.Column(db.Integer, db.ForeignKey("comments.id"), nullable=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id", name="fk_comments_post_id_posts"), nullable=True)
+    bill_id = db.Column(db.Integer, db.ForeignKey("bills.id", name="fk_comments_bill_id_bills"), nullable=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("comments.id", name="fk_comments_parent_id_comments"), nullable=True)
     is_removed = db.Column(db.Boolean, default=False, nullable=False)
     removed_by = db.Column(db.String(20), nullable=True)
     removed_at = db.Column(db.DateTime, nullable=True)
@@ -228,6 +229,13 @@ class Comment(db.Model):
     author = db.relationship("User", backref="comments", foreign_keys=[author_id])
     replies = db.relationship(
         "Comment", backref=db.backref("parent", remote_side=[id]), lazy="dynamic"
+    )
+    
+    __table_args__ = (
+        db.CheckConstraint(
+            "(post_id IS NOT NULL AND bill_id IS NULL) OR (post_id IS NULL AND bill_id IS NOT NULL)",
+            name="ck_comments_either_post_or_bill"
+        ),
     )
 
     @hybrid_method
@@ -378,6 +386,56 @@ class Tag(db.Model):
     posts = db.relationship(
         "Post", secondary=post_tags, back_populates="tags", lazy="dynamic"
     )
+
+
+class Bill(db.Model):
+    __tablename__ = "bills"
+    id = db.Column(db.Integer, primary_key=True)
+    bill_number = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    title = db.Column(db.String(500), nullable=False)
+    content = db.Column(db.Text, nullable=True)
+    chamber = db.Column(db.String(10), nullable=False)  # House, Senate, or Joint
+    status = db.Column(db.String(50), nullable=True)
+    created_at = db.Column(db.DateTime, default=timestamp(), nullable=False)
+    updated_at = db.Column(db.DateTime, onupdate=timestamp())
+    last_scraped = db.Column(db.DateTime, default=timestamp(), nullable=False)
+    
+    # Relationship to comments (reusing existing Comment model)
+    comments = db.relationship(
+        "Comment", backref="bill", lazy="dynamic", cascade="all, delete-orphan"
+    )
+    
+    @property
+    def slug(self):
+        """Generate a URL-friendly slug from the bill number"""
+        return self.bill_number.lower().replace('.', '').replace(' ', '-')
+    
+    @property
+    def display_title(self):
+        """Return a shortened title for display"""
+        if len(self.title) > 100:
+            return self.title[:97] + "..."
+        return self.title
+    
+    @property
+    def official_url(self):
+        """Generate the official MA Legislature URL for this bill"""
+        # Remove dots from bill number for URL (e.g., H.4459 -> H4459)
+        bill_number_clean = self.bill_number.replace('.', '')
+        
+        if self.bill_number.startswith('H.'):
+            return f"https://malegislature.gov/Bills/194/{bill_number_clean}/House/Bill/Text"
+        elif self.bill_number.startswith('S.'):
+            return f"https://malegislature.gov/Bills/194/{bill_number_clean}/Senate/Bill/Text"
+        elif self.bill_number.startswith('HD.'):
+            return f"https://malegislature.gov/Bills/194/{bill_number_clean}/House/Bill/Text"
+        elif self.bill_number.startswith('SD.'):
+            return f"https://malegislature.gov/Bills/194/{bill_number_clean}/Senate/Bill/Text"
+        else:
+            return None
+    
+    def __repr__(self):
+        return f"<Bill {self.bill_number}: {self.title[:50]}...>"
 
 
 def _render_md(md_text: str) -> str:
