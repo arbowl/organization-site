@@ -158,7 +158,8 @@ def get_active_discussion_threads():
                 )
 
                 # Calculate thread depth and engagement
-                thread_depth = len(related_posts)
+                # thread_depth should represent actual connections, not limited subset
+                thread_depth = connections  # Use actual connection count instead of limited related_posts length
                 total_engagement = comments + likes
                 
                 # Get the most recent splinter if this post has one

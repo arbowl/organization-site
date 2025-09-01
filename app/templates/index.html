@@ -118,7 +118,7 @@
                   
                       <!-- related -->
                       <div class="thread-related">
-                        <p class="text-sm font-medium text-gray-700 uppercase tracking-wide mb-2 mt-2">
+                        <p class="text-sm font-medium text-gray-700 tracking-wide mb-2 mt-2">
                           Connected Posts:
                         </p>
                         <div class="space-y-2 flex-grow">
@@ -137,9 +137,10 @@
                           {% endfor %}
                         </div>
                   
-                        {% if thread.thread_depth > 2 %}
+                        {# Show "more" count using connection_count (total connections) not thread_depth (limited subset) #}
+                        {% if thread.connection_count > 2 %}
                         <div class="text-sm text-gray-700 mb-2 pl-4">
-                          … and {{ thread.thread_depth - 2 }} more
+                          … and {{ thread.connection_count - 2 }} more
                         </div>
                         {% endif %}
                       </div>

@@ -165,9 +165,9 @@ class Post(db.Model):
 
     @property
     def display_date(self):
-        date = self.timestamp.strftime("%Y-%m-%d")
+        date = self.timestamp.strftime("%B %d, %Y")
         if self.updated_at:
-            date += f" ⸱ <i>(edited {self.updated_at.strftime('%Y-%m-%d')})</i>"
+            date += f" ⸱ <i>(edited {self.updated_at.strftime('%B %d, %Y')})</i>"
         return date
 
     @property
