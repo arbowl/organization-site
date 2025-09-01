@@ -166,9 +166,13 @@
         {% for comment in comments_entries %}
           <li class="bg-white p-6 rounded-lg border border-t-2 border-l-2 border-teal-200 hover:shadow-md transition">
             <p class="text-gray-800 text-md mb-2">"{{ comment.content | md | striptags | truncate(120, True, '...') }}"</p>
-            <small class="text-gray-700 text-sm block">
-              On: <a href="{{ url_for('blog.view_post', slug=comment.post.slug) }}" class="text-blue-600 hover:underline">{{ comment.post.title }}</a>
-              at {{ comment.timestamp.strftime('%Y-%m-%d %H:%M') }}
+            <small class="text-gray-700 text-sm block"> 
+              {% if comment.bill_id %}
+                <a href="{{ url_for('bills.view_bill', bill_slug=comment.bill.slug) }}" class="text-blue-600 hover:underline">{{ comment.bill.bill_number }}</a>
+              {% else %}
+                <a href="{{ url_for('blog.view_post', slug=comment.post.slug) }}" class="text-blue-600 hover:underline">{{ comment.post.title }}</a>
+              {% endif %}
+              on {{ comment.timestamp | format_date }}
             </small>
           </li>
         {% endfor %}
