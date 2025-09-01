@@ -48,7 +48,7 @@
 
 
 {% if current_user.is_authenticated and current_user.username == user.username %}
-  <div class="max-w-2xl mx-auto mb-6 bg-gray-50 p-6 rounded-lg shadow border-t-4 border-r-2 border-blue-300">
+  <div class="max-w-2xl mx-auto mb-6 bg-gray-50 p-6 rounded-lg border border-t-4 border-r-2 border-blue-300">
     <h2 class="text-xl font-semibold text-gray-800 mb-4">Your Profile</h2>
 
     <form method="post" action="{{ url_for('account.update_preferences') }}">
@@ -73,7 +73,7 @@
   </div>
 {% endif %}
 
-<div class="max-w-2xl mx-auto mb-4 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border-t-4 border-r-2 border-blue-300">
+<div class="max-w-2xl mx-auto mb-4 bg-white p-6 rounded-lg border transition-shadow duration-300 border-t-4 border-r-2 border-blue-300">
 
   {# Tabs Navigation #}
   <nav class="mb-4 border-b">
@@ -90,7 +90,7 @@
     {% if posts_entries %}
       <ul class="space-y-6">
         {% for entry in posts_entries %}
-          <li class="pb-4 last:border-b-0 last:pb-0 bg-white rounded-lg shadow-sm border-l-2 border-t-4 border-blue-300 hover:border-blue-400 hover:shadow-md transition-all duration-200 px-4 py-4">
+          <li class="pb-4 last:border-b-0 last:pb-0 bg-white rounded-lg border border-l-2 border-t-4 border-blue-300 hover:border-blue-400 hover:shadow-md transition-all duration-200 px-4 py-4">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2">
               <h4 class="m-0 pr-2 text-xl font-medium text-blue-700">
                 {% if entry.post.is_splinter %}
@@ -117,7 +117,7 @@
                   </a>
             </div>
             </div>
-            <small class="text-gray-500 text-sm mb-2 block">on {{ entry.post.display_date | safe }}</small>
+            <small class="text-gray-700 text-sm mb-2 block">on {{ entry.post.display_date | safe }}</small>
             {% set first_img = entry.post.content | first_img_abs %}
             {% if first_img %}
             <a href="{{ url_for('blog.view_post', slug=entry.post.slug) }}" class="block">
@@ -128,7 +128,7 @@
             {% endif %}
             <div class="post-content">{{ entry.post.content | md | striptags | truncate(200, True, '...') }} <a class="align-middle text-blue-800 hover:text-blue-900 italic text-sm" href="{{ url_for('blog.view_post', slug=entry.post.slug) }}">{{ "(Read more)" if entry.post.content|length > 200  else "" }}</a></div>
             {% if entry.post.tags.count() %}
-                <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-400"><em class="mr-4">Tags: </em>
+                <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-700"><em class="mr-4">tags: </em>
                     {% for tag in entry.post["tags"] %}
                         <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
                             class="tag inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded"
@@ -164,9 +164,9 @@
     {% if comments_entries %}
       <ul class="space-y-6">
         {% for comment in comments_entries %}
-          <li class="bg-white p-6 rounded-lg shadow-md border-t-2 border-l-2 border-teal-200 hover:shadow-lg transition">
-            <p class="text-gray-800 text-lg mb-2">"{{ comment.content | md | striptags | truncate(120, True, '...') }}"</p>
-            <small class="text-gray-500 text-sm block">
+          <li class="bg-white p-6 rounded-lg border border-t-2 border-l-2 border-teal-200 hover:shadow-md transition">
+            <p class="text-gray-800 text-md mb-2">"{{ comment.content | md | striptags | truncate(120, True, '...') }}"</p>
+            <small class="text-gray-700 text-sm block">
               On: <a href="{{ url_for('blog.view_post', slug=comment.post.slug) }}" class="text-blue-600 hover:underline">{{ comment.post.title }}</a>
               at {{ comment.timestamp.strftime('%Y-%m-%d %H:%M') }}
             </small>

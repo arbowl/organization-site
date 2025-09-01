@@ -17,7 +17,7 @@
             {% endfor %}
         </div>
     {% endif %}
-{% endwith %}
+{% endwith %} 
 <div class="mx-auto max-w-7xl px-4 mt-8 mb-6">
   <div class="mb-4">
     <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.edit_splinter', slug=splinter.slug) }}">← Back to splinter</a>
@@ -35,7 +35,7 @@
 <div class="flex flex-col lg:flex-row gap-6">
 
   <!-- LEFT: Target Post (read-only) -->
-  <section class="lg:w-3/5 bg-white shadow rounded-lg p-5 border-t-4 border-r-2 border-red-300">
+  <section class="lg:w-3/5 bg-white border rounded-lg p-5 border-t-4 border-r-2 border-red-300">
     <h2 class="text-xl font-semibold mb-3">Select text in the target post</h2>
     <p class="text-sm text-gray-600 mb-3">Highlight a passage, then return here to write your rebuttal.</p>
 
@@ -45,7 +45,7 @@
   </section>
 
   <!-- RIGHT: Composer, Preview, and Items -->
-  <section class="lg:w-2/5 bg-white shadow rounded-lg p-5 border-t-4 border-r-2 border-blue-300 flex flex-col">
+  <section class="lg:w-2/5 bg-white border rounded-lg p-5 border-t-4 border-r-2 border-blue-300 flex flex-col">
     <h2 class="text-xl font-semibold mb-3">Compose rebuttal item</h2>
 
     <!-- Hidden field -->

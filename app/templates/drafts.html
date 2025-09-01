@@ -3,7 +3,7 @@
 {% block title %}Your Drafts | Dismantl{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg mt-10 border-t-4 border-r-2 border-blue-200">
+<div class="max-w-4xl mx-auto bg-white p-8 rounded-lg border mt-10 border-t-4 border-r-2 border-blue-200">
   <h1 class="text-3xl font-bold text-gray-800 mb-6">Your Drafts</h1>
 
   {# flash messages (same pattern as post_form) #}
@@ -27,7 +27,7 @@
   {% if drafts and drafts|length %}
     <ul class="space-y-4">
       {% for d in drafts %}
-        <li class="rounded-lg p-5 shadow-md hover:shadow-lg transition border-blue-300 border-t-4 border-l-2">
+        <li class="rounded-lg p-5 border hover:shadow-md transition border-blue-300 border-t-4 border-l-2">
           <div class="flex items-start justify-between gap-4">
             <div>
               <div class="flex items-center gap-2">
@@ -94,7 +94,7 @@
       {% endfor %}
     </ul>
   {% else %}
-    <div class="rounded-lg p-5 shadow-md hover:shadow-lg transition border-blue-300 border-t-4 border-l-2">
+    <div class="rounded-lg p-5 border hover:shadow-md transition border-blue-300 border-t-4 border-l-2">
       <p class="text-gray-700 mb-4">You don’t have any drafts right now.</p>
       <a href="{{ url_for('blog.create_post') }}"
          class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">

@@ -21,7 +21,7 @@ h1, h2, h3, h4 {
 .marquee-track {
   display: inline-block;
   white-space: nowrap;
-  animation: marquee-loop 50s linear infinite;
+  animation: marquee-loop 70s linear infinite;
 }
 
 .marquee-track .tag:hover {
@@ -34,7 +34,6 @@ h1, h2, h3, h4 {
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
-/* If you’re not loading Tailwind for these, define both directions */
 .bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
 .bg-gradient-to-l { background-image: linear-gradient(to left,  var(--tw-gradient-stops)); }
 
@@ -53,7 +52,7 @@ h1, h2, h3, h4 {
 }
 
 .bg-offwhite {
-  background-color: #f1f6f9;
+  background-color: #F9FBFF;
 }
 
 .bg-almostwhite {
@@ -61,7 +60,7 @@ h1, h2, h3, h4 {
 }
 
 .bg-bluish {
-  background-color: #f6fbff;
+  background-color: #F9FBFF;
 }
 
 .bg-warmwhite {
@@ -331,7 +330,7 @@ blockquote footer {
   color: var(--fg);
   border-left: 0;
   border-radius: 0 var(--r) var(--r) 0;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   text-decoration: none;
   vertical-align: middle;
@@ -573,7 +572,6 @@ a:hover .preview-hero.clickable {
   --title-lh: 1.25;
   margin: 0;
   font-weight: 700;
-  color: #1e3a8a;             /* blue-800 */
   line-height: var(--title-lh);
 
   display: -webkit-box;
@@ -629,9 +627,24 @@ a:hover .preview-hero.clickable {
   border-top: 1px solid #f3f4f6;
 }
 
-/* Optional: make header section stand out (safe complement to blue) */
-section.bg-bluish {
-  /* Use a warm off-white to break the blue-on-blue look */
-  background-color: #ebf8ff;  /* soft, readable with dark text */
-  border-top-color: #cfe3ff;  /* keep the blue accent */
+/* Collapsible Active Discussions Section */
+#discussions-content {
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+#discussions-toggle {
+  transition: all 0.2s ease-in-out;
+}
+
+#discussions-toggle:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+#discussions-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+#discussions-toggle-icon {
+  transition: transform 0.3s ease-in-out;
 }

@@ -28,18 +28,18 @@
             {% endif %}
         {% endfor %}
     {% endfor %}
-    <div class="relative overflow-hidden whitespace-nowrap py-2 border-y border-gray-200 mb-2">
+    <div class="relative overflow-hidden whitespace-nowrap py-2 border-y border-gray-200 mb-3">
         <div class="marquee-track inline-block">
             {% for tag in all_tags %}
                 <p
-                class="italic tag mx-4 inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded mr-4"
+                class="italic tag mx-4 inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded mr-4"
                 style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
                     {{ tag.name }}
                 </p>
             {% endfor %}
             {% for tag in all_tags %}
                 <p
-                class="italic tag mx-4 inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded mr-4"
+                class="italic tag mx-4 inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded mr-4"
                 style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
                     {{ tag.name }}
                 </p>
@@ -51,33 +51,39 @@
 
     <!-- Active Discussion Threads Section -->
     {% if discussion_threads %}
-    <section class="bg-bluish p-6 rounded-lg shadow-md border-t-4 border-blue-300 mb-6 pb-1">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center">
-            Active Discussion Threads
+    <section class="bg-bluish p-6 rounded-lg border border-t-4 border-r-2 mb-6 pb-1 border-blue-200">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center justify-start">
+            <button id="discussions-toggle" class="text-blue-600 hover:text-blue-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md p-1 mr-2">
+                <svg id="discussions-toggle-icon" class="w-6 h-6 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <span>Active Discussions</span>
         </h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 discussion-threads-grid">
+        <div id="discussions-content" class="discussion-threads-grid transition-all duration-300 ease-in-out overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             {% for thread in discussion_threads %}
-            <div class="bg-warmwhite p-4 rounded-lg shadow-md border-l-2 border-t-4 border-blue-300 hover:shadow-lg transition-all duration-200 hover:border-blue-400 discussion-thread-card">
+            <div class="bg-warmwhite p-4 rounded-lg border border-l-2 border-t-4 border-blue-300 hover:shadow-md transition-all duration-200 hover:border-blue-400 discussion-thread-card">
                 <!-- Main post header -->
                 <div class="discussion-thread-card">
                     <!-- 1) TITLE -->
-                    <h3 class="thread-title">
-                      <a href="{{ url_for('blog.view_post', slug=thread.main_post.slug) }}">
+                    <h3 class="thread-title text-blue-700 hover:text-blue-900">
+                      <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.view_post', slug=thread.main_post.slug) }}">
                         {{ thread.main_post.title }}
                       </a>
                     </h3>
                   
                     <!-- 2) META -->
                     <div class="thread-meta">
-                      <span class="font-medium">
+                      <span class="font-medium text-gray-700">
                         By <span class="badge">{{ thread.main_post.author.role_icon }}</span>
                         <a class="text-blue-700 hover:text-blue-900"
                            href="{{ url_for('blog.user_posts', username=thread.main_post.author.username) }}">
                           {{thread.main_post.author.username}}
                         </a>
                       </span>
-                      <span>{{ thread.main_post.timestamp.strftime('%b %d') }}</span>
+                      <span class="text-gray-700">{{ thread.main_post.timestamp.strftime('%b %d') }}</span>
                     </div>
                   
                     <!-- 3) BODY (everything variable goes here) -->
@@ -87,11 +93,11 @@
                         <div class="flex items-center justify-between text-sm text-gray-500">
                           <div class="flex items-center">
                             <span class="w-2 h-2 bg-blue-400 rounded-full mr-1"></span>
-                            <span>{{ thread.connection_count }} connection{{ "s" if thread.connection_count != 1 }}</span>
+                            <span class="text-gray-700">{{ thread.connection_count }} connection{{ "s" if thread.connection_count != 1 }}</span>
                           </div>
                           <div class="flex items-center">
                             <span class="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
-                            <span>{{ thread.total_engagement }} response{{ "s" if thread.total_engagement != 1 }}</span>
+                            <span class="text-gray-700">{{ thread.total_engagement }} response{{ "s" if thread.total_engagement != 1 }}</span>
                           </div>
                         </div>
                       </div>
@@ -99,10 +105,10 @@
                       <!-- splinter (optional) -->
                       {% if thread.splinter %}
                       <div class="thread-splinter p-2 bg-red-50 border border-red-200 rounded-md">
-                        <div class="flex items-center text-xs text-red-700">
+                        <div class="flex items-center text-sm text-red-700">
                           <span class="mr-1">⚡</span><span class="font-medium">Active Challenge</span>
                         </div>
-                        <p class="text-xs text-red-600 mt-1">
+                        <p class="text-sm text-red-600 mt-1">
                           {{ thread.splinter.title[:50] }}{% if thread.splinter.title|length > 50 %}...{% endif %}
                         </p>
                       </div>
@@ -112,12 +118,12 @@
                   
                       <!-- related -->
                       <div class="thread-related">
-                        <p class="text-xs font-medium text-gray-700 uppercase tracking-wide mb-2 mt-2">
+                        <p class="text-sm font-medium text-gray-700 uppercase tracking-wide mb-2 mt-2">
                           Connected Posts:
                         </p>
                         <div class="space-y-2 flex-grow">
                           {% for related in thread.related_posts[:2] %}  <!-- cap to 2 for consistency -->
-                          <div class="flex items-center text-xs group">
+                          <div class="flex items-center text-sm group">
                             <div class="flex items-center mr-2 flex-shrink-0">
                               <span class="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1"></span>
                               <span class="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1"></span>
@@ -132,7 +138,7 @@
                         </div>
                   
                         {% if thread.thread_depth > 2 %}
-                        <div class="text-xs text-gray-500 mb-2 pl-4">
+                        <div class="text-sm text-gray-700 mb-2 pl-4">
                           … and {{ thread.thread_depth - 2 }} more
                         </div>
                         {% endif %}
@@ -150,6 +156,7 @@
                   </div>
             </div>
             {% endfor %}
+            </div>
         </div>
     </section>
     {% endif %}
@@ -173,7 +180,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- User Submissions (left column, full height) -->
-        <section class="bg-bluish p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200 md:col-span-2">
+        <section class="bg-bluish p-6 rounded-lg border border-t-4 border-r-2 border-blue-200 md:col-span-2">
             <h2 class="flex justify-between items-center text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
                 User Submissions
                 <a href="{{ url_for('blog.all_posts') }}"
@@ -185,12 +192,12 @@
                 <ul class="space-y-6">
                     {% for post_item in posts %}
                         {% if post_item.post.author.role != "admin" %}
-                            <li class="pb-4 last:border-b-0 last:pb-0 bg-warmwhite rounded-lg shadow-md border-l-2 border-t-4 border-blue-300 hover:border-blue-400 hover:shadow-lg transition-all duration-200 px-4 py-4">
+                            <li class="pb-4 last:border-b-0 last:pb-0 bg-warmwhite rounded-lg border border-l-2 border-t-4 border-blue-300 hover:border-blue-400 hover:shadow-md transition-all duration-200 px-4 py-4">
                                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1">
                                     <!-- Title + badge together -->
                                     <h3 class="m-0 pr-2 text-xl font-medium text-blue-700">
                                         {% if post_item.post.is_splinter %}
-                                            <span class="align-middle text-xs px-2 py-0.5 bg-red-100 text-red-700 font-semibold rounded-full uppercase tracking-wide">Splinter</span>
+                                            <span class="align-middle text-sm px-2 py-0.5 bg-red-100 text-red-700 font-semibold rounded-full uppercase tracking-wide">Splinter</span>
                                         {% endif %}
                                         <a class="align-middle hover:text-blue-900" href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}">
                                             {{ post_item.post.title }}
@@ -214,7 +221,7 @@
                                             </a>
                                         </div>
                                     </div>
-                                <small class="text-gray-500 text-sm block mb-2">
+                                <small class="text-gray-700 text-sm block mb-2">
                                     By <span class="font-medium"><span class="badge">{{ post_item.post.author.role_icon }}</span><a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=post_item.post.author.username) }}">{{ post_item.post.author.username }}</a></span> on {{ post_item.post.display_date | safe }}
                                 </small>
                                 {% set first_img = post_item.post.content | first_img_abs %}
@@ -227,10 +234,10 @@
                                 {% endif %}
                                 <div class="post-content">{{ post_item.post.content | md | striptags | truncate(200, True, '...') }} <a class="align-middle text-blue-800 hover:text-blue-900 italic text-sm" href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}">{{ "(Read more)" if post_item.post.content|length > 200  else "" }}</a></div>
                                 {% if post_item.post.tags.count() %}
-                                    <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-400"><em class="mr-4">Tags: </em>
+                                    <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-700"><em class="mr-4">tags: </em>
                                         {% for tag in post_item["tags"] %}
                                             <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
-                                               class="tag inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded"
+                                               class="tag inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded"
                                                style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
                                             {{ tag.name }}
                                             </a>
@@ -276,12 +283,12 @@
             {% endif %}
 
             <!-- Site Bulletins -->
-            <section class="bg-bluish mb-6 p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200">
+            <section class="bg-bluish mb-6 p-6 rounded-lg border border-t-4 border-r-2 border-blue-200">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Site Bulletins</h2>
                 {% if bulletins %}
                     <ul class="space-y-4">
                         {% for bulletin in bulletins %}
-                            <li class="pb-4 last:border-b-0 last:pb-0 bg-white rounded-lg shadow-sm border-t-4 border-l-2 border-gray-400 hover:border-blue-300 hover:shadow-md transition-all duration-200 px-4 py-4">
+                            <li class="pb-4 last:border-b-0 last:pb-0 bg-white rounded-lg shadow-sm border border-t-4 border-l-2 border-gray-400 hover:border-blue-300 hover:shadow-md transition-all duration-200 px-4 py-4">
                                 <div class="flex flex-wrap justify-between items-center gap-y-2">
                                     <h3 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1 sm:mb-0 pr-2">
                                         <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}">{{ bulletin.post.title }}</a>
@@ -303,7 +310,7 @@
                                         </a>
                                     </div>
                                 </div>
-                                <small class="text-gray-500 text-sm block mb-2">
+                                <small class="text-gray-700 text-sm block mb-2">
                                     By <span class="font-medium">{{ bulletin.post.author.role_icon }}<a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=bulletin.post.author.username) }}">{{ bulletin.post.author.username }}</a></span> on {{ bulletin.post.display_date | safe }}
                                 </small>
                                 {% set first_img = bulletin.post.content | first_img_abs %}
@@ -324,7 +331,7 @@
             </section>
 
             <!-- Events -->
-            <section class="bg-bluish mb-6 p-6 rounded-lg shadow-md border-t-4 border-r-2 border-blue-200">
+            <section class="bg-bluish mb-6 p-6 rounded-lg border border-t-4 border-r-2 border-blue-200">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Upcoming Boston Events</h2>
                 {% if events %}
                     <ul class="space-y-4">

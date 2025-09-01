@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showCopiedFeedback(button);
                     return;
                 } catch (err) {
-                    console.error("Clipboard API failed:", err);
+                    console.error("Comment clipboard API failed:", err);
                 }
             }
 
@@ -116,11 +116,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.removeChild(textarea);
                 showCopiedFeedback(button);
             } catch (err) {
-                console.error("Fallback comment copy failed:", err);
-                alert("Unable to share. Please copy the comment URL manually.");
+                console.error("Comment fallback copy failed:", err);
+                alert("Unable to share comment. Please copy the URL manually.");
             }
         });
     });
+
+    // Active Discussions collapsible section
+    const discussionsToggle = document.getElementById('discussions-toggle');
+    const discussionsContent = document.getElementById('discussions-content');
+    const discussionsToggleIcon = document.getElementById('discussions-toggle-icon');
+    
+    if (discussionsToggle && discussionsContent && discussionsToggleIcon) {
+        // Check if user has a saved preference, default to collapsed if no preference
+        const isCollapsed = localStorage.getItem('discussions-collapsed') !== 'false'; // Default to true (collapsed)
+        
+        // Set initial state
+        if (isCollapsed) {
+            discussionsContent.style.maxHeight = '0px';
+            discussionsContent.style.opacity = '0';
+            discussionsToggleIcon.style.transform = 'rotate(-90deg)';
+        } else {
+            discussionsContent.style.maxHeight = discussionsContent.scrollHeight + 'px';
+            discussionsContent.style.opacity = '1';
+        }
+        
+        // Add click event listener
+        discussionsToggle.addEventListener('click', () => {
+            const isCurrentlyCollapsed = discussionsContent.style.maxHeight === '0px';
+            
+            if (isCurrentlyCollapsed) {
+                // Expand
+                discussionsContent.style.maxHeight = discussionsContent.scrollHeight + 'px';
+                discussionsContent.style.opacity = '1';
+                discussionsToggleIcon.style.transform = 'rotate(0deg)';
+                localStorage.setItem('discussions-collapsed', 'false');
+            } else {
+                // Collapse
+                discussionsContent.style.maxHeight = '0px';
+                discussionsContent.style.opacity = '0';
+                discussionsToggleIcon.style.transform = 'rotate(-90deg)';
+                localStorage.setItem('discussions-collapsed', 'true');
+            }
+        });
+        
+        // Handle window resize to recalculate maxHeight
+        window.addEventListener('resize', () => {
+            if (discussionsContent.style.maxHeight !== '0px') {
+                discussionsContent.style.maxHeight = discussionsContent.scrollHeight + 'px';
+            }
+        });
+    }
 
     function showCopiedFeedback(buttonElement) {
         const originalHTML = buttonElement.innerHTML;

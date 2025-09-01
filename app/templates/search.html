@@ -64,11 +64,11 @@
         {% if posts %}
           <ul class="space-y-6 max-w-2xl lg:max-w-none mx-auto">
             {% for post in posts %}
-              <li class="pb-4 last:border-b-0 last:pb-0 bg-white rounded-lg shadow-sm border-l-2 border-t-4 border-blue-300 hover:border-blue-400 hover:shadow-md transition-all duration-200 px-4 py-4">
+              <li class="pb-4 last:border-b-0 last:pb-0 bg-white rounded-lg border border-l-2 border-t-4 border-blue-300 hover:border-blue-400 hover:shadow-md transition-all duration-200 px-4 py-4">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2">
                   <h4 class="m-0 pr-2 text-xl font-medium text-blue-700">
                     {% if post.is_splinter %}
-                        <span class="align-middle text-xs px-2 py-0.5 bg-red-100 text-red-700 font-semibold rounded-full uppercase tracking-wide">Splinter</span>
+                        <span class="align-middle text-sm px-2 py-0.5 bg-red-100 text-red-700 font-semibold rounded-full uppercase tracking-wide">Splinter</span>
                     {% endif %}
                     <a class="align-middle hover:text-blue-900" href="{{ url_for('blog.view_post', slug=post.slug) }}">
                         {{ post.title }}
@@ -91,7 +91,7 @@
                         </a>
                   </div>
                 </div>
-                <small class="text-gray-500 text-sm">
+                <small class="text-gray-700 text-sm">
                   By <span class="font-medium">{{ post.author.role_icon }}<a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=post.author.username) }}">{{ post.author.username }}</a></span>
                   on {{ post.display_date | safe }}
                 </small>
@@ -109,10 +109,10 @@
                 </div>
 
                 {% if post.tags.count() %}
-                  <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-400"><em class="mr-4">Tags: </em>
+                  <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-700"><em class="mr-4">tags: </em>
                     {% for tag in post.tags %}
                       <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
-                         class="tag inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded"
+                         class="tag inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded"
                          style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
                         {{ tag.name }}
                       </a>
@@ -143,7 +143,7 @@
                 </li>
               {% else %}
                 <li>
-                  <span class="px-4 py-2 border border-gray-200 text-gray-400 rounded-md cursor-not-allowed">Prev</span>
+                  <span class="px-4 py-2 border border-gray-200 text-gray-700 rounded-md cursor-not-allowed">Prev</span>
                 </li>
               {% endif %}
 
@@ -158,7 +158,7 @@
                     </li>
                   {% endif %}
                 {% else %}
-                  <li><span class="px-4 py-2 border border-gray-200 text-gray-500 rounded-md cursor-not-allowed">...</span></li>
+                  <li><span class="px-4 py-2 border border-gray-200 text-gray-700 rounded-md cursor-not-allowed">...</span></li>
                 {% endif %}
               {% endfor %}
 
@@ -170,7 +170,7 @@
                   </a>
                 </li>
               {% else %}
-                <li><span class="px-4 py-2 border border-gray-200 text-gray-400 rounded-md cursor-not-allowed">Next</span></li>
+                <li><span class="px-4 py-2 border border-gray-200 text-gray-700 rounded-md cursor-not-allowed">Next</span></li>
               {% endif %}
             </ul>
           </nav>
@@ -210,7 +210,7 @@
         </section>
 
         <section id="recent-comments">
-          <div class="bg-white rounded-lg shadow p-5 border-t-4 border-r-2 border-blue-300 max-w-2xl mx-auto">
+          <div class="bg-white rounded-lg border p-5 border-t-4 border-r-2 border-blue-300 max-w-2xl mx-auto">
             <h3 class="text-2xl font-semibold text-blue-800 mb-4 border-b pb-2">Recent Comments</h3>
             {% if recent_comments %}
               <ul class="space-y-4">
@@ -221,7 +221,7 @@
                     {% else %}
                       {{ c.guest_name }}
                     {% endif %}
-                    <span class="text-gray-500">on</span>
+                    <span class="text-gray-700">on</span>
                     <a class="font-medium text-blue-700 hover:text-blue-900" href="{{ url_for('blog.view_post', slug=c.post.slug) }}#c{{ c.id }}">{{ c.post.title }}</a>
                     <div class="text-gray-600 line-clamp-2">{{ c.content[:120] | md | striptags }}{% if c.content|length > 120 %}...{% endif %}</div>
                   </li>
@@ -234,13 +234,13 @@
         </section>
 
         <section id="trending-tags">
-          <div class="bg-white rounded-lg shadow p-5 border-t-4 border-r-2 border-blue-300 max-w-2xl mx-auto">
+          <div class="bg-white rounded-lg border p-5 border-t-4 border-r-2 border-blue-300 max-w-2xl mx-auto">
             <h3 class="text-2xl font-semibold text-blue-800 mb-4 border-b pb-2">Trending Tags</h3>
             {% if trending_tags %}
               <div class="flex flex-wrap gap-2">
                 {% for tag, count in trending_tags %}
                   <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
-                     class="tag inline-flex items-center px-2.5 py-1 text-xs font-medium rounded"
+                     class="tag inline-flex items-center px-2.5 py-1 text-sm font-medium rounded"
                      style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
                     {{ tag.name }}<span class="ml-1 opacity-70">({{ count }})</span>
                   </a>
