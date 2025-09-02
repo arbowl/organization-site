@@ -90,7 +90,6 @@
 {# Reply form, on its own line #}
 {% if current_user.is_authenticated and not comment.is_removed %}
     <form method="post"
-          action="{{ url_for('bills.reply_to_comment', bill_slug=comment.bill.slug, comment_id=comment.id) }}"
           class="reply-form mt-2 w-full"
           id="reply-{{ comment.id }}"
           style="display: none;">

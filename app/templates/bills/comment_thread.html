@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Discussion Thread{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto mb-4 bg-white p-6 rounded-lg border hover:shadow-lg transition-shadow duration-300 border-t-4 border-r-2 border-blue-300">
+    <div class="max-w-4xl mx-auto mt-8">
+      <article class="p-4 bg-white rounded-lg border mb-6">
+        <p class="text-sm text-gray-500">Continuing discussion on comment by 
+          {% if root.author %}
+            <strong>{{ root.author.username }}</strong>
+          {% else %}
+            <strong>{{ root.guest_name }}</strong>
+          {% endif %}
+          at {{ root.timestamp | format_date_time }}
+        </p>
+        <div class="mt-2 text-gray-700">
+          {{ root.content | md }}
+        </div>
+      </article>
+
+      <ul class="comments space-y-6">
+        {% for reply in root.ordered_replies %}
+          {% set comment = reply %}
+          {% set depth = 0 %}
+          {% include 'includes/bill_comment.html' %}
+        {% endfor %}
+      </ul>
+
+      <div class="max-w-4x1 mx-auto mt-8 text-center">
+        <p class="mb-4 mx-auto">
+          <a href="{{ url_for('bills.view_bill', bill_slug=bill.slug) }}"
+            class="text-blue-600 hover:underline mx-auto">
+            &larr; Back to bill
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+  <br>
+  <br>
+  <br>
+{% endblock %}
