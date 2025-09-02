@@ -29,7 +29,7 @@ h1, h2, h3, h4 {
 }
 
 .from-offwhite {
-  --tw-gradient-from: #f1f6f9;                                   /* off-white */
+  --tw-gradient-from: #f9fbff;                                   /* off-white */
   --tw-gradient-to: transparent;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
