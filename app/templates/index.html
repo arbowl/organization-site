@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros/post_cards.html' import post_card, post_card_list %}
 {% block title %}Massachusetts Commentary & Activism | Dismantl{% endblock %}
 {% block content %}
     <div class="text-center mb-2">
@@ -285,73 +286,8 @@
                 </a>
             </h2>
             {% if posts %}
-                <ul class="space-y-6">
-                    {% for post_item in posts %}
-                        {% if post_item.post.author.role != "admin" %}
-                            <li class="pb-4 last:border-b-0 last:pb-0 bg-warmwhite rounded-lg border border-l-2 border-t-4 border-blue-300 hover:border-blue-400 hover:shadow-md transition-all duration-200 px-4 py-4">
-                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1">
-                                    <!-- Title + badge together -->
-                                    <h3 class="m-0 pr-2 text-xl font-medium text-blue-700">
-                                        {% if post_item.post.is_splinter %}
-                                            <span class="align-middle text-sm px-2 py-0.5 bg-red-100 text-red-700 font-semibold rounded-full uppercase tracking-wide">Splinter</span>
-                                        {% endif %}
-                                        <a class="align-middle hover:text-blue-900" href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}">
-                                            {{ post_item.post.title }}
-                                        </a>
-                                    </h3>
-                                    <!-- Right-side counts -->
-                                        <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
-                                            <!-- Like button -->
-                                            <form method="post" action="{{ url_for('blog.toggle_post_like', post_id=post_item.post.id) }}">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10" aria-label="Like this post">
-                                                    <span class="text-sm mr-2">➕</span>
-                                                    <span class="font-semibold">{{ post_item.likes }}</span>
-                                                </button>
-                                            </form>
-                                            <!-- Comment link -->
-                                            <a href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}#comment-form"
-                                            class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10">
-                                                <span class="text-sm mr-2">💬</span>
-                                                <span class="font-semibold">{{ post_item.comments }}</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                                                 <small class="text-gray-700 text-sm block mb-2">
-                                     By <span class="font-medium"><span class="badge">{{ post_item.post.author.role_icon }}</span><a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=post_item.post.author.username) }}">{{ post_item.post.author.username }}</a></span> on {{ post_item.post.timestamp | format_date }}
-                                 </small>
-                                {% set first_img = post_item.post.content | first_img_abs %}
-                                {% if first_img %}
-                                <a href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}" class="block">
-                                    <div class="preview-hero clickable mx-1 mt-4 mb-3 rounded-t-md"
-                                        style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
-                                    </div>
-                                </a>
-                                {% endif %}
-                                <div class="post-content">{{ post_item.post.content | md | striptags | truncate(200, True, '...') }} <a class="align-middle text-blue-800 hover:text-blue-900 italic text-sm" href="{{ url_for('blog.view_post', slug=post_item.post.slug) }}">{{ "(Read more)" if post_item.post.content|length > 200  else "" }}</a></div>
-                                {% if post_item.post.tags.count() %}
-                                    <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-700"><em class="mr-4">tags: </em>
-                                        {% for tag in post_item["tags"] %}
-                                            <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
-                                               class="tag inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded"
-                                               style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
-                                            {{ tag.name }}
-                                            </a>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <div class="mt-3">
-                                    <article-spectrum
-                                        class="compact"
-                                        roots="{{ post_item.post.root_count }}"
-                                        branches="{{ post_item.post.branch_count }}"
-                                        data-title="{{ post_item.post.root_count }} roots · {{ post_item.post.branch_count }} branches">
-                                    </article-spectrum>
-                                </div>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
+                {% set user_posts = posts | selectattr('post.author.role', 'ne', 'admin') | list %}
+                {{ post_card_list(user_posts, card_classes="bg-warmwhite") }}
                 <p class="text-center mt-6">
                     <a href="{{ url_for('blog.all_posts') }}"
                     class="inline-flex items-center text-blue-600 hover:text-blue-800 text-lg font-medium transition duration-300 ease-in-out">
@@ -382,45 +318,7 @@
             <section class="bg-bluish mb-6 p-6 rounded-lg border border-t-4 border-r-2 border-blue-200">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Site Bulletins</h2>
                 {% if bulletins %}
-                    <ul class="space-y-4">
-                        {% for bulletin in bulletins %}
-                            <li class="pb-4 last:border-b-0 last:pb-0 bg-white rounded-lg shadow-sm border border-t-4 border-l-2 border-gray-400 hover:border-blue-300 hover:shadow-md transition-all duration-200 px-4 py-4">
-                                <div class="flex flex-wrap justify-between items-center gap-y-2">
-                                    <h3 class="text-xl font-medium text-blue-700 hover:text-blue-900 mb-1 sm:mb-0 pr-2">
-                                        <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}">{{ bulletin.post.title }}</a>
-                                    </h3>
-                                    <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
-                                        <!-- Like button -->
-                                        <form method="post" action="{{ url_for('blog.toggle_post_like', post_id=bulletin.post.id) }}">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10" aria-label="Like this post">
-                                                <span class="text-sm mr-2">➕</span>
-                                                <span class="font-semibold">{{ bulletin.likes }}</span>
-                                            </button>
-                                        </form>
-                                        <!-- Comment link -->
-                                        <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}#comment-form"
-                                        class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10">
-                                            <span class="text-sm mr-2">💬</span>
-                                            <span class="font-semibold">{{ bulletin.comments }}</span>
-                                        </a>
-                                    </div>
-                                </div>
-                                                                 <small class="text-gray-700 text-sm block mb-2">
-                                     By <span class="font-medium">{{ bulletin.post.author.role_icon }}<a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=bulletin.post.author.username) }}">{{ bulletin.post.author.username }}</a></span> on {{ bulletin.post.timestamp | format_date }}
-                                 </small>
-                                {% set first_img = bulletin.post.content | first_img_abs %}
-                                {% if first_img %}
-                                <a href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}" class="block">
-                                    <div class="preview-hero clickable mx-1 mt-4 mb-3 rounded-t-md"
-                                        style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
-                                    </div>
-                                </a>
-                                {% endif %}
-                                <div class="post-content">{{ bulletin.post.content | md | striptags | truncate(200, True, '...') }} <a class="align-middle text-blue-800 hover:text-blue-900 italic text-sm" href="{{ url_for('blog.view_post', slug=bulletin.post.slug) }}">{{ "(Read more)" if bulletin.post.content|length > 200  else "" }}</a></div>
-                            </li>
-                        {% endfor %}
-                    </ul>
+                    {{ post_card_list(bulletins, card_classes="bg-white shadow-sm border border-t-4 border-l-2 border-gray-400 hover:border-blue-300", show_tags=False, show_spectrum=False) }}
                 {% else %}
                     <p class="text-gray-600 italic">No bulletins yet. Check back soon!</p>
                 {% endif %}

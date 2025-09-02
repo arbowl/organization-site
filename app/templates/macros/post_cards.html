@@ -1,0 +1,104 @@
+{% macro post_card(post_item, show_author=True, show_meta=True, show_content=True, show_tags=True, show_spectrum=True, card_classes="") %}
+  {% set post = post_item.post if post_item.post else post_item %}
+  {% set likes = post_item.likes if post_item.likes is defined else post.likes.count() %}
+  {% set comments = post_item.comments if post_item.comments is defined else post.comments.count() %}
+  
+  <li class="pb-4 last:border-b-0 last:pb-0 bg-white rounded-lg border border-l-2 border-t-4 border-blue-300 hover:border-blue-400 hover:shadow-md transition-all duration-200 px-4 py-4 {{ card_classes }}">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2">
+      <h4 class="m-0 pr-2 text-xl font-medium text-blue-700">
+        {% if post.is_splinter %}
+          <span class="align-middle text-sm px-2 py-0.5 bg-red-100 text-red-700 font-semibold rounded-full uppercase tracking-wide">Splinter</span>
+        {% endif %}
+        <a class="align-middle hover:text-blue-900" href="{{ url_for('blog.view_post', slug=post.slug) }}">
+          {{ post.title }}
+        </a>
+      </h4>
+      <div class="flex items-center space-x-2 mt-1 sm:mt-0 flex-shrink-0">
+        <!-- Like button -->
+        <form method="post" action="{{ url_for('blog.toggle_post_like', post_id=post.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10" aria-label="Like this post">
+            <span class="text-sm mr-2">➕</span>
+            <span class="font-semibold">{{ likes }}</span>
+          </button>
+        </form>
+        <!-- Comment link -->
+        <a href="{{ url_for('blog.view_post', slug=post.slug) }}#comment-form"
+        class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200 transition relative z-10">
+          <span class="text-sm mr-2">💬</span>
+          <span class="font-semibold">{{ comments }}</span>
+        </a>
+      </div>
+    </div>
+    
+    {% if show_meta %}
+      <small class="text-gray-700 text-sm block mb-2">
+        {% if show_author %}
+          By <span class="font-medium">
+            <span class="badge">{{ post.author.role_icon }}</span>
+            <a class="text-blue-700 hover:text-blue-900" href="{{ url_for('blog.user_posts', username=post.author.username) }}">
+              {{ post.author.username }}
+            </a>
+          </span>
+        {% endif %}
+        {% if show_author and show_meta %} on {% endif %}
+        {% if show_meta %}
+          {% if post.display_date %}
+            {{ post.display_date | safe }}
+          {% else %}
+            {{ post.timestamp | format_date }}
+          {% endif %}
+        {% endif %}
+      </small>
+    {% endif %}
+    
+    {% if show_content %}
+      {% set first_img = post.content | first_img_abs %}
+      {% if first_img %}
+        <a href="{{ url_for('blog.view_post', slug=post.slug) }}" class="block">
+          <div class="preview-hero clickable mx-1 mt-4 mb-3 rounded-t-md"
+              style="--hero-url: url('{{ first_img }}'); --bg: #D9EAF5; height: 160px;">
+          </div>
+        </a>
+      {% endif %}
+      <div class="post-content mt-2">
+        {{ post.content | md | striptags | truncate(200, True, '...') }}
+        <a class="align-middle text-blue-800 hover:text-blue-900 italic text-sm" href="{{ url_for('blog.view_post', slug=post.slug) }}">
+          {{ "(Read more)" if post.content|length > 200 else "" }}
+        </a>
+      </div>
+    {% endif %}
+    
+    {% if show_tags and post.tags.count() %}
+      <div class="mt-4 flex flex-wrap gap-2 text-sm text-gray-700">
+        <em class="mr-4">tags: </em>
+        {% for tag in post.tags %}
+          <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+             class="tag inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded"
+             style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
+            {{ tag.name }}
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+    
+    {% if show_spectrum %}
+      <div class="mt-3">
+        <article-spectrum
+            class="compact"
+            roots="{{ post.root_count }}"
+            branches="{{ post.branch_count }}"
+            data-title="{{ post.root_count }} roots · {{ post.branch_count }} branches">
+        </article-spectrum>
+      </div>
+    {% endif %}
+  </li>
+{% endmacro %}
+
+{% macro post_card_list(posts, show_author=True, show_meta=True, show_content=True, show_tags=True, show_spectrum=True, card_classes="", list_classes="space-y-6") %}
+  <ul class="{{ list_classes }}">
+    {% for post_item in posts %}
+      {{ post_card(post_item, show_author, show_meta, show_content, show_tags, show_spectrum, card_classes) }}
+    {% endfor %}
+  </ul>
+{% endmacro %}

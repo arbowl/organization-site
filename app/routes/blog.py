@@ -40,16 +40,8 @@ MAIL_NOTIFICATION = getenv("MAIL_NOTIFICATIONS")
 @blog_bp.route("/")
 def index() -> str:
     """The landing page of the site"""
-    comment_count_subq = (
-        db.session.query(Comment.post_id, func.count(Comment.id).label("comment_count"))
-        .group_by(Comment.post_id)
-        .subquery()
-    )
-    like_count_subq = (
-        db.session.query(PostLike.post_id, func.count(PostLike.id).label("like_count"))
-        .group_by(PostLike.post_id)
-        .subquery()
-    )
+    comment_count_subq, like_count_subq = get_comment_like_subqueries()
+    
     post_data = (
         db.session.query(
             Post,
@@ -62,17 +54,14 @@ def index() -> str:
         .filter(Post.is_draft == False)
         .all()
     )
-    posts = [
-        {"post": p, "likes": like_count, "comments": comment_count}
-        for p, comment_count, like_count in post_data
-    ]
+    
+    posts = create_post_data_with_counts(post_data)
     bulletins = [
         {"post": p["post"], "likes": p["likes"], "comments": p["comments"]}
         for p in posts
         if p["post"].author.role == "admin"
     ]
     events = scrape_events()[:12]
-    attach_sorted_tags(posts, 16)
     
     # Get active discussion threads for the front page
     discussion_threads = get_active_discussion_threads()
@@ -94,17 +83,7 @@ def get_active_discussion_threads():
     """Find the most engaging discussion threads based on post connections"""
     try:
         # Use subqueries to get accurate counts (same pattern as index route)
-        comment_count_subq = (
-            db.session.query(Comment.post_id, func.count(Comment.id).label("comment_count"))
-            .group_by(Comment.post_id)
-            .subquery()
-        )
-        
-        like_count_subq = (
-            db.session.query(PostLike.post_id, func.count(PostLike.id).label("like_count"))
-            .group_by(PostLike.post_id)
-            .subquery()
-        )
+        comment_count_subq, like_count_subq = get_comment_like_subqueries()
         
         # Get posts with the most connections and accurate engagement counts
         thread_candidates = (
@@ -240,16 +219,9 @@ def all_posts() -> str:
     page = request.args.get("page", 1, type=int)
     raw_tags = (request.args.get("tags") or "").strip()
     tag_slugs = [slugify(t.strip()) for t in raw_tags.split(",") if t.strip()]
-    comment_count_subq = (
-        db.session.query(Comment.post_id, func.count(Comment.id).label("comment_count"))
-        .group_by(Comment.post_id)
-        .subquery()
-    )
-    like_count_subq = (
-        db.session.query(PostLike.post_id, func.count(PostLike.id).label("like_count"))
-        .group_by(PostLike.post_id)
-        .subquery()
-    )
+    
+    comment_count_subq, like_count_subq = get_comment_like_subqueries()
+    
     base = (
         db.session.query(
             Post,
@@ -266,13 +238,10 @@ def all_posts() -> str:
 
     base = base.order_by(Post.timestamp.desc())
     pagination = base.paginate(page=page, per_page=10, error_out=False)
-    entries = [
-        {"post": p, "comments": comment_count, "likes": like_count}
-        for p, comment_count, like_count in pagination.items
-    ]
+    entries = create_post_data_with_counts(pagination.items)
+    
     recent_comments = Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
-    for post in entries:
-        post["tags"] = sorted(post["post"].tags, key=lambda t: t.name.lower())
+    
     tag_counts = db.session.query(Tag).order_by(Tag.name).all()
     trending_tags = []
     for t in tag_counts:
@@ -283,6 +252,7 @@ def all_posts() -> str:
         trending_tags.append((t, cnt))
     trending_tags.sort(key=lambda x: x[1], reverse=True)
     trending_tags = trending_tags[:15]
+    
     return render_template(
         "all_posts.html",
         entries=entries,
@@ -657,24 +627,22 @@ def user_posts(username):
     posts_pagination = None
     comments_pagination = None
     if active_tab == "posts":
+        comment_count_subq, like_count_subq = get_comment_like_subqueries()
+        
         posts_pagination = (
             db.session.query(
                 Post,
-                func.count(Comment.id).label("comment_count"),
-                func.count(PostLike.id).label("like_count"),
+                func.coalesce(comment_count_subq.c.comment_count, 0),
+                func.coalesce(like_count_subq.c.like_count, 0),
             )
+            .outerjoin(comment_count_subq, Post.id == comment_count_subq.c.post_id)
+            .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
             .filter(Post.is_draft == False)
-            .outerjoin(Comment, Comment.post_id == Post.id)
-            .outerjoin(PostLike, PostLike.post_id == Post.id)
             .filter(Post.author_id == user.id)
-            .group_by(Post.id)
             .order_by(Post.timestamp.desc())
             .paginate(page=page_posts, per_page=10, error_out=False)
         )
-        posts_entries = [
-            {"post": p, "likes": like_count, "comments": comment_count}
-            for p, comment_count, like_count in posts_pagination.items
-        ]
+        posts_entries = create_post_data_with_counts(posts_pagination.items)
     elif active_tab == "comments":
         comments_pagination = (
             Comment.query.filter_by(author_id=user.id)
@@ -682,8 +650,7 @@ def user_posts(username):
             .paginate(page=page_comments, per_page=10, error_out=False)
         )
         comments_entries = comments_pagination.items
-    for post in posts_entries:
-        post["tags"] = sorted(post["post"].tags, key=lambda t: t.name.lower())
+    
     return render_template(
         "user_posts.html",
         user=user,
@@ -1301,6 +1268,41 @@ def get_or_create_tag(name: str) -> Tag:
     tag = Tag(name=name, slug=slug, color_hex=color_from_slug(slug))
     db.session.add(tag)
     return tag
+
+
+def create_post_data_with_counts(query_results):
+    """
+    Standardized function to convert query results into post data dictionaries.
+    Takes query results (list of tuples with Post, comment_count, like_count) 
+    and returns a list of dictionaries with 'post', 'likes', 'comments', and 'tags' keys.
+    """
+    entries = [
+        {"post": p, "likes": like_count, "comments": comment_count}
+        for p, comment_count, like_count in query_results
+    ]
+    
+    # Add sorted tags to each entry
+    for entry in entries:
+        entry["tags"] = sorted(entry["post"].tags, key=lambda t: t.name.lower())
+    
+    return entries
+
+
+def get_comment_like_subqueries():
+    """
+    Returns the standard comment and like count subqueries used across the app.
+    """
+    comment_count_subq = (
+        db.session.query(Comment.post_id, func.count(Comment.id).label("comment_count"))
+        .group_by(Comment.post_id)
+        .subquery()
+    )
+    like_count_subq = (
+        db.session.query(PostLike.post_id, func.count(PostLike.id).label("like_count"))
+        .group_by(PostLike.post_id)
+        .subquery()
+    )
+    return comment_count_subq, like_count_subq
 
 
 def attach_sorted_tags(entries, limit):
