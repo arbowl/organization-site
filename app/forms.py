@@ -13,7 +13,7 @@ from wtforms import (
     TextAreaField,
     HiddenField,
 )
-from wtforms.validators import DataRequired, Length, Email, ValidationError, Optional
+from wtforms.validators import DataRequired, Length, Email, ValidationError, Optional, URL
 
 from app.models import User, Post
 
@@ -147,3 +147,69 @@ class BillCommentForm(FlaskForm):
                 self.guest_name.errors.append("Name required for guest comments.")
                 return False
         return True
+
+
+class BioForm(FlaskForm):
+    """Form for editing user bio information"""
+    bio_text = TextAreaField(
+        "Bio", 
+        validators=[Optional(), Length(max=1000)],
+        render_kw={"placeholder": "Tell us about yourself... (Markdown supported)", "rows": 6}
+    )
+    location = StringField(
+        "Location", 
+        validators=[Optional(), Length(max=100)],
+        render_kw={"placeholder": "e.g., Boston, MA"}
+    )
+    website = StringField(
+        "Website", 
+        validators=[Optional(), Length(max=200), URL(message="Please enter a valid URL")],
+        render_kw={"placeholder": "https://yourwebsite.com"}
+    )
+    twitter = StringField(
+        "Twitter", 
+        validators=[Optional(), Length(max=50)],
+        render_kw={"placeholder": "@username"}
+    )
+    linkedin = StringField(
+        "LinkedIn", 
+        validators=[Optional(), Length(max=200), URL(message="Please enter a valid LinkedIn URL")],
+        render_kw={"placeholder": "https://linkedin.com/in/username"}
+    )
+    submit = SubmitField("Save Bio")
+
+    def validate_website(self, field):
+        if field.data and not field.data.startswith(('http://', 'https://')):
+            field.data = 'https://' + field.data
+
+    def validate_twitter(self, field):
+        if field.data:
+            # Clean up Twitter handle
+            handle = field.data.strip()
+            if handle.startswith('@'):
+                handle = handle[1:]
+            if handle and not handle.startswith('http'):
+                field.data = handle
+            elif handle.startswith('http'):
+                # Extract username from URL
+                import re
+                match = re.search(r'twitter\.com/([^/?]+)', handle)
+                if match:
+                    field.data = match.group(1)
+                else:
+                    raise ValidationError("Please enter a valid Twitter username or URL")
+
+    def validate_linkedin(self, field):
+        if field.data and not field.data.startswith(('http://', 'https://')):
+            field.data = 'https://' + field.data
+
+    def validate_bio_text(self, field):
+        if field.data:
+            # Check for potentially harmful content
+            bio_text = field.data.strip()
+            if len(bio_text) > 1000:
+                raise ValidationError("Bio text cannot exceed 1000 characters.")
+            
+            # Basic content validation
+            if bio_text.count('<script') > 0 or bio_text.count('javascript:') > 0:
+                raise ValidationError("Bio text contains potentially harmful content.")

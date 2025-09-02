@@ -36,6 +36,11 @@ class User(UserMixin, db.Model):
     newsletter = db.Column(db.Boolean, default=False)
     email_notifications = db.Column(db.Boolean, default=False)
     role = db.Column(db.String(20), nullable=False, default="user")
+    bio_text = db.Column(db.Text, nullable=True)
+    bio_html = db.Column(db.Text, nullable=True)
+    location = db.Column(db.String(100), nullable=True)
+    website = db.Column(db.String(200), nullable=True)
+    social_links = db.Column(db.JSON, nullable=True)
     posts = db.relationship("Post", backref="author", lazy="dynamic")
 
     @property
@@ -88,6 +93,35 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def update_bio(self, bio_text, location=None, website=None, social_links=None):
+        """Update user bio with content processing and HTML generation"""
+        self.bio_text = bio_text
+        self.location = location
+        self.website = website
+        self.social_links = social_links or {}
+        
+        # Process bio text to HTML with basic markdown support
+        if bio_text:
+            # Basic markdown processing
+            html = markdown(bio_text, extensions=['nl2br', 'fenced_code'])
+            # HTML sanitization using bleach for security
+            try:
+                import bleach
+                # Allow safe HTML tags and attributes
+                allowed_tags = ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre']
+                allowed_attributes = {
+                    'a': ['href', 'title'],
+                    'code': ['class'],
+                    'pre': ['class']
+                }
+                self.bio_html = bleach.clean(html, tags=allowed_tags, attributes=allowed_attributes, strip=True)
+            except ImportError:
+                # Fallback to basic HTML escaping if bleach is not available
+                from markupsafe import escape
+                self.bio_html = escape(html)
+        else:
+            self.bio_html = None
 
     def __repr__(self):
         return f"<User {self.username}>"
