@@ -653,6 +653,19 @@ def user_posts(username):
         )
         comments_entries = comments_pagination.items
     
+    # Create BioForm with available tags for the current user
+    from app.forms import BioForm
+    from app.models import Tag
+    
+    bio_form = None
+    if current_user.is_authenticated and current_user.username == user.username:
+        all_tags = Tag.query.order_by(Tag.name).all()
+        bio_form = BioForm()
+        bio_form.favorite_tags.choices = [(tag.id, tag.name) for tag in all_tags]
+        # Set current favorite tags
+        if user.favorite_tags:
+            bio_form.favorite_tags.data = user.favorite_tags
+    
     return render_template(
         "user_posts.html",
         user=user,
@@ -661,6 +674,7 @@ def user_posts(username):
         posts_pagination=posts_pagination,
         comments_entries=comments_entries,
         comments_pagination=comments_pagination,
+        bio_form=bio_form,
     )
 
 

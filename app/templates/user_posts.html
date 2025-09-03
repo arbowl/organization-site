@@ -75,7 +75,7 @@
 {% endif %}
 
 {# Bio Display Section - shown to all visitors #}
-{% if user.bio_text or user.location or user.website or user.social_links %}
+{% if user.bio_text or user.location or user.website or user.social_links or user.favorite_tags %}
 <div class="max-w-2xl mx-auto mb-6 bg-white p-6 rounded-lg border border-t-4 border-r-2 border-green-300">
   <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
     <span class="mr-2">👤</span>
@@ -106,6 +106,24 @@
       </div>
       {% endif %}
     </div>
+    
+    {% if user.favorite_tags %}
+    <div class="mt-4">
+      <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+        <span class="mr-1">🏷️</span>
+        Favorite Tags
+      </h3>
+      <div class="flex flex-wrap gap-2">
+        {% for tag in user.get_favorite_tags() %}
+          <a href="{{ url_for('blog.tag_view', slug=tag.slug) }}"
+             class="tag inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded"
+             style="--bg: {{ tag.color_hex }}1A; --fg: {{ tag.color_hex }};">
+            {{ tag.name }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endif %}
@@ -168,6 +186,25 @@
         </div>
       </div>
 
+      <div>
+        <label for="favorite_tags" class="block text-sm font-medium text-gray-700 mb-2">Favorite Tags (up to 3)</label>
+        <select 
+          name="favorite_tags" 
+          id="favorite_tags" 
+          multiple
+          size="8"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          {% if bio_form %}
+            {% for value, label in bio_form.favorite_tags.choices %}
+              <option value="{{ value }}" {% if value in (bio_form.favorite_tags.data or []) %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          {% endif %}
+        </select>
+        <p class="text-xs text-gray-500 mt-1">Hold Ctrl (or Cmd on Mac) to select multiple tags.</p>
+      </div>
 
     </div>
 

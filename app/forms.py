@@ -12,6 +12,7 @@ from wtforms import (
     SubmitField,
     TextAreaField,
     HiddenField,
+    SelectMultipleField,
 )
 from wtforms.validators import DataRequired, Length, Email, ValidationError, Optional, URL
 
@@ -166,6 +167,12 @@ class BioForm(FlaskForm):
         validators=[Optional(), Length(max=200), URL(message="Please enter a valid URL")],
         render_kw={"placeholder": "https://yourwebsite.com"}
     )
+    favorite_tags = SelectMultipleField(
+        "Favorite Tags (up to 3)",
+        validators=[Optional()],
+        coerce=int,
+        render_kw={"size": 10}
+    )
     submit = SubmitField("Save Bio")
 
     def validate_website(self, field):
@@ -182,6 +189,10 @@ class BioForm(FlaskForm):
             # Basic content validation
             if bio_text.count('<script') > 0 or bio_text.count('javascript:') > 0:
                 raise ValidationError("Bio text contains potentially harmful content.")
+
+    def validate_favorite_tags(self, field):
+        if field.data and len(field.data) > 3:
+            raise ValidationError("You can select at most 3 favorite tags.")
 
 
 class NewsletterForm(FlaskForm):

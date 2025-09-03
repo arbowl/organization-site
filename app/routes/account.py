@@ -5,7 +5,7 @@ from os import getenv
 
 from app import db
 from app.forms import BioForm
-from app.models import User
+from app.models import User, Tag
 
 account_bp: Blueprint = Blueprint("account", __name__)
 
@@ -23,14 +23,19 @@ def update_preferences():
 @account_bp.route("/account/update_bio", methods=["POST"])
 @login_required
 def update_bio():
+    # Get all available tags for the form choices
+    all_tags = Tag.query.order_by(Tag.name).all()
     form = BioForm()
+    form.favorite_tags.choices = [(tag.id, tag.name) for tag in all_tags]
+    
     if form.validate_on_submit():
         # Update bio using the model method (no social links)
         current_user.update_bio(
             bio_text=form.bio_text.data,
             location=form.location.data,
             website=form.website.data,
-            social_links={}
+            social_links={},
+            favorite_tags=form.favorite_tags.data
         )
         
         db.session.commit()

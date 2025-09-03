@@ -41,6 +41,7 @@ class User(UserMixin, db.Model):
     location = db.Column(db.String(100), nullable=True)
     website = db.Column(db.String(200), nullable=True)
     social_links = db.Column(db.JSON, nullable=True)
+    favorite_tags = db.Column(db.JSON, nullable=True)  # Store array of tag IDs
     posts = db.relationship("Post", backref="author", lazy="dynamic")
 
     @property
@@ -94,12 +95,28 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def update_bio(self, bio_text, location=None, website=None, social_links=None):
+    def get_favorite_tags(self):
+        """Get favorite tags as Tag objects"""
+        if not self.favorite_tags:
+            return []
+        return Tag.query.filter(Tag.id.in_(self.favorite_tags)).all()
+
+    def set_favorite_tags(self, tag_ids):
+        """Set favorite tags from a list of tag IDs"""
+        if tag_ids and len(tag_ids) > 3:
+            raise ValueError("Cannot have more than 3 favorite tags")
+        self.favorite_tags = tag_ids or []
+
+    def update_bio(self, bio_text, location=None, website=None, social_links=None, favorite_tags=None):
         """Update user bio with content processing and HTML generation"""
         self.bio_text = bio_text
         self.location = location
         self.website = website
         self.social_links = social_links or {}
+        
+        # Handle favorite tags
+        if favorite_tags is not None:
+            self.set_favorite_tags(favorite_tags)
         
         # Process bio text to HTML with basic markdown support
         if bio_text:
