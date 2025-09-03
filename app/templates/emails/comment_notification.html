@@ -2,3 +2,11 @@
 <hr>
 <p>{{ comment.content }}</p>
 <p><a href="{{ link }}">View and reply »</a></p>
+<hr style="margin: 1em 0; border: none; border-top: 1px solid #ddd;">
+<p style="color: #666; font-size: 0.8em; text-align: center;">
+  You received this email because you have email notifications enabled.<br>
+  <a href="{{ url_for('account.unsubscribe', token=generate_unsubscribe_token(user.id, 'notifications'), _external=True) }}" 
+     style="color: #dc3545; text-decoration: none;">Unsubscribe from notifications</a> | 
+  <a href="{{ url_for('account.manage_subscriptions', token=generate_unsubscribe_token(user.id, 'notifications'), _external=True) }}" 
+     style="color: #6c757d; text-decoration: none;">Manage preferences</a>
+</p>

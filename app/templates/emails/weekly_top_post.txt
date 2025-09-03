@@ -11,3 +11,8 @@ Read the full post and join the discussion:
 {{ url_for('blog.view_post', slug=post.slug, _external=True) }}#c{{ comments[-1].id if comments else '' }}
 
 — Dismantl
+
+---
+You received this email because you're subscribed to the Dismantl newsletter.
+Unsubscribe: {{ url_for('account.unsubscribe', token=generate_unsubscribe_token(user.id, 'newsletter'), _external=True) }}
+Manage preferences: {{ url_for('account.manage_subscriptions', token=generate_unsubscribe_token(user.id, 'newsletter'), _external=True) }}

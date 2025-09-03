@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Email Preferences{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white p-6 rounded-lg border border-t-4 border-r-2 border-blue-300">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Manage Email Preferences</h1>
+    
+    <p class="text-gray-600 mb-6">
+      Hello {{ user.username }}, you can manage your email preferences below.
+    </p>
+
+    <form method="post" action="{{ url_for('account.update_preferences_via_token', token=token) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
+      <div class="space-y-4 text-left">
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" name="newsletter" {% if user.newsletter %}checked{% endif %}>
+          <span class="text-gray-700">Subscribe to the Dismantl newsletter</span>
+        </label>
+
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" name="email_notifications" {% if user.email_notifications %}checked{% endif %}>
+          <span class="text-gray-700">Receive email notifications for replies and new posts</span>
+        </label>
+      </div>
+
+      <button type="submit" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+        Save Preferences
+      </button>
+    </form>
+
+    <div class="mt-6 pt-4 border-t border-gray-200">
+      <p class="text-sm text-gray-500">
+        You can also unsubscribe from specific email types using the links below:
+      </p>
+      <div class="mt-2 space-x-4">
+        <a href="{{ url_for('account.unsubscribe', token=generate_unsubscribe_token(user.id, 'newsletter')) }}" 
+           class="text-red-600 hover:text-red-800 text-sm">Unsubscribe from newsletter</a>
+        <a href="{{ url_for('account.unsubscribe', token=generate_unsubscribe_token(user.id, 'notifications')) }}" 
+           class="text-red-600 hover:text-red-800 text-sm">Unsubscribe from notifications</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

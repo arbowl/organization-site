@@ -47,33 +47,37 @@ def send_weekly_top_post_email():
             likes = PostLike.query.filter(
                 PostLike.post_id == post.id, PostLike.timestamp >= cutoff
             ).all()
-            text_body = render_template(
-                "emails/weekly_top_post.txt",
-                post=post,
-                comments=comments,
-                likes=likes,
-                score=score,
-            )
-            html_body = render_template(
-                "emails/weekly_top_post.html",
-                post=post,
-                comments=comments,
-                likes=likes,
-                score=score,
-            )
-            
             subscribers = User.query.filter_by(newsletter=True).all()
             if subscribers:
-                success = send_email_with_config(
-                    email_type="newsletter",
-                    subject=f"Weekly Top Post: {post.title}",
-                    recipients=[user.email for user in subscribers],
-                    text_body=text_body,
-                    html_body=html_body
-                )
-                
-                if not success:
-                    app.logger.error("Failed to send weekly newsletter email")
+                # Send individual emails to each subscriber so we can include unsubscribe links
+                for user in subscribers:
+                    text_body = render_template(
+                        "emails/weekly_top_post.txt",
+                        post=post,
+                        comments=comments,
+                        likes=likes,
+                        score=score,
+                        user=user,
+                    )
+                    html_body = render_template(
+                        "emails/weekly_top_post.html",
+                        post=post,
+                        comments=comments,
+                        likes=likes,
+                        score=score,
+                        user=user,
+                    )
+                    
+                    success = send_email_with_config(
+                        email_type="newsletter",
+                        subject=f"Weekly Top Post: {post.title}",
+                        recipients=[user.email],
+                        text_body=text_body,
+                        html_body=html_body
+                    )
+                    
+                    if not success:
+                        app.logger.error(f"Failed to send weekly newsletter email to {user.email}")
 
 
 def scrape_ma_bills():

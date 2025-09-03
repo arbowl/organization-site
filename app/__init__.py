@@ -293,6 +293,10 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     app.jinja_env.filters["format_date"] = format_date
     app.jinja_env.filters["format_date_time"] = format_date_time
     app.jinja_env.filters["format_date_short"] = format_date_short
+    
+    # Make unsubscribe token generation available in templates
+    from .routes.account import generate_unsubscribe_token
+    app.jinja_env.globals['generate_unsubscribe_token'] = generate_unsubscribe_token
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)

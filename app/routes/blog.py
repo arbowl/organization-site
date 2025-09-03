@@ -1241,6 +1241,7 @@ def attach_email_to_notification(notif: Notification) -> None:
         post=post,
         comment=comment,
         link=link,
+        user=notif.recipient,
     )
     html_body = render_template(
         "emails/comment_notification.html",
@@ -1249,6 +1250,7 @@ def attach_email_to_notification(notif: Notification) -> None:
         post=post,
         comment=comment,
         link=link,
+        user=notif.recipient,
     )
     
     success = send_email_with_config(

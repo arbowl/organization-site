@@ -4,3 +4,8 @@ Comment:
 {{ comment.content }}
 
 Read it in context: {{ link }}
+
+---
+You received this email because you have email notifications enabled.
+Unsubscribe: {{ url_for('account.unsubscribe', token=generate_unsubscribe_token(user.id, 'notifications'), _external=True) }}
+Manage preferences: {{ url_for('account.manage_subscriptions', token=generate_unsubscribe_token(user.id, 'notifications'), _external=True) }}
