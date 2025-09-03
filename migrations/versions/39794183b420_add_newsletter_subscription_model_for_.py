@@ -33,20 +33,33 @@ def upgrade():
         
         op.drop_table('bill_splinters')
     
-    # Create newsletter_subscriptions table
-    op.create_table('newsletter_subscriptions',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('email', sa.String(length=120), nullable=False),
-        sa.Column('subscribed_at', sa.DateTime(), nullable=False),
-        sa.Column('is_active', sa.Boolean(), nullable=False),
-        sa.Column('unsubscribe_token', sa.String(length=100), nullable=True),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('email'),
-        sa.UniqueConstraint('unsubscribe_token')
-    )
-    with op.batch_alter_table('newsletter_subscriptions', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_newsletter_subscriptions_email'), ['email'], unique=False)
-        batch_op.create_index(batch_op.f('ix_newsletter_subscriptions_unsubscribe_token'), ['unsubscribe_token'], unique=False)
+    # Create newsletter_subscriptions table if it doesn't exist
+    if 'newsletter_subscriptions' not in inspector.get_table_names():
+        op.create_table('newsletter_subscriptions',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('email', sa.String(length=120), nullable=False),
+            sa.Column('subscribed_at', sa.DateTime(), nullable=False),
+            sa.Column('is_active', sa.Boolean(), nullable=False),
+            sa.Column('unsubscribe_token', sa.String(length=100), nullable=True),
+            sa.PrimaryKeyConstraint('id'),
+            sa.UniqueConstraint('email'),
+            sa.UniqueConstraint('unsubscribe_token')
+        )
+        with op.batch_alter_table('newsletter_subscriptions', schema=None) as batch_op:
+            batch_op.create_index(batch_op.f('ix_newsletter_subscriptions_email'), ['email'], unique=False)
+            batch_op.create_index(batch_op.f('ix_newsletter_subscriptions_unsubscribe_token'), ['unsubscribe_token'], unique=False)
+    else:
+        # Table exists, but check if indexes exist and create them if needed
+        existing_indexes = inspector.get_indexes('newsletter_subscriptions')
+        index_names = [idx['name'] for idx in existing_indexes]
+        
+        if 'ix_newsletter_subscriptions_email' not in index_names:
+            with op.batch_alter_table('newsletter_subscriptions', schema=None) as batch_op:
+                batch_op.create_index(batch_op.f('ix_newsletter_subscriptions_email'), ['email'], unique=False)
+        
+        if 'ix_newsletter_subscriptions_unsubscribe_token' not in index_names:
+            with op.batch_alter_table('newsletter_subscriptions', schema=None) as batch_op:
+                batch_op.create_index(batch_op.f('ix_newsletter_subscriptions_unsubscribe_token'), ['unsubscribe_token'], unique=False)
     # ### end Alembic commands ###
 
 
