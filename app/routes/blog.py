@@ -50,7 +50,7 @@ def index() -> str:
         )
         .outerjoin(comment_count_subq, Post.id == comment_count_subq.c.post_id)
         .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
-        .order_by(Post.timestamp.desc())
+        .order_by(Post.published_at.desc())
         .filter(Post.is_draft == False)
         .all()
     )
@@ -135,7 +135,7 @@ def get_active_discussion_threads():
                     )
                     .filter(Post.is_draft == False)
                     .filter(Post.id != post.id)  # Exclude the main post
-                    .order_by(Post.timestamp.desc())
+                    .order_by(Post.published_at.desc())
                     .limit(5)
                     .all()
                 )
@@ -150,7 +150,7 @@ def get_active_discussion_threads():
                     db.session.query(Post)
                     .filter(Post.is_splinter == True, Post.target_post_id == post.id)
                     .filter(Post.is_draft == False)
-                    .order_by(Post.timestamp.desc())
+                    .order_by(Post.published_at.desc())
                     .first()
                 )
 
@@ -236,7 +236,7 @@ def all_posts() -> str:
         for s in tag_slugs:
             base = base.filter(Post.tags.any(Tag.slug == s))
 
-    base = base.order_by(Post.timestamp.desc())
+    base = base.order_by(Post.published_at.desc())
     pagination = base.paginate(page=page, per_page=10, error_out=False)
     entries = create_post_data_with_counts(pagination.items)
     
@@ -372,7 +372,7 @@ def view_post(slug: str) -> str:
         db.session.query(Post)
         .join(PostLink, PostLink.dst_post_id == Post.id)
         .filter(PostLink.src_post_id == post.id)
-        .order_by(Post.timestamp.desc())
+        .order_by(Post.published_at.desc())
         .filter(Post.is_draft == False)
         .limit(5)
         .all()
@@ -382,7 +382,7 @@ def view_post(slug: str) -> str:
         db.session.query(Post)
         .join(PostLink, PostLink.src_post_id == Post.id)
         .filter(PostLink.dst_post_id == post.id)
-        .order_by(Post.timestamp.desc())
+        .order_by(Post.published_at.desc())
         .filter(Post.is_draft == False)
         .limit(5)
         .all()
@@ -390,7 +390,7 @@ def view_post(slug: str) -> str:
     splinters = (
         db.session.query(Post)
         .filter(Post.is_splinter == True, Post.target_post_id == post.id)
-        .order_by(Post.timestamp.desc())
+        .order_by(Post.published_at.desc())
         .filter(Post.is_draft == False)
         .limit(2)
         .all()
@@ -639,7 +639,7 @@ def user_posts(username):
             .outerjoin(like_count_subq, Post.id == like_count_subq.c.post_id)
             .filter(Post.is_draft == False)
             .filter(Post.author_id == user.id)
-            .order_by(Post.timestamp.desc())
+            .order_by(Post.published_at.desc())
             .paginate(page=page_posts, per_page=10, error_out=False)
         )
         posts_entries = create_post_data_with_counts(posts_pagination.items)
@@ -697,7 +697,7 @@ def search():
         per_page = 10
         query = Post.query.filter(
             or_(Post.title.ilike(q), Post.content.ilike(q))
-        ).filter(Post.is_draft == False).order_by(Post.timestamp.desc())
+        ).filter(Post.is_draft == False).order_by(Post.published_at.desc())
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         posts = pagination.items
     recent_comments = Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
@@ -1157,20 +1157,20 @@ def post_references(slug: str):
         .join(PostLink, PostLink.dst_post_id == Post.id)
         .filter(PostLink.src_post_id == post.id)
         .filter(Post.is_draft == False)
-        .order_by(Post.timestamp.desc())
+        .order_by(Post.published_at.desc())
     )
     branches_q = (
         db.session.query(Post)
         .join(PostLink, PostLink.src_post_id == Post.id)
         .filter(PostLink.dst_post_id == post.id)
         .filter(Post.is_draft == False)
-        .order_by(Post.timestamp.desc())
+        .order_by(Post.published_at.desc())
     )
     splinters_q = (
         db.session.query(Post)
         .filter(Post.is_splinter == True, Post.target_post_id == post.id)
         .filter(Post.is_draft == False)
-        .order_by(Post.timestamp.desc())
+        .order_by(Post.published_at.desc())
     )
     roots_pagination = (
         roots_q.paginate(page=page_roots, per_page=per_page, error_out=False)

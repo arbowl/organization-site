@@ -199,7 +199,7 @@ class Post(db.Model):
 
     @property
     def display_date(self):
-        date = self.timestamp.strftime("%B %d, %Y")
+        date = self.published_at.strftime("%B %d, %Y")
         if self.updated_at:
             date += f" ⸱ <i>(edited {self.updated_at.strftime('%B %d, %Y')})</i>"
         return date
