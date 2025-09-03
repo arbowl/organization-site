@@ -258,6 +258,14 @@
     </section>
     {% endif %}
 
+    <!-- Newsletter signup for guests (mobile only) -->
+    {% if not current_user.is_authenticated %}
+        <div class="md:hidden mb-6">
+            {% set newsletter_form = newsletter_form %}
+            {% include 'includes/newsletter_form.html' %}
+        </div>
+    {% endif %}
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="mb-4">
@@ -301,12 +309,6 @@
 
         <!-- Sidebar Column (right side) -->
         <div class="md:space-y-6 md:col-span-1">
-            <!-- Newsletter signup for guests -->
-            {% if not current_user.is_authenticated %}
-                {% set newsletter_form = newsletter_form %}
-                {% include 'includes/newsletter_form.html' %}
-            {% endif %}
-            
             <!-- Join button on Desktop -->
             {% if not current_user.is_authenticated %}
                 <a href="{{ url_for('auth.register') }}"
@@ -318,6 +320,14 @@
                 class="block w-full px-6 py-3 text-center bg-blue-500 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 hidden md:block">
                     <em>Start a new discussion!</em>
                 </a>
+            {% endif %}
+            
+            <!-- Newsletter signup for guests (desktop only) -->
+            {% if not current_user.is_authenticated %}
+                <div class="hidden md:block">
+                    {% set newsletter_form = newsletter_form %}
+                    {% include 'includes/newsletter_form.html' %}
+                </div>
             {% endif %}
 
             <!-- Site Bulletins -->
