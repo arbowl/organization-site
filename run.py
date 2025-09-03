@@ -87,7 +87,7 @@ def inject_unread_count():
 
 if __name__ == "__main__":
     host = getenv("HOST", "0.0.0.0")
-    port = int(getenv("PORT", "5001"))
+    port = int(getenv("PORT", "5000"))
     debug_env = getenv("FLASK_DEBUG", "true").lower()
     debug = debug_env in ("1", "true", "yes")
     app.run(host=host, port=port, debug=debug)
