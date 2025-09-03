@@ -487,6 +487,9 @@ def create_post():
             timestamp=timestamp(),
             is_draft=is_draft,
         )
+        # Set published_at for direct posts (not drafts)
+        if not is_draft:
+            post.published_at = timestamp()
         db.session.add(post)
         try:
             for name in form.clean_tags():
@@ -969,6 +972,9 @@ def new_splinter(slug):
             target_post_id=target.id,
             is_draft=is_draft,
         )
+        # Set published_at for direct splinter posts (not drafts)
+        if not is_draft:
+            spl.published_at = timestamp()
         db.session.add(spl)
         with db.session.no_autoflush:
             try:
