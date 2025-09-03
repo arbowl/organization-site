@@ -31,10 +31,10 @@ from app.models import (
 )
 from app.forms import PostForm, CommentForm, SearchForm, CommentEditForm
 from app.utils import scrape_events, color_from_slug
+from app.email_utils import send_email_with_config
 
 blog_bp: Blueprint = Blueprint("blog", __name__)
 timestamp = partial(datetime.now, timezone.utc)
-MAIL_NOTIFICATION = getenv("MAIL_NOTIFICATIONS")
 
 
 @blog_bp.route("/")
@@ -1250,14 +1250,17 @@ def attach_email_to_notification(notif: Notification) -> None:
         comment=comment,
         link=link,
     )
-    app.config["MAIL_DEFAULT_SENDER"] = MAIL_NOTIFICATION
-    msg = Message(
+    
+    success = send_email_with_config(
+        email_type="notification",
         subject=subject,
         recipients=[notif.recipient.email],
-        body=text_body,
-        html=html_body,
+        text_body=text_body,
+        html_body=html_body
     )
-    app.mail.send(msg)
+    
+    if not success:
+        app.logger.error(f"Failed to send notification email to {notif.recipient.email}")
 
 
 def get_or_create_tag(name: str) -> Tag:

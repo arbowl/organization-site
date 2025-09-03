@@ -6,6 +6,7 @@ from werkzeug.wrappers import Response
 
 from app import app, limiter
 from app.forms import ContactForm
+from app.email_utils import send_email_with_config
 
 pages_bp = Blueprint("pages", __name__)
 MAIL_CONTACT = getenv("SMTP_USER")
@@ -28,28 +29,35 @@ def privacy():
 
 @limiter.limit("2 per day")
 def send_mail(form: ContactForm) -> Response:
-    msg = Message(
-        subject=f"[Contact] {form.subject.data}",
-        recipients=[MAIL_CONTACT],
-        reply_to=form.email.data,
-    )
-    msg.body = render_template(
+    text_body = render_template(
         "emails/contact.txt",
         name=form.name.data,
         email=form.email.data,
         subject=form.subject.data,
         message=form.message.data,
     )
-    msg.html = render_template(
+    html_body = render_template(
         "emails/contact.html",
         name=form.name.data,
         email=form.email.data,
         subject=form.subject.data,
         message=form.message.data,
     )
-    app.config["MAIL_DEFAULT_SENDER"] = MAIL_CONTACT
-    app.mail.send(msg)
-    flash("Thanks! Your message has been sent.", "success")
+    
+    success = send_email_with_config(
+        email_type="contact",
+        subject=f"[Contact] {form.subject.data}",
+        recipients=[MAIL_CONTACT],
+        text_body=text_body,
+        html_body=html_body,
+        reply_to=form.email.data
+    )
+    
+    if success:
+        flash("Thanks! Your message has been sent.", "success")
+    else:
+        flash("Sorry, there was an error sending your message. Please try again.", "error")
+    
     return redirect(url_for("blog.index"))
 
 

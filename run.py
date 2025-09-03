@@ -35,7 +35,7 @@ def make_session_permanent():
 
 @app.before_request
 def check_user_timeout():
-    if current_user.is_authenticated and session.get("last_seen"):
+    if current_user and current_user.is_authenticated and session.get("last_seen"):
         if datetime.now(timezone.utc) - session["last_seen"] > timedelta(minutes=30):
             logout_user()
             return redirect(url_for("auth.login"))
@@ -76,7 +76,7 @@ def inject_search_form():
 
 @app.context_processor
 def inject_unread_count():
-    if current_user.is_authenticated:
+    if current_user and current_user.is_authenticated:
         count = Notification.query.filter_by(
             recipient_id=current_user.id, read_at=None
         ).count()
