@@ -294,6 +294,27 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Bill view character counter initialized');
     }
 
+    // Bio form character counter
+    const bioCharCount = document.getElementById('bio-char-count');
+    const bioMaxChars = document.getElementById('bio-max-chars');
+    const bioTextarea = document.getElementById('bio_text');
+    
+    if (bioCharCount && bioMaxChars && bioTextarea) {
+        const maxLength = 1000;
+        bioMaxChars.textContent = maxLength;
+
+        function updateBioCharCount() {
+            const currentLength = bioTextarea.value.length;
+            bioCharCount.textContent = currentLength;
+            bioCharCount.style.color = currentLength > maxLength ? 'red' : '';
+        }
+
+        updateBioCharCount();
+        bioTextarea.addEventListener("input", updateBioCharCount);
+        bioTextarea.setAttribute('data-char-counter-initialized', 'true');
+        console.log('Bio character counter initialized');
+    }
+
     // Generic character counter for any other textarea with char-count elements
     document.querySelectorAll('textarea').forEach(textarea => {
         // Skip if already processed or if it's the main post content (handled above)

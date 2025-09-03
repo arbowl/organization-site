@@ -166,40 +166,9 @@ class BioForm(FlaskForm):
         validators=[Optional(), Length(max=200), URL(message="Please enter a valid URL")],
         render_kw={"placeholder": "https://yourwebsite.com"}
     )
-    twitter = StringField(
-        "Twitter", 
-        validators=[Optional(), Length(max=50)],
-        render_kw={"placeholder": "@username"}
-    )
-    linkedin = StringField(
-        "LinkedIn", 
-        validators=[Optional(), Length(max=200), URL(message="Please enter a valid LinkedIn URL")],
-        render_kw={"placeholder": "https://linkedin.com/in/username"}
-    )
     submit = SubmitField("Save Bio")
 
     def validate_website(self, field):
-        if field.data and not field.data.startswith(('http://', 'https://')):
-            field.data = 'https://' + field.data
-
-    def validate_twitter(self, field):
-        if field.data:
-            # Clean up Twitter handle
-            handle = field.data.strip()
-            if handle.startswith('@'):
-                handle = handle[1:]
-            if handle and not handle.startswith('http'):
-                field.data = handle
-            elif handle.startswith('http'):
-                # Extract username from URL
-                import re
-                match = re.search(r'twitter\.com/([^/?]+)', handle)
-                if match:
-                    field.data = match.group(1)
-                else:
-                    raise ValidationError("Please enter a valid Twitter username or URL")
-
-    def validate_linkedin(self, field):
         if field.data and not field.data.startswith(('http://', 'https://')):
             field.data = 'https://' + field.data
 
