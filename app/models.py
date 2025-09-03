@@ -422,6 +422,19 @@ class Tag(db.Model):
     )
 
 
+class NewsletterSubscription(db.Model):
+    __tablename__ = "newsletter_subscriptions"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    subscribed_at = db.Column(db.DateTime, default=timestamp(), nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    unsubscribe_token = db.Column(db.String(100), unique=True, nullable=True, index=True)
+    
+    def __repr__(self):
+        return f"<NewsletterSubscription {self.email}>"
+
+
 class Bill(db.Model):
     __tablename__ = "bills"
     id = db.Column(db.Integer, primary_key=True)

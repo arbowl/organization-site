@@ -301,6 +301,12 @@
 
         <!-- Sidebar Column (right side) -->
         <div class="md:space-y-6 md:col-span-1">
+            <!-- Newsletter signup for guests -->
+            {% if not current_user.is_authenticated %}
+                {% set newsletter_form = newsletter_form %}
+                {% include 'includes/newsletter_form.html' %}
+            {% endif %}
+            
             <!-- Join button on Desktop -->
             {% if not current_user.is_authenticated %}
                 <a href="{{ url_for('auth.register') }}"

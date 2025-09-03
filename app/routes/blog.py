@@ -29,7 +29,7 @@ from app.models import (
     PostLink,
     SplinterItem,
 )
-from app.forms import PostForm, CommentForm, SearchForm, CommentEditForm
+from app.forms import PostForm, CommentForm, SearchForm, CommentEditForm, NewsletterForm
 from app.utils import scrape_events, color_from_slug
 from app.email_utils import send_email_with_config
 
@@ -76,6 +76,7 @@ def index() -> str:
         events=events,
         discussion_threads=discussion_threads,
         hot_bills=hot_bills,
+        newsletter_form=NewsletterForm(),
     )
 
 
@@ -260,6 +261,7 @@ def all_posts() -> str:
         tag_slugs=tag_slugs,
         recent_comments=recent_comments,
         trending_tags=trending_tags,
+        newsletter_form=NewsletterForm(),
     )
 
 
@@ -727,6 +729,7 @@ def search():
         pagination=pagination,
         recent_comments=recent_comments,
         trending_tags=trending_tags,
+        newsletter_form=NewsletterForm(),
     )
 
 

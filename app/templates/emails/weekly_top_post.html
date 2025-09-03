@@ -31,10 +31,15 @@
   <hr style="margin: 2em 0; border: none; border-top: 1px solid #ddd;">
   <p style="color: #666; font-size: 0.8em; text-align: center;">
     You received this email because you're subscribed to the Dismantl newsletter.<br>
-    <a href="{{ url_for('account.unsubscribe', token=generate_unsubscribe_token(user.id, 'newsletter'), _external=True) }}" 
-       style="color: #dc3545; text-decoration: none;">Unsubscribe from newsletter</a> | 
-    <a href="{{ url_for('account.manage_subscriptions', token=generate_unsubscribe_token(user.id, 'newsletter'), _external=True) }}" 
-       style="color: #6c757d; text-decoration: none;">Manage preferences</a>
+    {% if is_guest and subscription %}
+      <a href="{{ url_for('pages.unsubscribe_newsletter', token=subscription.unsubscribe_token, _external=True) }}" 
+         style="color: #dc3545; text-decoration: none;">Unsubscribe from newsletter</a>
+    {% elif user %}
+      <a href="{{ url_for('account.unsubscribe', token=generate_unsubscribe_token(user.id, 'newsletter'), _external=True) }}" 
+         style="color: #dc3545; text-decoration: none;">Unsubscribe from newsletter</a> | 
+      <a href="{{ url_for('account.manage_subscriptions', token=generate_unsubscribe_token(user.id, 'newsletter'), _external=True) }}" 
+         style="color: #6c757d; text-decoration: none;">Manage preferences</a>
+    {% endif %}
   </p>
 </body>
 </html>

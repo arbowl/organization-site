@@ -14,5 +14,9 @@ Read the full post and join the discussion:
 
 ---
 You received this email because you're subscribed to the Dismantl newsletter.
+{% if is_guest and subscription %}
+Unsubscribe: {{ url_for('pages.unsubscribe_newsletter', token=subscription.unsubscribe_token, _external=True) }}
+{% elif user %}
 Unsubscribe: {{ url_for('account.unsubscribe', token=generate_unsubscribe_token(user.id, 'newsletter'), _external=True) }}
 Manage preferences: {{ url_for('account.manage_subscriptions', token=generate_unsubscribe_token(user.id, 'newsletter'), _external=True) }}
+{% endif %}

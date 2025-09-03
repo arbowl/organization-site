@@ -120,6 +120,12 @@
       {# 3) Right rail remainder: duplicates your all_posts structure #}
       <aside id="right-rail-rest" class="order-4 lg:order-2 lg:col-span-4 lg:col-start-9 lg:row-start-1 space-y-8 mt-8 lg:mt-0">
 
+      <!-- Newsletter signup for guests -->
+      {% if not current_user.is_authenticated %}
+        {% set newsletter_form = newsletter_form %}
+        {% include 'includes/newsletter_form.html' %}
+      {% endif %}
+
       <section id="start-discussion" class="hidden lg:block order-1 sm:order-1 sm:col-span-4 sm:col-start-9 sm:row-start-1">
         <div class="w-full">
           <div class="flex items-center justify-center">

@@ -10,7 +10,7 @@ from flask import render_template
 from flask_mail import Message
 
 from app import app
-from app.models import Post, Comment, PostLike, User, Bill, db
+from app.models import Post, Comment, PostLike, User, Bill, NewsletterSubscription, db
 from app.email_utils import send_email_with_config
 
 
@@ -47,17 +47,42 @@ def send_weekly_top_post_email():
             likes = PostLike.query.filter(
                 PostLike.post_id == post.id, PostLike.timestamp >= cutoff
             ).all()
-            subscribers = User.query.filter_by(newsletter=True).all()
-            if subscribers:
+            
+            # Get both registered user subscribers and guest subscribers
+            user_subscribers = User.query.filter_by(newsletter=True).all()
+            guest_subscribers = NewsletterSubscription.query.filter_by(is_active=True).all()
+            
+            all_subscribers = []
+            
+            # Add registered users
+            for user in user_subscribers:
+                all_subscribers.append({
+                    'email': user.email,
+                    'user': user,
+                    'is_guest': False
+                })
+            
+            # Add guest subscribers
+            for guest in guest_subscribers:
+                all_subscribers.append({
+                    'email': guest.email,
+                    'user': None,
+                    'is_guest': True,
+                    'subscription': guest
+                })
+            
+            if all_subscribers:
                 # Send individual emails to each subscriber so we can include unsubscribe links
-                for user in subscribers:
+                for subscriber in all_subscribers:
                     text_body = render_template(
                         "emails/weekly_top_post.txt",
                         post=post,
                         comments=comments,
                         likes=likes,
                         score=score,
-                        user=user,
+                        user=subscriber['user'],
+                        is_guest=subscriber['is_guest'],
+                        subscription=subscriber.get('subscription'),
                     )
                     html_body = render_template(
                         "emails/weekly_top_post.html",
@@ -65,19 +90,21 @@ def send_weekly_top_post_email():
                         comments=comments,
                         likes=likes,
                         score=score,
-                        user=user,
+                        user=subscriber['user'],
+                        is_guest=subscriber['is_guest'],
+                        subscription=subscriber.get('subscription'),
                     )
                     
                     success = send_email_with_config(
                         email_type="newsletter",
                         subject=f"Weekly Top Post: {post.title}",
-                        recipients=[user.email],
+                        recipients=[subscriber['email']],
                         text_body=text_body,
                         html_body=html_body
                     )
                     
                     if not success:
-                        app.logger.error(f"Failed to send weekly newsletter email to {user.email}")
+                        app.logger.error(f"Failed to send weekly newsletter email to {subscriber['email']}")
 
 
 def scrape_ma_bills():

@@ -182,3 +182,16 @@ class BioForm(FlaskForm):
             # Basic content validation
             if bio_text.count('<script') > 0 or bio_text.count('javascript:') > 0:
                 raise ValidationError("Bio text contains potentially harmful content.")
+
+
+class NewsletterForm(FlaskForm):
+    """Form for guest newsletter subscription"""
+    email = StringField(
+        "Email", 
+        validators=[DataRequired(), Email(), Length(1, 120)],
+        render_kw={"placeholder": "Enter your email address", "class": "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"}
+    )
+    submit = SubmitField(
+        "Subscribe", 
+        render_kw={"class": "w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition duration-300"}
+    )

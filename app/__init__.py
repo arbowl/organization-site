@@ -307,7 +307,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     from .routes.account import account_bp
     from .routes.analytics import analytics_bp
     from .routes.bills import bills_bp
-    from app.models import User, Post, Comment, Report, Bill
+    from app.models import User, Post, Comment, Report, Bill, NewsletterSubscription
 
     admin.add_view(UserAdmin(User, db.session))
     admin.add_view(UserAdmin(Post, db.session))
@@ -325,6 +325,20 @@ def create_app(config_name: Optional[str] = None) -> Flask:
             return current_user.is_authenticated and current_user.is_authority()
     
     admin.add_view(BillAdmin(Bill, db.session))
+    
+    # Add NewsletterSubscription admin view
+    class NewsletterAdmin(ModelView):
+        column_list = ["email", "subscribed_at", "is_active"]
+        column_searchable_list = ["email"]
+        column_filters = ["is_active", "subscribed_at"]
+        can_create = False
+        can_edit = True
+        can_delete = True
+        
+        def is_accessible(self):
+            return current_user.is_authenticated and current_user.is_authority()
+    
+    admin.add_view(NewsletterAdmin(NewsletterSubscription, db.session))
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(blog_bp)
     app.register_blueprint(pages_bp)
