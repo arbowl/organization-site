@@ -178,34 +178,29 @@ def get_active_discussion_threads():
 
 
 def get_hot_bills():
-    """Get the most commented bills for the front page"""
+    """Get bills with the most recent comments for the front page"""
     try:
         from app.models import Bill, Comment
         from sqlalchemy import func
         
-        # Pre-calculate comment counts using subquery (same pattern as posts)
-        comment_count_subq = (
-            db.session.query(Comment.bill_id, func.count(Comment.id).label("comment_count"))
-            .group_by(Comment.bill_id)
-            .subquery()
-        )
-        
-        # Get bills with pre-calculated comment counts
+        # Get bills ordered by most recent comment timestamp
         bill_data = (
             db.session.query(
                 Bill,
-                func.coalesce(comment_count_subq.c.comment_count, 0)
+                func.max(Comment.timestamp).label("latest_comment_time"),
+                func.count(Comment.id).label("comment_count")
             )
-            .outerjoin(comment_count_subq, Bill.id == comment_count_subq.c.bill_id)
-            .order_by(func.coalesce(comment_count_subq.c.comment_count, 0).desc())
-            .limit(20)
+            .outerjoin(Comment, Bill.id == Comment.bill_id)
+            .group_by(Bill.id)
+            .order_by(func.max(Comment.timestamp).desc().nulls_last())
+            .limit(10)  # Show 10 in dropdown
             .all()
         )
         
         # Return in same format as posts: list of dictionaries
         hot_bills = [
-            {"bill": bill, "comments": comment_count}
-            for bill, comment_count in bill_data
+            {"bill": bill, "comments": comment_count, "latest_comment": latest_comment_time}
+            for bill, latest_comment_time, comment_count in bill_data
         ]
         
         return hot_bills
