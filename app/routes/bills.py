@@ -296,13 +296,22 @@ def list_bills():
             )
         )
     
-    # Order by most recent activity (bills with recent comments first, then by creation date)
-    from sqlalchemy import func
+    # Order by two-tier ranking:
+    # 1. Bills with recent comments (sorted by most recent comment timestamp)
+    # 2. Bills without comments (sorted by creation date, newest first)
+    from sqlalchemy import func, case
     query = (
         query.outerjoin(Comment, Bill.id == Comment.bill_id)
         .group_by(Bill.id)
         .order_by(
+            # First: bills with comments (rank 0) before bills without (rank 1)
+            case(
+                (func.count(Comment.id) > 0, 0),
+                else_=1
+            ),
+            # Second: within each group, sort by most recent comment time (for bills with comments)
             func.max(Comment.timestamp).desc().nulls_last(),
+            # Third: for bills without comments, sort by creation date (newest first)
             Bill.created_at.desc()
         )
     )
