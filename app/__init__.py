@@ -289,10 +289,18 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     app.jinja_env.filters["md"] = md
     
     # Register custom date formatting filters
-    from app.filters import format_date, format_date_time, format_date_short
+    from app.filters import (
+        format_date, format_date_time, format_date_short, smart_truncate
+    )
     app.jinja_env.filters["format_date"] = format_date
     app.jinja_env.filters["format_date_time"] = format_date_time
     app.jinja_env.filters["format_date_short"] = format_date_short
+    app.jinja_env.filters["smart_truncate"] = smart_truncate
+
+    # Register utility filters
+    from app.utils import render_img, postprocess_comment_html
+    app.jinja_env.filters["render_img"] = render_img
+    app.jinja_env.filters["postprocess_comment_html"] = postprocess_comment_html
     
     # Make unsubscribe token generation available in templates
     from .routes.account import generate_unsubscribe_token
