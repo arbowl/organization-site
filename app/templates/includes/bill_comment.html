@@ -36,7 +36,7 @@
     </p>
   {% else %}
     <div class="text-gray-700 leading-relaxed mb-3 comment-content">
-      {{ comment.content | md }}
+      {{ comment.content | md | postprocess_comment_html }}
     </div>
   {% endif %}
 
