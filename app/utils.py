@@ -296,7 +296,7 @@ def render_img(src, alt, is_first=False, width=None, height=None):
     return f'<img src="{src}" {alt_attr} {" ".join(attrs)} />'
 
 
-def postprocess_comment_html(html: str) -> str:
+def postprocess_comment_html(html: str) -> Markup:
     """Sanitize UGC links in comments with proper rel attributes.
 
     Args:
@@ -312,4 +312,5 @@ def postprocess_comment_html(html: str) -> str:
         }
         a["rel"] = " ".join(sorted(rel))
         a["target"] = "_blank"
-    return str(soup)
+
+    return Markup(str(soup))
