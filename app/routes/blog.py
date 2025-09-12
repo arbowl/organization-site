@@ -178,34 +178,46 @@ def get_active_discussion_threads():
 
 
 def get_hot_bills():
-    """Get the most commented bills for the front page"""
+    """Get bills with the most recent comments for the front page"""
     try:
         from app.models import Bill, Comment
-        from sqlalchemy import func
+        from sqlalchemy import func, case
         
-        # Pre-calculate comment counts using subquery (same pattern as posts)
-        comment_count_subq = (
-            db.session.query(Comment.bill_id, func.count(Comment.id).label("comment_count"))
-            .group_by(Comment.bill_id)
-            .subquery()
-        )
-        
-        # Get bills with pre-calculated comment counts
+        # Get bills with two-tier ranking:
+        # 1. Bills with recent comments (sorted by most recent comment timestamp)
+        # 2. Bills without comments (sorted by creation date, newest first)
         bill_data = (
             db.session.query(
                 Bill,
-                func.coalesce(comment_count_subq.c.comment_count, 0)
+                func.max(Comment.timestamp).label("latest_comment_time"),
+                func.count(Comment.id).label("comment_count"),
+                # Create a ranking field: 0 for bills with comments, 1 for bills without
+                case(
+                    (func.count(Comment.id) > 0, 0),
+                    else_=1
+                ).label("has_comments_rank")
             )
-            .outerjoin(comment_count_subq, Bill.id == comment_count_subq.c.bill_id)
-            .order_by(func.coalesce(comment_count_subq.c.comment_count, 0).desc())
-            .limit(20)
+            .outerjoin(Comment, Bill.id == Comment.bill_id)
+            .group_by(Bill.id)
+            .order_by(
+                # First: bills with comments (rank 0) before bills without (rank 1)
+                case(
+                    (func.count(Comment.id) > 0, 0),
+                    else_=1
+                ),
+                # Second: within each group, sort by most recent comment time (for bills with comments)
+                func.max(Comment.timestamp).desc().nulls_last(),
+                # Third: for bills without comments, sort by creation date (newest first)
+                Bill.created_at.desc()
+            )
+            .limit(10)  # Show 10 in dropdown
             .all()
         )
         
         # Return in same format as posts: list of dictionaries
         hot_bills = [
-            {"bill": bill, "comments": comment_count}
-            for bill, comment_count in bill_data
+            {"bill": bill, "comments": comment_count, "latest_comment": latest_comment_time}
+            for bill, latest_comment_time, comment_count, has_comments_rank in bill_data
         ]
         
         return hot_bills

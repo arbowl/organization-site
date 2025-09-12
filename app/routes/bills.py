@@ -273,6 +273,101 @@ def api_hot_bills():
     }
 
 
+@bills_bp.route("/bills")
+def list_bills():
+    """List all bills with pagination"""
+    page = request.args.get("page", 1, type=int)
+    chamber_filter = request.args.get("chamber", "")
+    search_query = request.args.get("search", "").strip()
+    
+    # Build the base query
+    query = Bill.query
+    
+    # Apply chamber filter
+    if chamber_filter and chamber_filter in ["House", "Senate", "Joint"]:
+        query = query.filter(Bill.chamber == chamber_filter)
+    
+    # Apply search filter
+    if search_query:
+        query = query.filter(
+            db.or_(
+                Bill.title.ilike(f"%{search_query}%"),
+                Bill.bill_number.ilike(f"%{search_query}%")
+            )
+        )
+    
+    # Order by two-tier ranking:
+    # 1. Bills with recent comments (sorted by most recent comment timestamp)
+    # 2. Bills without comments (sorted by creation date, newest first)
+    from sqlalchemy import func, case
+    query = (
+        query.outerjoin(Comment, Bill.id == Comment.bill_id)
+        .group_by(Bill.id)
+        .order_by(
+            # First: bills with comments (rank 0) before bills without (rank 1)
+            case(
+                (func.count(Comment.id) > 0, 0),
+                else_=1
+            ),
+            # Second: within each group, sort by most recent comment time (for bills with comments)
+            func.max(Comment.timestamp).desc().nulls_last(),
+            # Third: for bills without comments, sort by creation date (newest first)
+            Bill.created_at.desc()
+        )
+    )
+    
+    # Paginate results
+    pagination = query.paginate(page=page, per_page=20, error_out=False)
+    bills = pagination.items
+    
+    # Get comment counts for each bill
+    bill_data = []
+    for bill in bills:
+        comment_count = Comment.query.filter_by(bill_id=bill.id).count()
+        latest_comment = (
+            Comment.query.filter_by(bill_id=bill.id)
+            .order_by(Comment.timestamp.desc())
+            .first()
+        )
+        bill_data.append({
+            "bill": bill,
+            "comments": comment_count,
+            "latest_comment": latest_comment.timestamp if latest_comment else None
+        })
+    
+    # Get recent comments for sidebar
+    recent_comments = Comment.query.order_by(Comment.timestamp.desc()).limit(5).all()
+    
+    # Get trending tags for sidebar
+    from app.models import Tag, Post
+    try:
+        trending_tags = (
+            db.session.query(Tag, func.count(Post.id).label("cnt"))
+            .join(Tag.posts)
+            .group_by(Tag.id)
+            .order_by(func.count(Post.id).desc())
+            .limit(15)
+            .all()
+        )
+    except Exception:
+        trending_tags = []
+        for t in Tag.query.order_by(Tag.name).all():
+            try:
+                cnt = t.posts.count()
+            except Exception:
+                cnt = Post.query.filter(Post.tags.any(Tag.id == t.id)).count()
+            trending_tags.append((t, cnt))
+        trending_tags.sort(key=lambda x: x[1], reverse=True)
+    
+    return render_template("bills/list.html",
+                         bills=bill_data,
+                         pagination=pagination,
+                         chamber_filter=chamber_filter,
+                         search_query=search_query,
+                         recent_comments=recent_comments,
+                         trending_tags=trending_tags)
+
+
 @bills_bp.route("/bills/manual-scrape", methods=["POST"])
 @login_required
 def manual_scrape():

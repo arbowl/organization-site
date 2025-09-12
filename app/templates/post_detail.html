@@ -1,6 +1,10 @@
 {% extends "base.html" %}
-{% set desc = (post.content|striptags)|truncate(180, True)|replace('"', "'") %}
 
+{# Smart meta description with sentence-aware truncation #}
+{% set raw_text = (post.content|striptags) %}
+{% set desc = raw_text|smart_truncate(160) | replace('"', "'") %}
+
+{# Image handling for social sharing #}
 {% set first_img = post.content|first_img_abs %}
 {% if first_img %}
   {% set share_img = first_img %}
@@ -8,44 +12,94 @@
   {% set share_img = url_for('static', filename='og-image.png', _external=True) %}
 {% endif %}
 
+{# Canonical URL (clean slug URL without params) #}
+{% block canonical %}
+<link rel="canonical" href="{{ url_for('blog.view_post', slug=post.slug, _external=True) }}">
+{% endblock %}
+
+{# Title #}
 {% block title %}{{ post.title }} | Dismantl{% endblock %}
 
+{# Meta description #}
 {% block meta_description %}
   <meta name="description" content="{{ desc }}">
 {% endblock %}
 
-{# Override nested OG/Twitter text blocks from base.html #}
-{% block og_title %}{{ post.title }} | Dismantl{% endblock %}
-{% block og_description %}{{ desc }}{% endblock %}
-{% block twitter_title %}{{ post.title }} | Dismantl{% endblock %}
-{% block twitter_description %}{{ desc }}{% endblock %}
+{# Social meta: define once here; do NOT render duplicate OG/Twitter tags in base.html #}
 {% block social_meta %}
   <meta property="og:title" content="{{ post.title }} | Dismantl">
   <meta property="og:description" content="{{ desc }}">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:url" content="{{ url_for('blog.view_post', slug=post.slug, _external=True) }}">
   <meta property="og:image" content="{{ share_img }}">
-  <meta property="og:image:alt" content="{{ post.title }}">
+  <meta property="og:image:alt" content="{{ post.title|e }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="Dismantl">
+  <meta property="article:published_time" content="{{ post.timestamp.isoformat() }}">
+  <meta property="article:modified_time" content="{{ (post.updated_at or post.timestamp).isoformat() }}">
+  {% for tag in post.tags %}
+    <meta property="article:tag" content="{{ tag.name }}">
+  {% endfor %}
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ post.title }} | Dismantl">
   <meta name="twitter:description" content="{{ desc }}">
   <meta name="twitter:image" content="{{ share_img }}">
-  <meta name="twitter:image:alt" content="{{ post.title }}">
+  <meta name="twitter:image:alt" content="{{ post.title|e }}">
+  {# Optional if accounts exist: #}
+  {# <meta name="twitter:site" content="@Dismantl"> #}
+  {# <meta name="twitter:creator" content="@{{ post.author.username }}"> #}
+  {# Locale (optional) #}
+  {# <meta property="og:locale" content="en_US"> #}
 {% endblock %}
 {% block content %}
+{% block structured_data %}
 <script type="application/ld+json">
 {
-    "@context": "https://schema.org/",
-    "@type": "BlogPosting",
-    "headline": "{{ post.title|e }}",
-    "author": { "@type": "Person", "name": "{{ post.author.username|e }}" },
-    "datePublished": "{{ post.timestamp.isoformat() }}",
-    "url": "{{ request.url }}",
-    "image": "{{ url_for('static', filename='og-image.png', _external=True) }}"
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {"@type": "WebPage", "@id": "{{ url_for('blog.view_post', slug=post.slug, _external=True) }}"},
+  "headline": {{ post.title|tojson }},
+  "description": {{ desc|tojson }},
+  "image": [{{ share_img|tojson }}],
+  "author": {
+    "@type": "Person",
+    "name": {{ post.author.username|tojson }},
+    "url": {{ url_for('blog.user_posts', username=post.author.username, _external=True)|tojson }}
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dismantl",
+    "logo": {
+      "@type":"ImageObject",
+      "url": {{ url_for('static', filename='logo.png', _external=True)|tojson }},
+      "width": 512,
+      "height": 512
+    }
+  },
+  "datePublished": "{{ post.timestamp.isoformat() }}",
+  "dateModified": "{{ (post.updated_at or post.timestamp).isoformat() }}",
+  "keywords": [{% for tag in post.tags %}{{ (',' if not loop.first) }}{{ tag.name|tojson }}{% endfor %}],
+  "isAccessibleForFree": true,
+  "commentCount": {{ post.comments.count() }},
+  "url": {{ url_for('blog.view_post', slug=post.slug, _external=True)|tojson }}
 }
 </script>
+
+{# Optional: Breadcrumbs JSON-LD #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":{{ url_for('blog.index', _external=True)|tojson }}},
+    {"@type":"ListItem","position":2,"name":"Blog","item":{{ url_for('blog.all_posts', _external=True)|tojson }}},
+    {"@type":"ListItem","position":3,"name":{{ post.title|tojson }},"item":{{ url_for('blog.view_post', slug=post.slug, _external=True)|tojson }}}
+  ]
+}
+</script>
+{% endblock %}
 
 <div class="mx-auto max-w-7xl px-0 sm:px-4 grid grid-cols-1 lg:grid-cols-12 lg:gap-8 mt-8">
 
@@ -360,7 +414,7 @@
                 <a class="font-medium text-blue-700 hover:text-blue-900"
                    href="{{ url_for('blog.view_post', slug=c.post.slug) }}#c{{ c.id }}">{{ c.post.title }}</a>
               {% endif %}
-              <div class="text-gray-600">{{ c.content | md | striptags | truncate(120, True, '...') }}</div>
+              <div class="text-gray-600">{{ c.content | md | postprocess_comment_html | striptags | truncate(120, True, '...') }}</div>
             </li>
           {% endfor %}
         </ul>

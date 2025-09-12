@@ -270,3 +270,47 @@ def extract_internal_slugs(
         pass
 
     return sorted(slugs)
+
+
+def render_img(src, alt, is_first=False, width=None, height=None):
+    """Render an img tag with CWV optimizations.
+
+    Args:
+        src: Image source URL
+        alt: Alt text
+        is_first: Whether this is the first image (hero image)
+        width: Image width
+        height: Image height
+
+    Returns:
+        HTML img tag string
+    """
+    attrs = []
+    if width and height:
+        attrs += [f'width="{width}"', f'height="{height}"']
+    if is_first:
+        attrs += ['loading="eager"', 'fetchpriority="high"']
+    else:
+        attrs += ['loading="lazy"', 'decoding="async"']
+    alt_attr = f'alt="{alt or ""}"'
+    return f'<img src="{src}" {alt_attr} {" ".join(attrs)} />'
+
+
+def postprocess_comment_html(html: str) -> Markup:
+    """Sanitize UGC links in comments with proper rel attributes.
+
+    Args:
+        html: HTML content to sanitize
+
+    Returns:
+        Sanitized HTML with UGC link attributes
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    for a in soup.find_all("a", href=True):
+        rel = set((a.get("rel") or [])) | {
+            "ugc", "nofollow", "noopener", "noreferrer"
+        }
+        a["rel"] = " ".join(sorted(rel))
+        a["target"] = "_blank"
+
+    return Markup(str(soup))
