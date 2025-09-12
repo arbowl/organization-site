@@ -30,7 +30,7 @@ def robots():
 @app.before_request
 def make_session_permanent():
     session.permanent = True
-    app.permanent_session_lifetime = timedelta(minutes=30)
+    app.permanent_session_lifetime = timedelta(minutes=60)
 
 
 @app.before_request
@@ -38,6 +38,7 @@ def check_user_timeout():
     if current_user and current_user.is_authenticated and session.get("last_seen"):
         if datetime.now(timezone.utc) - session["last_seen"] > timedelta(minutes=30):
             logout_user()
+            session.clear()  # Clear all session data including CSRF token
             return redirect(url_for("auth.login"))
     session["last_seen"] = datetime.now(timezone.utc)
 
