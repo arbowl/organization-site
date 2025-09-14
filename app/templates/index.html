@@ -67,7 +67,7 @@
     </div>
     {% endif %}
     {% if hot_bills %}
-    <section class="bg-bluish p-4 rounded-lg border border-t-4 border-r-2 mb-6 pb-1 border-blue-200">
+    <section class="bg-bluish p-4 rounded-lg border mb-6 pb-1 border-gray-300 shadow-sm">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
@@ -77,7 +77,7 @@
                         </svg>
                     </button>
                     <span>🏛️ Bill Watch</span>
-                    <span class="ml-4 text-sm text-gray-500">Bills with recent activity, updated weekly.</span>
+                    <span class="ml-4 text-sm text-gray-600">Bills with recent activity, updated weekly.</span>
                 </div>
                 <a href="{{ url_for('bills.list_bills') }}" 
                    class="text-sm px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition">
@@ -152,7 +152,7 @@
 
     <!-- Active Discussion Threads Section -->
     {% if discussion_threads %}
-    <section class="bg-bluish p-4 rounded-lg border border-t-4 border-r-2 mb-6 pb-1 border-blue-200">
+    <section class="bg-bluish p-4 rounded-lg border mb-6 pb-1 border-gray-300 shadow-sm">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center justify-start">
             <button id="discussions-toggle" class="text-blue-600 hover:text-blue-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md p-1 mr-2">
                 <svg id="discussions-toggle-icon" class="w-6 h-6 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,7 +160,7 @@
                 </svg>
             </button>
             <span>💬 Active Discussions</span>
-            <span class="ml-4 text-sm text-gray-500">Posts with the most interactions, updated daily.</span>
+            <span class="ml-4 text-sm text-gray-600">Posts with the most interactions, updated daily.</span>
         </h2>
         
         <div id="discussions-content" class="discussion-threads-grid transition-all duration-300 ease-in-out overflow-hidden">
@@ -291,7 +291,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- User Submissions (left column, full height) -->
-        <section class="bg-bluish p-6 rounded-lg border border-t-4 border-r-2 border-blue-200 md:col-span-2">
+        <section class="bg-bluish p-6 rounded-lg border md:col-span-2 border-gray-300 shadow-sm">
             <h2 class="flex justify-between items-center text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
                 User Submissions
                 <a href="{{ url_for('blog.all_posts') }}"
@@ -337,7 +337,7 @@
             {% endif %}
 
             <!-- Site Bulletins -->
-            <section class="bg-bluish mb-6 p-6 rounded-lg border border-t-4 border-r-2 border-blue-200">
+            <section class="bg-bluish mb-6 p-6 rounded-lg border border-gray-300 shadow-sm">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Site Bulletins</h2>
                 {% if bulletins %}
                     {{ post_card_list(bulletins, card_classes="bg-white shadow-sm border border-t-4 border-l-2 border-gray-400 hover:border-blue-300", show_tags=False, show_spectrum=False) }}
@@ -347,7 +347,7 @@
             </section>
 
             <!-- Events -->
-            <section class="bg-bluish mb-6 p-6 rounded-lg border border-t-4 border-r-2 border-blue-200">
+            <section class="bg-bluish mb-6 p-6 rounded-lg border border-gray-300 shadow-sm">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Upcoming Boston Events</h2>
                 {% if events %}
                     <ul class="space-y-4">

@@ -23,30 +23,30 @@
                         focus:ring-2 focus:ring-blue-400">
         </form>
         <a href="{{ url_for('blog.index') }}"
-           class="text-gray-700 bg-warmwhite hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+           class="text-gray-700 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm shadow-sm">
           🏠 Home
         </a>
         <a href="{{ url_for('blog.all_posts') }}"
-           class="text-gray-700 bg-warmwhite hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+           class="text-gray-700 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm shadow-sm">
           📚 Archive
         </a>
         
         {% if current_user.is_authenticated %}
           <a href="{{ url_for('blog.create_post') }}"
-            class="text-gray-700 bg-warmwhite hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+            class="text-gray-700 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm shadow-sm">
             📝 Write
           </a>
           <a href="{{ url_for('blog.list_drafts') }}"
-            class="text-gray-700 bg-warmwhite hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+            class="text-gray-700 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm shadow-sm">
             🗂️ Drafts
           </a>
         {% endif %}
         <a href="{{ url_for('pages.contact') }}"
-          class="text-gray-700 bg-warmwhite hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+          class="text-gray-700 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm shadow-sm">
           📪 Contact
         </a>
         <a href="{{ url_for('pages.about') }}"
-          class="text-gray-700 bg-warmwhite hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm">
+          class="text-gray-700 hover:text-blue-300 hover:bg-gray-400 px-2 py-1 rounded-md text-sm shadow-sm">
           ❓ About
         </a>
 
