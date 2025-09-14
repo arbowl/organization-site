@@ -34,6 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateCharCount();
         easyMDE.codemirror.on("change", updateCharCount);
+        
+        // Mark elements as initialized to prevent generic counter from interfering
+        if (charCountSpan) charCountSpan.setAttribute('data-counter-initialized', 'true');
+        if (maxCharsSpan) maxCharsSpan.setAttribute('data-counter-initialized', 'true');
     }
 
     // Post-level share button
@@ -270,6 +274,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePostCommentCharCount();
         postCommentTextarea.addEventListener("input", updatePostCommentCharCount);
         postCommentTextarea.setAttribute('data-char-counter-initialized', 'true');
+        postCommentCharCount.setAttribute('data-counter-initialized', 'true');
+        postCommentMaxChars.setAttribute('data-counter-initialized', 'true');
         console.log('Post comment character counter initialized');
     }
 
@@ -291,6 +297,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBillViewCharCount();
         billViewTextarea.addEventListener("input", updateBillViewCharCount);
         billViewTextarea.setAttribute('data-char-counter-initialized', 'true');
+        billViewCharCount.setAttribute('data-counter-initialized', 'true');
+        billViewMaxChars.setAttribute('data-counter-initialized', 'true');
         console.log('Bill view character counter initialized');
     }
 
@@ -312,6 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBioCharCount();
         bioTextarea.addEventListener("input", updateBioCharCount);
         bioTextarea.setAttribute('data-char-counter-initialized', 'true');
+        bioCharCount.setAttribute('data-counter-initialized', 'true');
+        bioMaxChars.setAttribute('data-counter-initialized', 'true');
         console.log('Bio character counter initialized');
     }
 
@@ -330,12 +340,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const charCountSpan = form.querySelector('[id*="char-count"]');
         const maxCharsSpan = form.querySelector('[id*="max-chars"]');
         
-        if (charCountSpan && maxCharsSpan) {
+        // Skip if the character count elements are already being used
+        if (charCountSpan && maxCharsSpan && 
+            !charCountSpan.hasAttribute('data-counter-initialized') &&
+            !maxCharsSpan.hasAttribute('data-counter-initialized')) {
+            
             const maxLength = 5000;
             maxCharsSpan.textContent = maxLength;
             
             // Mark as initialized
             textarea.setAttribute('data-char-counter-initialized', 'true');
+            charCountSpan.setAttribute('data-counter-initialized', 'true');
+            maxCharsSpan.setAttribute('data-counter-initialized', 'true');
 
             function updateCharCount() {
                 const currentLength = textarea.value.length;

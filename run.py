@@ -36,11 +36,13 @@ def make_session_permanent():
 @app.before_request
 def check_user_timeout():
     if current_user and current_user.is_authenticated and session.get("last_seen"):
-        if datetime.now(timezone.utc) - session["last_seen"] > timedelta(minutes=30):
+        if datetime.now(timezone.utc) - session["last_seen"] > timedelta(minutes=60):
             logout_user()
-            session.clear()  # Clear all session data including CSRF token
+            session.clear()
             return redirect(url_for("auth.login"))
-    session["last_seen"] = datetime.now(timezone.utc)
+        session["last_seen"] = datetime.now(timezone.utc)
+    else:
+        session["last_seen"] = datetime.now(timezone.utc)
 
 
 @app.before_request

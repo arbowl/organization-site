@@ -4,7 +4,7 @@
 <div class="container mx-auto px-4 py-8">
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-800 mb-2">All Bills</h1>
-        <p class="text-gray-600">Browse and search through all Massachusetts legislative bills</p>
+        <p class="text-gray-600">Browse and search through recent and popular Massachusetts legislative bills</p>
     </div>
 
     <!-- Search and Filter Controls -->
@@ -24,7 +24,6 @@
                 <select id="chamber" 
                         name="chamber" 
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">All Chambers</option>
                     <option value="House" {% if chamber_filter == "House" %}selected{% endif %}>House</option>
                     <option value="Senate" {% if chamber_filter == "Senate" %}selected{% endif %}>Senate</option>
                     <option value="Joint" {% if chamber_filter == "Joint" %}selected{% endif %}>Joint</option>
