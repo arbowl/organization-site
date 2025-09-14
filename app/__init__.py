@@ -71,13 +71,6 @@ def handle_csrf_error(error):
     return render_template("csrf_error.html"), 400
 
 
-@app.before_request
-def block_banned():
-    if current_user.is_authenticated and current_user.is_banned():
-        logout_user()
-        abort(403)
-
-
 @app.route("/sitemap.xml")
 def sitemap():
     from app.models import Post

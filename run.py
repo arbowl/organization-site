@@ -3,7 +3,7 @@
 from datetime import datetime, timezone, timedelta
 from os import getenv
 
-from flask import redirect, url_for, send_from_directory, request, session
+from flask import redirect, url_for, send_from_directory, request, session, abort
 from flask_login import logout_user, current_user
 
 from app import create_app, db
@@ -31,6 +31,13 @@ def robots():
 def make_session_permanent():
     session.permanent = True
     app.permanent_session_lifetime = timedelta(minutes=60)
+
+
+@app.before_request
+def block_banned():
+    if current_user.is_authenticated and current_user.is_banned():
+        logout_user()
+        abort(403)
 
 
 @app.before_request
