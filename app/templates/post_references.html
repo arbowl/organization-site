@@ -45,7 +45,7 @@
         <div class="flex justify-between items-center mt-4 text-sm">
           {% if roots_pagination.has_prev %}
             <a class="text-blue-700 hover:underline"
-               href="{{ url_for('blog.post_references', slug=post.slug, type='roots', page_roots=roots_pagination.prev_num, per_page=per_page) }}">← Previous</a>
+               href="{{ url_for('blog.post_references', slug=post.slug, type='roots', page_roots=roots_pagination.prev_num, per_page=per_page) }}">← Back</a>
           {% else %}<span></span>{% endif %}
           <span class="text-gray-500">Page {{ roots_pagination.page }} / {{ roots_pagination.pages }}</span>
           {% if roots_pagination.has_next %}
@@ -80,7 +80,7 @@
         <div class="flex justify-between items-center mt-4 text-sm">
           {% if branches_pagination.has_prev %}
             <a class="text-blue-700 hover:underline"
-               href="{{ url_for('blog.post_references', slug=post.slug, type='branches', page_branches=branches_pagination.prev_num, per_page=per_page) }}">← Previous</a>
+               href="{{ url_for('blog.post_references', slug=post.slug, type='branches', page_branches=branches_pagination.prev_num, per_page=per_page) }}">← Back</a>
           {% else %}<span></span>{% endif %}
           <span class="text-gray-500">Page {{ branches_pagination.page }} / {{ branches_pagination.pages }}</span>
           {% if branches_pagination.has_next %}
@@ -126,7 +126,7 @@
       <div class="flex justify-between items-center mt-4 text-sm">
         {% if splinters_pagination.has_prev %}
           <a class="text-blue-700 hover:underline"
-             href="{{ url_for('blog.post_references', slug=post.slug, type='splinters', page_splinters=splinters_pagination.prev_num, per_page=per_page) }}">← Previous</a>
+             href="{{ url_for('blog.post_references', slug=post.slug, type='splinters', page_splinters=splinters_pagination.prev_num, per_page=per_page) }}">← Back</a>
         {% else %}<span></span>{% endif %}
         <span class="text-gray-500">Page {{ splinters_pagination.page }} / {{ splinters_pagination.pages }}</span>
         {% if splinters_pagination.has_next %}

@@ -67,46 +67,47 @@
 
         {% if entries %}
           <nav aria-label="Pages" class="mt-12">
-            <ul class="flex justify-center items-center space-x-2">
-              {% if pagination.has_prev %}
-                <li>
-                  <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-1">
+              <!-- Prev button -->
+              <div class="flex-shrink-0">
+                {% if pagination.has_prev %}
+                  <a class="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out whitespace-nowrap"
                      href="{{ url_for('blog.all_posts', page=pagination.prev_num) }}">
-                    Previous
+                    Back
                   </a>
-                </li>
-              {% else %}
-                <li>
-                  <span class="px-4 py-2 border border-gray-200 text-gray-400 rounded-md cursor-not-allowed">Prev</span>
-                </li>
-              {% endif %}
-
-              {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                {% if p %}
-                  {% if p == pagination.page %}
-                    <li><span class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md">{{ p }}</span></li>
-                  {% else %}
-                    <li>
-                      <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
-                         href="{{ url_for('blog.all_posts', page=p) }}">{{ p }}</a>
-                    </li>
-                  {% endif %}
                 {% else %}
-                  <li><span class="px-4 py-2 border border-gray-200 text-gray-500 rounded-md cursor-not-allowed">...</span></li>
+                  <span class="px-3 py-2 text-sm border border-gray-200 text-gray-400 rounded-md cursor-not-allowed whitespace-nowrap">Back</span>
                 {% endif %}
-              {% endfor %}
+              </div>
 
-              {% if pagination.has_next %}
-                <li>
-                  <a class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out"
+              <!-- Page numbers - responsive container -->
+              <div class="flex flex-wrap justify-center items-center gap-1 max-w-full overflow-hidden">
+                {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                  {% if p %}
+                    {% if p == pagination.page %}
+                      <span class="px-2 py-1 text-sm bg-blue-600 text-white font-semibold rounded whitespace-nowrap">{{ p }}</span>
+                    {% else %}
+                      <a class="px-2 py-1 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition duration-300 ease-in-out whitespace-nowrap"
+                         href="{{ url_for('blog.all_posts', page=p) }}">{{ p }}</a>
+                    {% endif %}
+                  {% else %}
+                    <span class="px-1 py-1 text-sm border border-gray-200 text-gray-500 rounded cursor-not-allowed whitespace-nowrap">...</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+
+              <!-- Next button -->
+              <div class="flex-shrink-0">
+                {% if pagination.has_next %}
+                  <a class="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition duration-300 ease-in-out whitespace-nowrap"
                      href="{{ url_for('blog.all_posts', page=pagination.next_num) }}">
                     Next
                   </a>
-                </li>
-              {% else %}
-                <li><span class="px-4 py-2 border border-gray-200 text-gray-400 rounded-md cursor-not-allowed">Next</span></li>
-              {% endif %}
-            </ul>
+                {% else %}
+                  <span class="px-3 py-2 text-sm border border-gray-200 text-gray-400 rounded-md cursor-not-allowed whitespace-nowrap">Next</span>
+                {% endif %}
+              </div>
+            </div>
           </nav>
         {% endif %}
       </main>

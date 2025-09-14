@@ -1,39 +1,44 @@
 {% if pagination.pages > 1 %}
   <nav aria-label="Page navigation" class="mt-6">
-    <ul class="flex justify-center items-center space-x-2">
-      {% if pagination.has_prev %}
-        <li>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-1">
+      <!-- Prev button -->
+      <div class="flex-shrink-0">
+        {% if pagination.has_prev %}
           <a href="{{ url }}&page={{ pagination.prev_num }}"
-             class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100">
-            Previous
+             class="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 whitespace-nowrap">
+            Back
           </a>
-        </li>
-      {% else %}
-        <li><span class="px-4 py-2 text-gray-400 cursor-not-allowed">Previous</span></li>
-      {% endif %}
-
-      {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-        {% if p %}
-          {% if p == pagination.page %}
-            <li><span class="px-4 py-2 bg-blue-600 text-white rounded-md">{{ p }}</span></li>
-          {% else %}
-            <li><a href="{{ url }}&page={{ p }}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100">{{ p }}</a></li>
-          {% endif %}
         {% else %}
-          <li><span class="px-4 py-2 text-gray-400">…</span></li>
+          <span class="px-3 py-2 text-sm text-gray-400 cursor-not-allowed whitespace-nowrap">Back</span>
         {% endif %}
-      {% endfor %}
+      </div>
 
-      {% if pagination.has_next %}
-        <li>
+      <!-- Page numbers - responsive container -->
+      <div class="flex flex-wrap justify-center items-center gap-1 max-w-full overflow-hidden">
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+            {% if p == pagination.page %}
+              <span class="px-2 py-1 text-sm bg-blue-600 text-white rounded whitespace-nowrap">{{ p }}</span>
+            {% else %}
+              <a href="{{ url }}&page={{ p }}" class="px-2 py-1 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 whitespace-nowrap">{{ p }}</a>
+            {% endif %}
+          {% else %}
+            <span class="px-1 py-1 text-sm text-gray-400 whitespace-nowrap">…</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- Next button -->
+      <div class="flex-shrink-0">
+        {% if pagination.has_next %}
           <a href="{{ url }}&page={{ pagination.next_num }}"
-             class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100">
+             class="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 whitespace-nowrap">
             Next
           </a>
-        </li>
-      {% else %}
-        <li><span class="px-4 py-2 text-gray-400 cursor-not-allowed">Next</span></li>
-      {% endif %}
-    </ul>
+        {% else %}
+          <span class="px-3 py-2 text-sm text-gray-400 cursor-not-allowed whitespace-nowrap">Next</span>
+        {% endif %}
+      </div>
+    </div>
   </nav>
 {% endif %}
