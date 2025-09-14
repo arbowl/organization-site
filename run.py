@@ -86,11 +86,14 @@ def inject_search_form():
 
 @app.context_processor
 def inject_unread_count():
-    if current_user and current_user.is_authenticated:
-        count = Notification.query.filter_by(
-            recipient_id=current_user.id, read_at=None
-        ).count()
-    else:
+    try:
+        if current_user and current_user.is_authenticated and hasattr(current_user, 'id'):
+            count = Notification.query.filter_by(
+                recipient_id=current_user.id, read_at=None
+            ).count()
+        else:
+            count = 0
+    except Exception:
         count = 0
     return {"unread_count": count}
 
