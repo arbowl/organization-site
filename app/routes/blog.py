@@ -705,7 +705,7 @@ def remove_comment(comment_id):
     comment.is_removed = True
     if is_admin:
         comment.removed_by = "admin"
-    if is_mod:
+    elif is_mod:
         comment.removed_by = "moderator"
     else:
         comment.removed_by = "user"
