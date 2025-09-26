@@ -44,6 +44,7 @@ def view_bill(bill_slug):
             guest_name=guest_name,
             bill_id=bill.id,
             parent_id=form.parent_id.data or None,
+            timestamp=timestamp()
         )
         db.session.add(comment)
         db.session.commit()
@@ -104,7 +105,8 @@ def add_comment(bill_slug):
             content=form.content.data,
             bill_id=bill.id,
             author_id=current_user.id if current_user.is_authenticated else None,
-            guest_name=form.guest_name.data if not current_user.is_authenticated else None
+            guest_name=form.guest_name.data if not current_user.is_authenticated else None,
+            timestamp=timestamp()
         )
         
         db.session.add(comment)
@@ -134,7 +136,8 @@ def reply_to_comment(bill_slug, comment_id):
             bill_id=bill.id,
             parent_id=comment_id,
             author_id=current_user.id if current_user.is_authenticated else None,
-            guest_name=form.guest_name.data if not current_user.is_authenticated else None
+            guest_name=form.guest_name.data if not current_user.is_authenticated else None,
+            timestamp=timestamp()
         )
         
         db.session.add(reply)
@@ -241,6 +244,7 @@ def comment_thread(bill_slug, comment_id):
             author_id=current_user.id,
             bill_id=root.bill_id,
             parent_id=form.parent_id.data or None,
+            timestamp=timestamp()
         )
         db.session.add(comment)
         db.session.commit()
