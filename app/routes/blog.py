@@ -299,6 +299,7 @@ def view_post(slug: str) -> str:
             guest_name=guest_name,
             post_id=form.post_id.data,
             parent_id=form.parent_id.data or None,
+            timestamp=timestamp()
         )
         db.session.add(comment)
         db.session.commit()
@@ -903,6 +904,7 @@ def comment_thread(comment_id):
             author=current_user,
             post_id=form.post_id.data,
             parent_id=form.parent_id.data or None,
+            timestamp=timestamp()
         )
         db.session.add(comment)
         db.session.commit()
