@@ -1,0 +1,295 @@
+/* Projects Dashboard Styles */
+
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+    
+    /* Stack summary cards vertically on mobile */
+    .summary-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    /* Horizontal scroll for table on mobile */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Hide less critical columns on smaller screens */
+    .bills-table th:nth-child(4),
+    .bills-table td:nth-child(4),
+    .bills-table th:nth-child(5),
+    .bills-table td:nth-child(5) {
+        display: none;
+    }
+    
+    /* Smaller chart containers on mobile */
+    .chart-container {
+        height: 250px;
+    }
+}
+
+@media (min-width: 769px) {
+    /* Show all columns on larger screens */
+    .bills-table th:nth-child(4),
+    .bills-table td:nth-child(4),
+    .bills-table th:nth-child(5),
+    .bills-table td:nth-child(5) {
+        display: table-cell;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .compliance-compliant {
+        background-color: #065f46 !important;
+        color: #ffffff !important;
+    }
+    
+    .compliance-non-compliant {
+        background-color: #991b1b !important;
+        color: #ffffff !important;
+    }
+    
+    .compliance-incomplete {
+        background-color: #92400e !important;
+        color: #ffffff !important;
+    }
+    
+    .compliance-unknown {
+        background-color: #374151 !important;
+        color: #ffffff !important;
+    }
+}
+
+/* Focus indicators for accessibility */
+.focusable:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Custom tooltip styles */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #1f2937;
+    color: #ffffff;
+    text-align: center;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    position: absolute;
+    z-index: 1000;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    font-size: 0.875rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #1f2937 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced table styles */
+.bills-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.bills-table th {
+    position: sticky;
+    top: 0;
+    background-color: #f9fafb;
+    z-index: 10;
+}
+
+.bills-table tr.expanded-row {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 200px;
+    }
+}
+
+/* Status indicator styles */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-dot.compliant {
+    background-color: #10b981;
+}
+
+.status-dot.non-compliant {
+    background-color: #ef4444;
+}
+
+.status-dot.incomplete {
+    background-color: #f59e0b;
+}
+
+.status-dot.unknown {
+    background-color: #6b7280;
+}
+
+/* Color classes matching the HTML reference */
+.ok {
+    color: #137333;
+    font-weight: 600;
+}
+
+.bad {
+    color: #b00020;
+    font-weight: 600;
+}
+
+.warn {
+    color: #b26a00;
+    font-weight: 600;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-only {
+        display: block !important;
+    }
+    
+    .bg-white {
+        background: white !important;
+    }
+    
+    .text-gray-900 {
+        color: black !important;
+    }
+    
+    .shadow-lg,
+    .shadow-sm {
+        box-shadow: none !important;
+    }
+    
+    .rounded-lg {
+        border: 1px solid #e5e7eb;
+    }
+    
+    /* Ensure charts are visible in print */
+    canvas {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    
+    /* Page breaks */
+    .page-break-before {
+        page-break-before: always;
+    }
+    
+    .page-break-after {
+        page-break-after: always;
+    }
+    
+    .page-break-inside-avoid {
+        page-break-inside: avoid;
+    }
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+    .dark-mode-support {
+        /* Dark mode styles would go here */
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Enhanced focus styles for keyboard navigation */
+button:focus,
+select:focus,
+input:focus,
+a:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+
+
+/* Screen reader only text */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

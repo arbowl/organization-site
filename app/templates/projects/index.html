@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - Dismantl{% endblock %}
+
+{% block meta_description %}
+    <meta name="description" content="Explore data-driven projects tracking Massachusetts government transparency, legislative compliance, and public accountability.">
+{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/projects.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+            📊 Data Projects
+        </h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            Explore our data-driven projects that track Massachusetts government transparency, 
+            legislative compliance, and public accountability. Each project transforms complex 
+            government data into accessible insights for journalists, advocates, and citizens.
+        </p>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+        {% for project in projects %}
+        <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+            <!-- Project Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xl font-semibold text-gray-900">
+                        {{ project.title }}
+                    </h2>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full
+                               {% if project.status == 'active' %}bg-green-100 text-green-800
+                               {% elif project.status == 'beta' %}bg-yellow-100 text-yellow-800
+                               {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ project.status.title() }}
+                    </span>
+                </div>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    {{ project.description }}
+                </p>
+            </div>
+
+            <!-- Project Stats -->
+            <div class="p-6 bg-gray-50">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    {% if project.id == 'committees' %}
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{ project.stats.committees }}</div>
+                            <div class="text-xs text-gray-500">Committees</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600">{{ project.stats.avg_compliance }}</div>
+                            <div class="text-xs text-gray-500">Avg Compliance</div>
+                        </div>
+                        <div class="text-center col-span-2">
+                            <div class="text-xl font-bold text-gray-700">{{ project.stats.bills }}</div>
+                            <div class="text-xs text-gray-500">Bills Tracked</div>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="text-xs text-gray-500 mb-4">
+                    Last updated: {{ project.last_updated }}
+                </div>
+
+                <!-- Action Button -->
+                <a href="{{ project.url }}" 
+                   class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center 
+                          py-2 px-4 rounded-md transition-colors duration-200 font-medium">
+                    Explore Project →
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Coming Soon Section -->
+    <div class="mt-16 text-center">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-4">More Projects Coming Soon</h2>
+        <p class="text-gray-600 max-w-2xl mx-auto mb-6">
+            We're continuously working on new data projects to increase government transparency. 
+            Future projects may include campaign finance tracking, voting record analysis, 
+            budget monitoring, and lobbying disclosure dashboards.
+        </p>
+        <a href="{{ url_for('pages.contact') }}" 
+           class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md 
+                  text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+            📧 Suggest a Project
+        </a>
+    </div>
+
+    <!-- Methodology Note -->
+    <div class="mt-12 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-blue-900 mb-2">📋 About Our Data</h3>
+        <p class="text-blue-800 text-sm leading-relaxed">
+            All projects use publicly available government data and follow transparent methodologies. 
+            Data sources, collection methods, and analysis techniques are documented for each project. 
+            We prioritize accuracy, timeliness, and accessibility in all our work.
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Committee Compliance Dashboard - Dismantl{% endblock %}
+
+{% block meta_description %}
+    <meta name="description" content="Track Massachusetts legislative committee compliance with hearing notice requirements, decision deadlines, and transparency rules.">
+{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/projects.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    {% if error %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <h2 class="text-xl font-semibold text-red-800 mb-2">⚠️ No Data Available</h2>
+            <p class="text-red-700">{{ error }}</p>
+        </div>
+    {% else %}
+        <!-- Header with Committee Selector -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">
+                        📊 Committee Compliance Dashboard
+                    </h1>
+                    <p class="text-gray-600">
+                        Track legislative committee compliance with Massachusetts transparency requirements
+                    </p>
+                </div>
+                
+                <!-- Committee Selector -->
+                <div class="flex-shrink-0">
+                    <label for="committee-select" class="block text-sm font-medium text-gray-700 mb-1">
+                        Select Committee:
+                    </label>
+                    <select id="committee-select" 
+                            class="block w-full md:w-80 px-3 py-2 border border-gray-300 rounded-md 
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        {% for code, committee in committees.items() %}
+                            <option value="{{ code }}" {% if code == selected_code %}selected{% endif %}>
+                                {{ committee.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Executive Summary Panel -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <span class="text-blue-600 font-semibold">📋</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Bills</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="total-bills">
+                            {{ selected_committee.metadata.total_bills }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <span class="text-green-600 font-semibold">✅</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Compliant</p>
+                        <p class="text-2xl font-semibold text-green-600" id="compliant-bills">
+                            {{ selected_committee.metadata.compliant_bills }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                            <span class="text-red-600 font-semibold">❌</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Non-Compliant</p>
+                        <p class="text-2xl font-semibold text-red-600" id="non-compliant-bills">
+                            {{ selected_committee.metadata.non_compliant_bills }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <span class="text-purple-600 font-semibold">📊</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Compliance Rate</p>
+                        <p class="text-2xl font-semibold text-purple-600" id="compliance-rate">
+                            {{ selected_committee.metadata.compliance_rate }}%
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Controls -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">🔍 Filters & Controls</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Compliance Status Filter -->
+                <div>
+                    <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">
+                        Compliance Status
+                    </label>
+                    <select id="status-filter" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            aria-describedby="status-filter-help">
+                        <option value="all">All Bills</option>
+                        <option value="compliant">Compliant</option>
+                        <option value="non-compliant">Non-Compliant</option>
+                        <option value="incomplete">Incomplete</option>
+                        <option value="unknown">Unknown</option>
+                    </select>
+                    <div id="status-filter-help" class="sr-only">Filter bills by their compliance status with Massachusetts transparency requirements</div>
+                </div>
+
+                <!-- Export Button -->
+                <div class="flex items-end">
+                    <button id="export-csv" 
+                            class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200">
+                        📥 Export CSV
+                    </button>
+                </div>
+
+                <!-- Share Button -->
+                <div class="flex items-end">
+                    <button id="share-link" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200">
+                        🔗 Share Link
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bills Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">📋 Bills Overview</h2>
+                <p class="text-sm text-gray-600 mt-1">Click on any row to see detailed compliance information</p>
+            </div>
+            <div class="table-container overflow-x-auto">
+                <table id="bills-table" 
+                       class="bills-table min-w-full divide-y divide-gray-200"
+                       role="table"
+                       aria-label="Committee bills compliance data"
+                       aria-describedby="table-description">
+                <div id="table-description" class="sr-only">
+                    Table showing legislative bills with their compliance status, hearing dates, and notice gaps. 
+                    Click column headers to sort. Click rows to expand for more details.
+                </div>
+                    <thead class="bg-gray-50">
+                        <tr role="row">
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="bill_id" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Bill ID - Click to sort">
+                                Bill <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="bill_title" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Bill Title - Click to sort">
+                                Title <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="hearing_date" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Hearing Date - Click to sort">
+                                Hearing <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="deadline_60" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="60-Day Deadline - Click to sort">
+                                D60 <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="effective_deadline" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Effective Deadline - Click to sort">
+                                Eff. Deadline <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="notice_gap_days" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Notice Gap in Days - Click to sort">
+                                Notice Gap <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="reported_out" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Reported Out - Click to sort">
+                                Reported? <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Summary
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Votes
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="state" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Compliance Status - Click to sort">
+                                Status <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="bills-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="table-pagination" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <!-- Pagination controls will be added by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Analytics Charts -->
+        <div class="grid grid-cols-1 gap-6 mb-6">
+            <!-- Compliance Breakdown -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 page-break-inside-avoid">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">🥧 Compliance Breakdown</h3>
+                <div class="chart-container" role="img" aria-labelledby="compliance-chart-title" aria-describedby="compliance-chart-desc" style="max-height: 400px; position: relative;">
+                    <canvas id="compliance-chart"></canvas>
+                </div>
+                <div id="compliance-chart-title" class="sr-only">Compliance Status Breakdown Chart</div>
+                <div id="compliance-chart-desc" class="sr-only">
+                    Doughnut chart showing the proportion of bills by compliance status: 
+                    compliant (green), non-compliant (red), incomplete (yellow), and unknown (gray).
+                </div>
+                <!-- Data table for screen readers -->
+                <table class="sr-only" id="compliance-data-table">
+                    <caption>Compliance Status Breakdown Data</caption>
+                    <thead>
+                        <tr><th>Compliance Status</th><th>Number of Bills</th><th>Percentage</th></tr>
+                    </thead>
+                    <tbody id="compliance-table-body">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Data Provenance Panel -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-blue-900 mb-3">📋 Data Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                    <span class="font-medium text-blue-800">Committee:</span>
+                    <span class="text-blue-700">{{ selected_committee.name }}</span>
+                </div>
+                <div>
+                    <span class="font-medium text-blue-800">Last Updated:</span>
+                    <span class="text-blue-700">{{ selected_committee.metadata.last_updated }}</span>
+                </div>
+                <div>
+                    <span class="font-medium text-blue-800">Data Source:</span>
+                    <span class="text-blue-700">Massachusetts Legislature</span>
+                </div>
+            </div>
+            <div class="mt-4 text-xs text-blue-600">
+                <strong>Methodology:</strong> Committees must announce hearings ≥10 days in advance, report decisions within 60-90 days,
+                post summaries, and post votes. Data is automatically parsed from official legislative records and manually verified for accuracy.
+            </div>
+            <div class="mt-4 text-xs text-blue-600">
+                <strong>Disclaimer:</strong> Although we strive to be as accurate as possible, the data collected is scraped from various
+                sources, formats, and layouts. In addition, data generation is a time-consuming process, and deadline windows may
+                shift as information is gathered. Consider this dashboard a "compliance snapshot", not a real-time source of truth.
+            </div>
+            <div class="mt-4 text-xs text-blue-600">
+                <strong>Corrections:</strong> If you notice any errors in data analysis or gaps in discovery, please contact us at
+                <a href="mailto:contact@dismantl.org" class="text-blue-700">contact@dismantl.org</a>.
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Dashboard JavaScript -->
+<script>
+// Embed committee data for JavaScript
+const COMMITTEE_DATA = {{ selected_committee.bills | tojson }};
+const COMMITTEES = {{ committees | tojson }};
+const SELECTED_CODE = "{{ selected_code }}";
+
+// Dashboard functionality will be implemented here
+console.log('Committee dashboard loaded with', COMMITTEE_DATA.length, 'bills');
+</script>
+
+<script src="{{ url_for('static', filename='js/committee-dashboard.js') }}"></script>
+{% endblock %}
