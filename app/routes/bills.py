@@ -5,6 +5,7 @@ from app.forms import BillCommentForm
 from datetime import datetime, timezone
 
 bills_bp = Blueprint("bills", __name__)
+timestamp = partial(datetime.now, timezone.utc)
 
 
 def get_bill_by_slug(bill_slug):
