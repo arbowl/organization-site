@@ -1,6 +1,7 @@
 [
   {
     "bill_id": "H3591",
+    "bill_title": "An Act ensuring our freedom to read in the Commonwealth",
     "bill_url": "https://malegislature.gov/Bills/194/H3591",
     "hearing_date": "2025-07-22",
     "deadline_60": "2025-09-20",
@@ -12,11 +13,16 @@
     "summary_url": null,
     "votes_present": false,
     "votes_url": null,
-    "state": "unknown",
-    "reason": "Before deadline"
+    "state": "non-compliant",
+    "reason": "Factors: not reported out, no votes posted, no summaries posted, adequate notice (12 days)",
+    "notice_status": "in_range",
+    "notice_gap_days": 12,
+    "announcement_date": "2025-07-10",
+    "scheduled_hearing_date": "2025-07-22"
   },
   {
     "bill_id": "H3594",
+    "bill_title": "An Act regarding free expression",
     "bill_url": "https://malegislature.gov/Bills/194/H3594",
     "hearing_date": "2025-07-22",
     "deadline_60": "2025-09-20",
@@ -24,15 +30,20 @@
     "extension_order_url": null,
     "extension_date": null,
     "reported_out": false,
-    "summary_present": false,
-    "summary_url": null,
+    "summary_present": true,
+    "summary_url": "https://malegislature.gov/Download/DownloadDocument/24537/H3594%20Moran%20J%20194%20Summary.pdf",
     "votes_present": false,
     "votes_url": null,
-    "state": "unknown",
-    "reason": "Before deadline"
+    "state": "non-compliant",
+    "reason": "Factors: not reported out, no votes posted, adequate notice (12 days)",
+    "notice_status": "in_range",
+    "notice_gap_days": 12,
+    "announcement_date": "2025-07-10",
+    "scheduled_hearing_date": "2025-07-22"
   },
   {
     "bill_id": "H3595",
+    "bill_title": "An Act addressing challenges facing public libraries and digital resource collections",
     "bill_url": "https://malegislature.gov/Bills/194/H3595",
     "hearing_date": "2025-07-22",
     "deadline_60": "2025-09-20",
@@ -40,15 +51,20 @@
     "extension_order_url": null,
     "extension_date": null,
     "reported_out": false,
-    "summary_present": false,
-    "summary_url": null,
+    "summary_present": true,
+    "summary_url": "https://malegislature.gov/Download/DownloadDocument/24538/H3595%20Murray%20194%20Summary.pdf",
     "votes_present": false,
     "votes_url": null,
-    "state": "unknown",
-    "reason": "Before deadline"
+    "state": "non-compliant",
+    "reason": "Factors: not reported out, no votes posted, adequate notice (12 days)",
+    "notice_status": "in_range",
+    "notice_gap_days": 12,
+    "announcement_date": "2025-07-10",
+    "scheduled_hearing_date": "2025-07-22"
   },
   {
     "bill_id": "H3598",
+    "bill_title": "An Act protecting against attempts to ban, remove, or restrict library access to materials",
     "bill_url": "https://malegislature.gov/Bills/194/H3598",
     "hearing_date": "2025-07-22",
     "deadline_60": "2025-09-20",
@@ -60,11 +76,16 @@
     "summary_url": "https://malegislature.gov/Download/DownloadDocument/24539/H3598%20Saunders%20194%20Summary.pdf",
     "votes_present": false,
     "votes_url": null,
-    "state": "unknown",
-    "reason": "Before deadline"
+    "state": "non-compliant",
+    "reason": "Factors: not reported out, no votes posted, adequate notice (12 days)",
+    "notice_status": "in_range",
+    "notice_gap_days": 12,
+    "announcement_date": "2025-07-10",
+    "scheduled_hearing_date": "2025-07-22"
   },
   {
     "bill_id": "S2328",
+    "bill_title": "An Act regarding free expression",
     "bill_url": "https://malegislature.gov/Bills/194/S2328",
     "hearing_date": "2025-07-22",
     "deadline_60": "2025-09-20",
@@ -76,11 +97,16 @@
     "summary_url": null,
     "votes_present": false,
     "votes_url": null,
-    "state": "unknown",
-    "reason": "Before deadline"
+    "state": "non-compliant",
+    "reason": "Senate bill: no votes or summaries posted, adequate notice (12 days)",
+    "notice_status": "in_range",
+    "notice_gap_days": 12,
+    "announcement_date": "2025-07-10",
+    "scheduled_hearing_date": "2025-07-22"
   },
   {
     "bill_id": "S2330",
+    "bill_title": "An Act addressing challenges facing public libraries and digital resource collections",
     "bill_url": "https://malegislature.gov/Bills/194/S2330",
     "hearing_date": "2025-07-22",
     "deadline_60": "2025-09-20",
@@ -92,7 +118,11 @@
     "summary_url": null,
     "votes_present": false,
     "votes_url": null,
-    "state": "unknown",
-    "reason": "Before deadline"
+    "state": "non-compliant",
+    "reason": "Senate bill: no votes or summaries posted, adequate notice (12 days)",
+    "notice_status": "in_range",
+    "notice_gap_days": 12,
+    "announcement_date": "2025-07-10",
+    "scheduled_hearing_date": "2025-07-22"
   }
 ]
