@@ -1,13 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app
 from flask_login import login_required, current_user
-from functools import partial
-
 from app.models import Bill, Comment, db
 from app.forms import BillCommentForm
 from datetime import datetime, timezone
 
 bills_bp = Blueprint("bills", __name__)
-timestamp = partial(datetime.now, timezone.utc)
 
 
 def get_bill_by_slug(bill_slug):

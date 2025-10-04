@@ -308,6 +308,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     from .routes.account import account_bp
     from .routes.analytics import analytics_bp
     from .routes.bills import bills_bp
+    from .routes.projects import projects_bp
     from app.models import User, Post, Comment, Report, Bill, NewsletterSubscription
 
     admin.add_view(UserAdmin(User, db.session))
@@ -347,6 +348,7 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     app.register_blueprint(account_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(bills_bp)
+    app.register_blueprint(projects_bp)
     with app.app_context():
         db.create_all()
     CSRFProtect(app)
