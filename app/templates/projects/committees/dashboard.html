@@ -301,6 +301,58 @@
                 <strong>Methodology:</strong> Committees must announce hearings ≥10 days in advance, report decisions within 60-90 days,
                 post summaries, and post votes. Data is automatically parsed from official legislative records and manually verified for accuracy.
             </div>
+            <!-- Contact info for the selected committee (from cache.json) -->
+            <div class="mt-4 text-sm">
+                <strong class="text-blue-800">Contact</strong>
+                {% if selected_committee.contact or selected_committee.metadata.contact_email or selected_committee.metadata.contact_name %}
+                    <div class="mt-2 text-blue-700 space-y-1">
+                        {% set c = selected_committee.contact if selected_committee.contact else selected_committee.metadata %}
+
+                        {# Basic summary #}
+                        {% if c.name or selected_committee.name %}
+                            <div class="font-medium">{{ c.name or selected_committee.name }}</div>
+                        {% endif %}
+                        {% if c.chamber %}<div class="text-xs text-blue-600">Chamber: {{ c.chamber }}</div>{% endif %}
+                        {% if c.url %}<div>Website: <a href="{{ c.url }}" target="_blank" rel="noopener noreferrer" class="text-blue-700">{{ c.url }}</a></div>{% endif %}
+
+                        {# House contact block #}
+                        {% if c.house_room or c.house_address or c.house_phone or c.house_chair_name or c.house_chair_email or c.house_vice_chair_name or c.house_vice_chair_email %}
+                            <div class="mt-2">
+                                <div class="font-semibold">House</div>
+                                {% if c.house_room %}<div class="text-xs text-blue-600">Room: {{ c.house_room }}</div>{% endif %}
+                                {% if c.house_address %}<div>Address: {{ c.house_address }}</div>{% endif %}
+                                {% if c.house_phone %}<div>Phone: {{ c.house_phone }}</div>{% endif %}
+                                {% if c.house_chair_name %}<div>Chair: {{ c.house_chair_name }}{% if c.house_chair_email %} — <a href="mailto:{{ c.house_chair_email }}" class="text-blue-700">{{ c.house_chair_email }}</a>{% endif %}</div>{% endif %}
+                                {% if c.house_vice_chair_name %}<div>Vice Chair: {{ c.house_vice_chair_name }}{% if c.house_vice_chair_email %} — <a href="mailto:{{ c.house_vice_chair_email }}" class="text-blue-700">{{ c.house_vice_chair_email }}</a>{% endif %}</div>{% endif %}
+                            </div>
+                        {% endif %}
+
+                        {# Senate contact block #}
+                        {% if c.senate_room or c.senate_address or c.senate_phone or c.senate_chair_name or c.senate_chair_email or c.senate_vice_chair_name or c.senate_vice_chair_email %}
+                            <div class="mt-2">
+                                <div class="font-semibold">Senate</div>
+                                {% if c.senate_room %}<div class="text-xs text-blue-600">Room: {{ c.senate_room }}</div>{% endif %}
+                                {% if c.senate_address %}<div>Address: {{ c.senate_address }}</div>{% endif %}
+                                {% if c.senate_phone %}<div>Phone: {{ c.senate_phone }}</div>{% endif %}
+                                {% if c.senate_chair_name %}<div>Chair: {{ c.senate_chair_name }}{% if c.senate_chair_email %} — <a href="mailto:{{ c.senate_chair_email }}" class="text-blue-700">{{ c.senate_chair_email }}</a>{% endif %}</div>{% endif %}
+                                {% if c.senate_vice_chair_name %}<div>Vice Chair: {{ c.senate_vice_chair_name }}{% if c.senate_vice_chair_email %} — <a href="mailto:{{ c.senate_vice_chair_email }}" class="text-blue-700">{{ c.senate_vice_chair_email }}</a>{% endif %}</div>{% endif %}
+                            </div>
+                        {% endif %}
+
+                        {# Generic contact fields (fallbacks) #}
+                        {% if c.email or c.contact_email or selected_committee.metadata.contact_email %}
+                            <div>Email: <a href="mailto:{{ c.email or c.contact_email or selected_committee.metadata.contact_email }}" class="text-blue-700">{{ c.email or c.contact_email or selected_committee.metadata.contact_email }}</a></div>
+                        {% endif %}
+                        {% if c.phone or c.contact_phone or selected_committee.metadata.contact_phone %}
+                            <div>Phone: {{ c.phone or c.contact_phone or selected_committee.metadata.contact_phone }}</div>
+                        {% endif %}
+
+                        {% if c.updated_at %}<div class="text-xs text-blue-600">Contact updated: {{ c.updated_at }}</div>{% endif %}
+                    </div>
+                {% else %}
+                    <div class="mt-2 text-blue-700">Not available</div>
+                {% endif %}
+            </div>
             <div class="mt-4 text-xs text-blue-600">
                 <strong>Disclaimer:</strong> Although we strive to be as accurate as possible, the data collected is scraped from various
                 sources, formats, and layouts. In addition, data generation is a time-consuming process, and deadline windows may

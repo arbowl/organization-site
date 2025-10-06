@@ -15,11 +15,13 @@ projects_bp = Blueprint("projects", __name__, url_prefix="/projects")
 # Global committee data cache
 _committee_cache = {}
 _committee_names = {}
+_committee_contacts = {}
 
 
 def load_committee_names() -> Dict[str, str]:
     """Load committee code to name mapping from cache.json"""
     global _committee_names
+    global _committee_contacts
     if _committee_names:
         return _committee_names
     
@@ -30,8 +32,10 @@ def load_committee_names() -> Dict[str, str]:
         with open(cache_path, 'r', encoding='utf-8') as f:
             cache_data = json.load(f)
             committee_contacts = cache_data.get('committee_contacts', {})
+            # store full contact info mapping for later use
+            _committee_contacts = committee_contacts
             _committee_names = {
-                code: info.get('name', code) 
+                code: info.get('name', code)
                 for code, info in committee_contacts.items()
             }
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
@@ -39,6 +43,7 @@ def load_committee_names() -> Dict[str, str]:
             f"Could not load committee names from {cache_path}"
         )
         _committee_names = {}
+        _committee_contacts = {}
     
     return _committee_names
 
@@ -51,6 +56,8 @@ def scan_committee_files() -> Dict[str, Dict[str, Any]]:
     
     committees_dir = os.path.join(app.static_folder, 'data', 'committees')
     committee_names = load_committee_names()
+    # use the contacts mapping (may be empty)
+    committee_contacts = _committee_contacts
     
     for filename in os.listdir(committees_dir):
         if filename.startswith('basic_') and filename.endswith('.json'):
@@ -81,6 +88,8 @@ def scan_committee_files() -> Dict[str, Dict[str, Any]]:
                     'name': committee_name,
                     'path': file_path,
                     'bills': bills_data,
+                    # attach contact info (if any) from cache.json
+                    'contact': None,
                     'metadata': {
                         'total_bills': total_bills,
                         'compliant_bills': compliant_bills,
@@ -94,6 +103,30 @@ def scan_committee_files() -> Dict[str, Dict[str, Any]]:
                         ).strftime('%Y-%m-%d')
                     }
                 }
+                # Merge contact info if present
+                if committee_contacts and code in committee_contacts:
+                    raw = committee_contacts.get(code) or {}
+                    # support both nested 'contact' dict or flat fields
+                    contact_obj = raw.get('contact') if isinstance(raw, dict) and 'contact' in raw else raw
+                    _committee_cache[code]['contact'] = contact_obj
+                    # populate metadata fallback fields commonly used in templates
+                    md = _committee_cache[code]['metadata']
+                    md['contact_name'] = (
+                        (contact_obj.get('name') if isinstance(contact_obj, dict) else None)
+                        or raw.get('contact_name') or raw.get('name')
+                    )
+                    md['contact_email'] = (
+                        (contact_obj.get('email') if isinstance(contact_obj, dict) else None)
+                        or raw.get('contact_email') or raw.get('email')
+                    )
+                    md['contact_phone'] = (
+                        (contact_obj.get('phone') if isinstance(contact_obj, dict) else None)
+                        or raw.get('contact_phone') or raw.get('phone')
+                    )
+                    md['contact_website'] = (
+                        (contact_obj.get('website') if isinstance(contact_obj, dict) else None)
+                        or raw.get('contact_website') or raw.get('website')
+                    )
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 app.logger.error(
                     f"Error loading committee file {filename}: {e}"
