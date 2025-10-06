@@ -645,3 +645,21 @@ a:hover .preview-hero.clickable {
 #discussions-toggle-icon {
   transition: transform 0.3s ease-in-out;
 }
+
+/* Match bills toggle behavior to discussions toggle (same hover/focus visuals) */
+#bills-toggle {
+  transition: all 0.2s ease-in-out;
+}
+
+#bills-toggle:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+#bills-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+#bills-toggle-icon {
+  transition: transform 0.3s ease-in-out;
+}
