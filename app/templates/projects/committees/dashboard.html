@@ -154,132 +154,6 @@
             </div>
         </div>
 
-        <!-- Bills Table -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">📋 Bills Overview</h2>
-                <p class="text-sm text-gray-600 mt-1">Click on any row to see detailed compliance information</p>
-            </div>
-            <div class="table-container overflow-x-auto">
-                <table id="bills-table" 
-                       class="bills-table min-w-full divide-y divide-gray-200"
-                       role="table"
-                       aria-label="Committee bills compliance data"
-                       aria-describedby="table-description">
-                <div id="table-description" class="sr-only">
-                    Table showing legislative bills with their compliance status, hearing dates, and notice gaps. 
-                    Click column headers to sort. Click rows to expand for more details.
-                </div>
-                    <thead class="bg-gray-50">
-                        <tr role="row">
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
-                                data-sort="bill_id" 
-                                role="columnheader" 
-                                aria-sort="none"
-                                tabindex="0"
-                                aria-label="Bill ID - Click to sort">
-                                Bill <span class="sort-indicator" aria-hidden="true">↕️</span>
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
-                                data-sort="bill_title" 
-                                role="columnheader" 
-                                aria-sort="none"
-                                tabindex="0"
-                                aria-label="Bill Title - Click to sort">
-                                Title <span class="sort-indicator" aria-hidden="true">↕️</span>
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
-                                data-sort="hearing_date" 
-                                role="columnheader" 
-                                aria-sort="none"
-                                tabindex="0"
-                                aria-label="Hearing Date - Click to sort">
-                                Hearing <span class="sort-indicator" aria-hidden="true">↕️</span>
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
-                                data-sort="notice_gap_days" 
-                                role="columnheader" 
-                                aria-sort="none"
-                                tabindex="0"
-                                aria-label="Notice Gap in Days - Click to sort">
-                                Hearing Notice <span class="sort-indicator" aria-hidden="true">↕️</span>
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
-                                data-sort="deadline_60" 
-                                role="columnheader" 
-                                aria-sort="none"
-                                tabindex="0"
-                                aria-label="60-Day Deadline - Click to sort">
-                                Original Deadline <span class="sort-indicator" aria-hidden="true">↕️</span>
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
-                                data-sort="effective_deadline" 
-                                role="columnheader" 
-                                aria-sort="none"
-                                tabindex="0"
-                                aria-label="Effective Deadline - Click to sort">
-                                Final Deadline <span class="sort-indicator" aria-hidden="true">↕️</span>
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
-                                data-sort="reported_out" 
-                                role="columnheader" 
-                                aria-sort="none"
-                                tabindex="0"
-                                aria-label="Reported Out - Click to sort">
-                                Reported? <span class="sort-indicator" aria-hidden="true">↕️</span>
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Summary
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Votes
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
-                                data-sort="state" 
-                                role="columnheader" 
-                                aria-sort="none"
-                                tabindex="0"
-                                aria-label="Compliance Status - Click to sort">
-                                Status <span class="sort-indicator" aria-hidden="true">↕️</span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody id="bills-table-body" class="bg-white divide-y divide-gray-200">
-                        <!-- Table rows will be populated by JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-            <div id="table-pagination" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                <!-- Pagination controls will be added by JavaScript -->
-            </div>
-        </div>
-
-        <!-- Analytics Charts -->
-        <div class="grid grid-cols-1 gap-6 mb-6">
-            <!-- Compliance Breakdown -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 page-break-inside-avoid">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">🥧 Compliance Breakdown</h3>
-                <div class="chart-container" role="img" aria-labelledby="compliance-chart-title" aria-describedby="compliance-chart-desc" style="max-height: 400px; position: relative;">
-                    <canvas id="compliance-chart"></canvas>
-                </div>
-                <div id="compliance-chart-title" class="sr-only">Compliance Status Breakdown Chart</div>
-                <div id="compliance-chart-desc" class="sr-only">
-                    Doughnut chart showing the proportion of bills by compliance status: 
-                    compliant (green), non-compliant (red), incomplete (yellow), and unknown (gray).
-                </div>
-                <!-- Data table for screen readers -->
-                <table class="sr-only" id="compliance-data-table">
-                    <caption>Compliance Status Breakdown Data</caption>
-                    <thead>
-                        <tr><th>Compliance Status</th><th>Number of Bills</th><th>Percentage</th></tr>
-                    </thead>
-                    <tbody id="compliance-table-body">
-                        <!-- Populated by JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
         <!-- Data Provenance Panel -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
             <h3 class="text-lg font-semibold text-blue-900 mb-3">📋 Data Information</h3>
@@ -361,6 +235,132 @@
             <div class="mt-4 text-xs text-blue-600">
                 <strong>Corrections:</strong> If you notice any errors in data analysis or gaps in discovery, please contact us at
                 <a href="mailto:contact@dismantl.org" class="text-blue-700">contact@dismantl.org</a>.
+            </div>
+        </div>
+
+        <!-- Bills Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">📋 Bills Overview</h2>
+                <p class="text-sm text-gray-600 mt-1">Click on any row to see detailed compliance information</p>
+            </div>
+            <div class="table-container overflow-x-auto">
+                <table id="bills-table" 
+                       class="bills-table min-w-full divide-y divide-gray-200"
+                       role="table"
+                       aria-label="Committee bills compliance data"
+                       aria-describedby="table-description">
+                <div id="table-description" class="sr-only">
+                    Table showing legislative bills with their compliance status, hearing dates, and notice gaps. 
+                    Click column headers to sort. Click rows to expand for more details.
+                </div>
+                    <thead class="bg-gray-50">
+                        <tr role="row">
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="bill_id" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Bill ID - Click to sort">
+                                Bill <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="bill_title" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Bill Title - Click to sort">
+                                Title <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="hearing_date" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Hearing Date - Click to sort">
+                                Hearing <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="notice_gap_days" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Notice Gap in Days - Click to sort">
+                                Hearing Notice <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="deadline_60" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="60-Day Deadline - Click to sort">
+                                Original Reporting Deadline <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="effective_deadline" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Effective Deadline - Click to sort">
+                                Final Reporting Deadline <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="reported_out" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Reported Out - Click to sort">
+                                Reported? <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Summary
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Votes
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 focusable" 
+                                data-sort="state" 
+                                role="columnheader" 
+                                aria-sort="none"
+                                tabindex="0"
+                                aria-label="Compliance Status - Click to sort">
+                                Status <span class="sort-indicator" aria-hidden="true">↕️</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="bills-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="table-pagination" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <!-- Pagination controls will be added by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Analytics Charts -->
+        <div class="grid grid-cols-1 gap-6 mb-6">
+            <!-- Compliance Breakdown -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 page-break-inside-avoid">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">🥧 Compliance Breakdown</h3>
+                <div class="chart-container" role="img" aria-labelledby="compliance-chart-title" aria-describedby="compliance-chart-desc" style="max-height: 400px; position: relative;">
+                    <canvas id="compliance-chart"></canvas>
+                </div>
+                <div id="compliance-chart-title" class="sr-only">Compliance Status Breakdown Chart</div>
+                <div id="compliance-chart-desc" class="sr-only">
+                    Doughnut chart showing the proportion of bills by compliance status: 
+                    compliant (green), non-compliant (red), incomplete (yellow), and unknown (gray).
+                </div>
+                <!-- Data table for screen readers -->
+                <table class="sr-only" id="compliance-data-table">
+                    <caption>Compliance Status Breakdown Data</caption>
+                    <thead>
+                        <tr><th>Compliance Status</th><th>Number of Bills</th><th>Percentage</th></tr>
+                    </thead>
+                    <tbody id="compliance-table-body">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
             </div>
         </div>
     {% endif %}
