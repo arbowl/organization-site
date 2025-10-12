@@ -221,8 +221,8 @@ def export_committee_csv(code):
     
     # Header row
     writer.writerow([
-        'Bill ID', 'Title', 'Hearing Date', 'D60 Deadline', 'Effective Deadline', 
-        'Notice Gap (Days)', 'Reported Out', 'Summary Present', 'Votes Present', 
+        'Bill ID', 'Title', 'Hearing Date', 'Notice Gap (Days)', 'D60 Deadline', 
+        'Effective Deadline', 'Reported Out', 'Summary Present', 'Votes Present', 
         'Compliance State', 'Reason', 'Bill URL', 'Summary URL', 'Votes URL'
     ])
     
@@ -232,9 +232,9 @@ def export_committee_csv(code):
             bill.get('bill_id', ''),
             bill.get('bill_title', ''),
             bill.get('hearing_date', ''),
+            bill.get('notice_gap_days', ''),
             bill.get('deadline_60', ''),
             bill.get('effective_deadline', ''),
-            bill.get('notice_gap_days', ''),
             'Yes' if bill.get('reported_out') else 'No',
             'Yes' if bill.get('summary_present') else 'No',
             'Yes' if bill.get('votes_present') else 'No',
