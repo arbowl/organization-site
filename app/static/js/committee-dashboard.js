@@ -134,6 +134,12 @@ class CommitteeDashboard {
                     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                         ${bill.hearing_date || 'N/A'}
                     </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm ${noticeGapClass}">
+                        ${bill.notice_gap_days !== null ? 
+                            `<span class="${bill.notice_gap_days < 10 ? 'bad' : 'ok'}">${bill.notice_gap_days} days</span>` : 
+                            'N/A'
+                        }
+                    </td>
                     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                         ${bill.deadline_60 || 'N/A'}
                     </td>
@@ -141,12 +147,6 @@ class CommitteeDashboard {
                         ${hasExtension ? 
                             `<a href="${bill.extension_order_url || '#'}" target="_blank" class="text-blue-600 hover:text-blue-800">${bill.effective_deadline}</a>` :
                             (bill.effective_deadline || 'N/A')
-                        }
-                    </td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm ${noticeGapClass}">
-                        ${bill.notice_gap_days !== null ? 
-                            `<span class="${bill.notice_gap_days < 10 ? 'bad' : 'ok'}">${bill.notice_gap_days} days</span>` : 
-                            'N/A'
                         }
                     </td>
                     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
