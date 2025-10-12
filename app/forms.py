@@ -230,3 +230,32 @@ class ChangePasswordForm(FlaskForm):
     def validate_confirm_password(self, field):
         if field.data != self.new_password.data:
             raise ValidationError("Passwords do not match.")
+
+
+class ForgotPasswordForm(FlaskForm):
+    """Form for requesting a password reset"""
+    email = StringField(
+        "Email",
+        validators=[DataRequired(), Email()],
+        render_kw={"placeholder": "Enter your email address"}
+    )
+    submit = SubmitField("Send Reset Link")
+
+
+class ResetPasswordForm(FlaskForm):
+    """Form for resetting password with token"""
+    password = PasswordField(
+        "New Password",
+        validators=[DataRequired(), Length(min=6, message="Password must be at least 6 characters long")],
+        render_kw={"placeholder": "Enter new password (minimum 6 characters)"}
+    )
+    password2 = PasswordField(
+        "Confirm New Password",
+        validators=[DataRequired()],
+        render_kw={"placeholder": "Confirm new password"}
+    )
+    submit = SubmitField("Reset Password")
+
+    def validate_password2(self, field):
+        if field.data != self.password.data:
+            raise ValidationError("Passwords do not match.")

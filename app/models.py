@@ -42,6 +42,8 @@ class User(UserMixin, db.Model):
     website = db.Column(db.String(200), nullable=True)
     social_links = db.Column(db.JSON, nullable=True)
     favorite_tags = db.Column(db.JSON, nullable=True)  # Store array of tag IDs
+    reset_token = db.Column(db.String(100), nullable=True, index=True)
+    reset_token_expiry = db.Column(db.DateTime, nullable=True)
     posts = db.relationship("Post", backref="author", lazy="dynamic")
 
     @property
