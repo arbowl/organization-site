@@ -4,7 +4,7 @@ from itsdangerous import URLSafeTimedSerializer
 from os import getenv
 
 from app import db
-from app.forms import BioForm
+from app.forms import BioForm, ChangePasswordForm
 from app.models import User, Tag
 
 account_bp: Blueprint = Blueprint("account", __name__)
@@ -134,3 +134,25 @@ def update_preferences_via_token(token):
     
     flash("Preferences updated successfully.", "success")
     return redirect(url_for("account.manage_subscriptions", token=token))
+
+
+@account_bp.route("/account/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    """Allow users to change their password."""
+    form = ChangePasswordForm()
+    
+    if form.validate_on_submit():
+        # Verify current password
+        if not current_user.check_password(form.current_password.data):
+            flash("Current password is incorrect.", "danger")
+            return render_template("auth/change_password.html", form=form)
+        
+        # Set new password
+        current_user.set_password(form.new_password.data)
+        db.session.commit()
+        
+        flash("Your password has been changed successfully.", "success")
+        return redirect(url_for("blog.user_posts", username=current_user.username))
+    
+    return render_template("auth/change_password.html", form=form)
