@@ -312,8 +312,43 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     from app.models import User, Post, Comment, Report, Bill, NewsletterSubscription
 
     admin.add_view(UserAdmin(User, db.session))
-    admin.add_view(UserAdmin(Post, db.session))
-    admin.add_view(UserAdmin(Comment, db.session))
+    
+    # Add Post admin view
+    class PostAdmin(ModelView):
+        column_list = [
+            "id", "title", "author.username", "published_at",
+            "timestamp", "is_draft", "is_splinter", "updated_at"
+        ]
+        column_labels = {"author.username": "Author"}
+        column_searchable_list = ["title", "slug"]
+        column_filters = [
+            "is_draft", "is_splinter", "timestamp", "published_at"
+        ]
+        form_excluded_columns = [
+            "comments", "likes", "reports",
+            "splinter_items", "incoming_splinters"
+        ]
+        column_default_sort = ("timestamp", True)
+
+        def is_accessible(self):
+            return (current_user.is_authenticated and
+                    current_user.is_authority())
+    
+    admin.add_view(PostAdmin(Post, db.session))
+    
+    # Add Comment admin view
+    class CommentAdmin(ModelView):
+        column_list = ["id", "author.username", "guest_name", "timestamp", "post_id", "bill_id", "parent_id", "is_removed", "edited_at"]
+        column_labels = {"author.username": "Author"}
+        column_searchable_list = ["content"]
+        column_filters = ["is_removed", "timestamp", "post_id", "bill_id"]
+        form_excluded_columns = ["likes", "reports", "replies"]
+        column_default_sort = ("timestamp", True)
+        
+        def is_accessible(self):
+            return current_user.is_authenticated and current_user.is_authority()
+    
+    admin.add_view(CommentAdmin(Comment, db.session))
     admin.add_view(ReportAdmin(Report, db.session))
     
     # Add Bill admin view
