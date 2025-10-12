@@ -1,7 +1,7 @@
 """Add password reset token
 
 Revision ID: c8f9a2b5d3e1
-Revises: 084e773361a0
+Revises: 3fac5dc18cba
 Create Date: 2025-10-12 10:00:00.000000
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "c8f9a2b5d3e1"
-down_revision = "084e773361a0"
+down_revision = "3fac5dc18cba"
 branch_labels = None
 depends_on = None
 
