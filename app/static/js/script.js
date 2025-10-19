@@ -1,3 +1,16 @@
+// Keepalive to prevent Cloudflare challenge timeout
+// Sends a lightweight HEAD request every 5 minutes to keep the session active
+// This prevents 403 errors when users spend long periods reading or writing
+setInterval(function() {
+    fetch(window.location.href, { 
+        method: 'HEAD',
+        cache: 'no-cache'
+    }).catch(function(error) {
+        // Silently fail - user will discover any issues on form submit
+        console.log('Keepalive ping failed:', error);
+    });
+}, 5 * 60 * 1000); // 5 minutes in milliseconds
+
 document.addEventListener('DOMContentLoaded', () => {
     // Reply toggle for comments
     document.querySelectorAll('.reply-toggle').forEach(btn => {
