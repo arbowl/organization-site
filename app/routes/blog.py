@@ -4,12 +4,13 @@ This handles any routes related to the blog post portion of the site.
 """
 
 from os import getenv
+import re
+from urllib.parse import ParseResult, urlparse
 
 from datetime import datetime, timezone
 from functools import partial
 from flask import Blueprint, render_template, redirect, url_for, flash, abort, request
 from flask_login import login_required, current_user
-from flask_mail import Message
 from slugify import slugify
 from sqlalchemy import or_, func
 from wtforms.validators import ValidationError
@@ -284,6 +285,15 @@ def populate_replies(comment: Comment) -> None:
         populate_replies(r)
 
 
+def contains_external_link(text: str) -> bool:
+    url_regex = r"(https?://[^\s]+)"
+    for match in re.findall(url_regex, text):
+        parsed: ParseResult = urlparse(match)
+        if parsed.netloc and getenv("HOST_DOMAIN") not in parsed.netloc:
+            return True
+    return False
+
+
 @blog_bp.route("/post/<slug>", methods=["GET", "POST"])
 def view_post(slug: str) -> str:
     post = Post.query.filter_by(slug=slug).first_or_404()
@@ -293,6 +303,13 @@ def view_post(slug: str) -> str:
     if form.validate_on_submit():
         author_id = current_user.id if current_user.is_authenticated else None
         guest_name = form.guest_name.data.strip() if not author_id else None
+        if not author_id and contains_external_link(form.content.data):
+            flash(
+                "Your comment appears to contain an external link. "
+                "Please log in to post comments with links.",
+                "error",
+            )
+            return redirect(url_for("blog.view_post", slug=slug))
         comment = Comment(
             content=form.content.data,
             author_id=author_id,
